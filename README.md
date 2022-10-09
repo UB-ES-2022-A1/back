@@ -1,1 +1,20 @@
 # backend
+
+setup: ejecutar lo siguiente.
+
+    pip install -r requirements.txt
+    flask db init
+    flask db migrate -m "Initial migration"
+    flask db upgrade
+
+estos dos últimos pasos habrá que repetirlos (con un mensaje distinto) si cambiamos la estructura de la base de datos.
+
+finalmente, ejecutamos:
+
+    python3 app.py
+
+y ya tendríamos nuestra API funcionando en localhost:5000
+
+
+
+

@@ -16,6 +16,10 @@ migrate = Migrate(app, db)
 db.app = app
 db.init_app(app)
 
+#esto funciona para testing, hay que cambiarlo cuando estemos en produccion
+with app.app_context():
+    db.create_all()
+
 
 # registramos los blueprints de los recursos
 app.register_blueprint(users_bp)
