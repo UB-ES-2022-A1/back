@@ -1,0 +1,9 @@
+### Send POST request with json body
+POST localhost:5000/users
+Content-Type: application/json
+
+{
+  "email": "aasasdfsfda",
+  "pwd": "123aaa",
+  "name": "alice"
+}
