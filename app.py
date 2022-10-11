@@ -5,7 +5,7 @@ from routes.error import error_bp
 from database import db
 from flask_migrate import Migrate
 
-# creamos la app
+# creamos la app!
 app = Flask(__name__)
 
 # URI a cambiar en producción.
