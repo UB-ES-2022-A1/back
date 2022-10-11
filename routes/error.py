@@ -1,6 +1,8 @@
+from sqlite3 import IntegrityError
 from flask import Blueprint, jsonify
 from marshmallow import ValidationError
 from werkzeug.exceptions import NotFound, Conflict
+
 
 error_bp = Blueprint("errors", __name__)
 
@@ -18,10 +20,11 @@ def handle_validation(err):
 # 404 not found
 @error_bp.app_errorhandler(NotFound)
 def handle_notfound(err):
-    return jsonify({"message": "No se ha encontrado el recurso"}), 404
+    return jsonify({"message": err.description}), 404
 
 
 # error genérico. Poner excepciones más concretas por encima de esta.
 @error_bp.app_errorhandler(Exception)
 def handle_generic_exception(err):
     return jsonify({"message": "error: " + str(err)}), 500
+
