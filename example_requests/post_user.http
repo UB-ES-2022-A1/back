@@ -1,9 +1,30 @@
-### Send POST request with json body
-POST localhost:5000/users
+### GET all users
+GET localhost:3000/users
+
+### GET all services
+GET localhost:3000/services
+
+### POST an user
+POST localhost:3000/users
 Content-Type: application/json
 
 {
-  "email": "aasasdfsfdaaaa",
-  "pwd": "123aaa",
-  "name": "alice"
+  "email": "email3",
+  "pwd": "pwd22",
+  "name": "user2"
 }
+
+### POST a service
+POST localhost:3000/services
+Content-Type: application/json
+
+{
+  "user": "email2",
+  "title": "titulo2",
+  "description": "descripcion2"
+}
+
+### GET concrete services
+GET localhost:3000/services/1
+
+
