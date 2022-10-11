@@ -15,6 +15,13 @@ finalmente, ejecutamos:
 
 y ya tendríamos nuestra API funcionando en localhost:5000
 
+Cada vez que cambiemos los modelos de la base de datos:
 
+    flask db migrate -m "Initial migration".
+    flask db upgrade
+
+En caso de que algo no vaya probar de borrar las migrations y ejecutar:
+
+    flask db init
 
 

@@ -1,0 +1,30 @@
+### GET all users
+GET localhost:2000/users
+
+### GET all services
+GET localhost:2000/services
+
+### POST an user
+POST localhost:2000/users
+Content-Type: application/json
+
+{
+  "email": "email12",
+  "pwd": "pwddd",
+  "name": "userr"
+}
+
+### POST a service
+POST localhost:2000/services
+Content-Type: application/json
+
+{
+  "user": "email1",
+  "title": "titulo22",
+  "description": "descripcion"
+}
+
+### GET concrete services
+GET localhost:2000/services/1
+
+
