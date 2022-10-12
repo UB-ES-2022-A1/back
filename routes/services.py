@@ -3,9 +3,9 @@ from marshmallow import validates, ValidationError
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound, Conflict
 from database import db
-
 from sqlalchemy.orm.util import has_identity
-from entities.service import Service
+from models.service import Service
+from routes.users import get_user
 
 # Todas las url de servicios empiezan por esto
 services_bp = Blueprint("services", __name__, url_prefix="/services")
@@ -19,9 +19,14 @@ class ServiceSchema(SQLAlchemyAutoSchema):
         load_instance = True  # Para que se puedan crear los objetos
 
     @validates("user")
-    def validates_pwd(self, value):
+    def validates_usr(self, value):
         if not has_identity(value):
             raise NotFound("Usuario con id " + str(value.email) + " no encontrado!")
+
+    @validates("price")
+    def validates_usr(self, value):
+        if value < 0:
+            raise ValidationError("Price can't be negative!")
 
 
 # Para crear servicio
@@ -34,15 +39,46 @@ def get_all_services():
     return jsonify(service_schema_all.dump(all_services, many=True)), 200
 
 
-@services_bp.route("/<int:service_id>", methods=["GET"])
-def get_service(service_id):
+@services_bp.route("/<int:service_id>", methods=["GET", "PUT", "DELETE"])
+def interact_concrete_service(service_id):
+    service = Service.get_by_id(service_id)
+    # En caso de no encontrar el servicio retornamos un mensaje de error.
+    if not service:
+        raise NotFound
+    if request.method == "GET":
+        return jsonify(service_schema_all.dump(service, many=False)), 200
+    # TODO una vez haya autentificación que solo pueda acceder el usuario o admins posteriormente.
+    elif request.method == "DELETE":
+        service.delete_from_db()
+        return Response("Se ha eliminado correctamente el servicio con identificador: " + str(service_id), status=200)
+    elif request.method == "PUT":
+        info = request.json
+        iterator = iter(service.__dict__.items())
+        next(iterator)  # Metadata
+        for attr, value in iterator:
+            if attr == "user_email": attr = "user"
+            if attr not in info.keys():
+                info[attr] = value
+        n_service = service_schema_all.load(info, session=db.session)  # De esta forma pasamos todos los constrains.
+        n_service.save_to_db()
+        return Response("Servicio modificado correctamente", status=200)
+
+
+@services_bp.route("/<int:service_id>/user", methods=["GET"])
+def get_service_user(service_id):
     service = Service.get_by_id(service_id)
 
     # En caso de no encontrar el servicio retornamos un mensaje de error.
     if not service:
         raise NotFound
 
-    return jsonify(service_schema_all.dump(service, many=False)), 200
+    return get_user(service.user.email)
+
+
+@services_bp.route("/<string:email>/ownservices", methods=["GET"])
+def get_user_services(email):
+    services = Service.query.filter_by(user_email=email)
+    return jsonify(service_schema_all.dump(services, many=True)), 200
 
 
 @services_bp.route("", methods=["POST"])

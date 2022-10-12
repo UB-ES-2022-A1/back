@@ -5,10 +5,10 @@ from routes.error import error_bp
 from database import db
 from flask_migrate import Migrate
 
-# creamos la app
+# Creamos la app
 app = Flask(__name__)
 
-# URI a cambiar en producción.
+# Indicamos la ubicación de la base de datos. Cambiar en producción.
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -16,12 +16,12 @@ migrate = Migrate(app, db)
 db.app = app
 db.init_app(app)
 
-#todo esto funciona para testing, hay que cambiarlo cuando estemos en produccion
+# Todo esto funciona para testing, hay que cambiarlo cuando estemos en produccion
 with app.app_context():
     db.create_all()
 
 
-# registramos los blueprints de los recursos
+# Registramos los blueprints de los recursos
 app.register_blueprint(users_bp)
 app.register_blueprint(error_bp)
 app.register_blueprint(services_bp)
@@ -33,4 +33,4 @@ def hello_world():  # put application's code here
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=2000)
+    app.run(host='0.0.0.0', port=5000)
