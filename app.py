@@ -7,9 +7,11 @@ from flask_migrate import Migrate
 
 # Creamos la app
 app = Flask(__name__)
-
 # Indicamos la ubicación de la base de datos. Cambiar en producción.
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db"
+if __name__ == '__main__':
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db"
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test_data.db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 migrate = Migrate(app, db)
