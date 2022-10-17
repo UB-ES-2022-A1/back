@@ -4,7 +4,7 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound, Conflict
 from database import db
 
-from entities.user import User
+from models.user import User
 
 login_bp = Blueprint("login", __name__, url_prefix="/login")
 
