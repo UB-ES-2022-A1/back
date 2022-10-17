@@ -1,20 +1,21 @@
 from sqlalchemy.orm import relationship
 from database import db
-from entities.user import User
 
 
 class Service(db.Model):
     __tablename__ = "services"
+    __table_args__ = (
+        db.UniqueConstraint('user_email', 'title', 'description', 'price', name='unq_cons1'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
-    user_email = db.Column(db.Text, db.ForeignKey(User.__tablename__ + '.email'), nullable=False)
-    title = db.Column(db.Text, nullable=False)
-    description = db.Column(db.Text, nullable=False)
+    user_email = db.Column(db.String(50), db.ForeignKey('users.email'), nullable=False)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String, nullable=False)
+    price = db.Column(db.Integer, nullable=False, default=0)
 
-    user = db.relationship(User, foreign_keys=[user_email], backref="services")
 
     # TODO Añadir campos como foto, fecha, ubicación.
-
     def save_to_db(self):
         db.session.add(self)
         db.session.commit()

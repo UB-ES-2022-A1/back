@@ -4,7 +4,7 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound, Conflict
 from database import db
 
-from entities.user import User
+from models.user import User
 
 # Todas las url de users empiezan por esto
 users_bp = Blueprint("users", __name__, url_prefix="/users")
@@ -40,11 +40,15 @@ def get_all_users():
     return jsonify(user_schema_repr.dump(all_users, many=True)), 200
 
 
-@users_bp.route("/<string:email>", methods=["GET"])
+@users_bp.route("/<string:email>", methods=["GET", "DELETE"])
 def get_user(email):
     usr = User.query.get(email)
     if not usr:
         raise NotFound
+    if request.method == "DELETE":
+        usr.delete_from_db()
+        return Response("Se ha eliminado correctamente el usuario con identificador: " + str(email), status=200)
+
     return jsonify(user_schema_repr.dump(usr, many=False)), 200
 
 
