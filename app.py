@@ -2,6 +2,7 @@ from flask import Flask
 from routes.users import users_bp
 from routes.services import services_bp
 from routes.error import error_bp
+from routes.login import login_bp
 from database import db
 from flask_migrate import Migrate
 
@@ -27,6 +28,7 @@ with app.app_context():
 app.register_blueprint(users_bp)
 app.register_blueprint(error_bp)
 app.register_blueprint(services_bp)
+app.register_blueprint(login_bp)
 
 
 @app.route('/')
