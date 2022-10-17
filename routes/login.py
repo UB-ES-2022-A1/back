@@ -1,9 +1,6 @@
-from flask import Blueprint, jsonify, request, Response
-from marshmallow import validates, ValidationError, Schema, fields
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
-from werkzeug.exceptions import NotFound, Conflict
-from database import db
-
+from flask import Blueprint, jsonify, request
+from marshmallow import Schema, fields
+from werkzeug.exceptions import NotFound
 from models.user import User
 
 login_bp = Blueprint("login", __name__, url_prefix="/login")
