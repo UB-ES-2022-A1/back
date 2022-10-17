@@ -1,30 +1,53 @@
 ### GET all users
-GET localhost:2000/users
+GET localhost:5000/users
 
 ### GET all services
-GET localhost:2000/services
+GET localhost:5000/services
 
 ### POST an user
-POST localhost:2000/users
+POST localhost:5000/users
 Content-Type: application/json
 
 {
-  "email": "email12",
+  "email": "email4",
   "pwd": "pwddd",
   "name": "userr"
 }
 
 ### POST a service
-POST localhost:2000/services
+POST localhost:5000/services
 Content-Type: application/json
 
 {
-  "user": "email1",
-  "title": "titulo22",
-  "description": "descripcion"
+  "user": "email4",
+  "title": "titulo5",
+  "description": "descripcion",
+  "price" : 0
+}
+
+### PUT a service
+PUT localhost:5000/services/3
+Content-Type: application/json
+
+{
+  "title": "titulo6",
+  "price" : -100
 }
 
 ### GET concrete services
-GET localhost:2000/services/1
+GET localhost:5000/services/1
 
+### DELETE concrete services
+DELETE localhost:5000/services/4
 
+### GET service creator
+GET localhost:5000/services/5/user
+
+### GET user services
+GET localhost:5000/services/email2/ownservices
+
+### GET concrete user
+GET localhost:5000/users/email1
+
+### DELETE concrete user
+DELETE localhost:5000/users/email1
