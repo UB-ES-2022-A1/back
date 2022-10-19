@@ -7,20 +7,28 @@ from routes.login import login_bp
 from database import db
 from flask_migrate import Migrate
 
-def init_app(database_location):
+
+def init_app(database_location, develop=True):
     # creamos la app
     app = Flask(__name__)
 
-    # URI a cambiar en producción.
-    app.config["SQLALCHEMY_DATABASE_URI"] = database_location
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    if develop:
+        # URI a cambiar en producción.
+        app.config["SQLALCHEMY_DATABASE_URI"] = database_location
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    Migrate(app, db)
-    db.app = app
-    db.init_app(app)
+        Migrate(app, db)
+        db.app = app
+        db.init_app(app)
 
-    with app.app_context():
-        populate(db)
+        # poblamos la BD de develop con datos de prueba
+        with app.app_context():
+            populate(db)
+
+    else:
+
+        # TODO meter aquí la configuración de la BD de producción
+        pass
 
     # registramos los blueprints de los recursos
     app.register_blueprint(users_bp)
