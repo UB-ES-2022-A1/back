@@ -1,40 +1,13 @@
-from flask import Flask
-from routes.users import users_bp
-from routes.services import services_bp
-from routes.error import error_bp
-from routes.login import login_bp
-from database import db
-from flask_migrate import Migrate
+from init_app import init_app
 
-# Creamos la app
-app = Flask(__name__)
-# Indicamos la ubicación de la base de datos. Cambiar en producción.
-if __name__ == '__main__':
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db"
+# TODO METER A FALSE EN PRODUCCIÓN
+develop = True
+
+if develop:
+    db_url = "sqlite:///data.db"
 else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test_data.db"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db_url = "meter aqui URL de base de datos de producción"
 
-migrate = Migrate(app, db)
-db.app = app
-db.init_app(app)
-
-# Todo esto funciona para testing, hay que cambiarlo cuando estemos en produccion
+app, _ = init_app(db_url, develop=develop)
 with app.app_context():
-    db.create_all()
-
-
-# Registramos los blueprints de los recursos
-app.register_blueprint(users_bp)
-app.register_blueprint(error_bp)
-app.register_blueprint(services_bp)
-app.register_blueprint(login_bp)
-
-
-@app.route('/')
-def hello_world():  # put application's code here
-    return 'Hello World!'
-
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run()

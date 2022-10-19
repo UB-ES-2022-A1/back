@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, Response
-from marshmallow import validates, ValidationError
+from marshmallow import validates, ValidationError, validate
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound, Conflict
 from database import db
@@ -25,6 +25,11 @@ class UserSchema(SQLAlchemyAutoSchema):
     def validates_pwd(self, value):
         if len(value) < 5:
             raise ValidationError("Al menos 5 carácteres de contraseña.")
+
+    @validates("email")
+    def validates_email(self, value):
+        validator = validate.Email()
+        validator(value)
 
 
 # Para representar usuario sin exponer info sensible
