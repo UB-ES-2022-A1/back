@@ -9,7 +9,7 @@ POST localhost:5000/users
 Content-Type: application/json
 
 {
-  "email": "email4",
+  "email": "a.b@c.com",
   "pwd": "pwddd",
   "name": "userr"
 }

@@ -5,6 +5,7 @@ from routes.error import error_bp
 from routes.login import login_bp
 from database import db
 from flask_migrate import Migrate
+from populate_db import populate
 
 # Creamos la app
 app = Flask(__name__)
@@ -21,8 +22,7 @@ db.init_app(app)
 
 # Todo esto funciona para testing, hay que cambiarlo cuando estemos en produccion
 with app.app_context():
-    db.create_all()
-
+    populate(db)
 
 # Registramos los blueprints de los recursos
 app.register_blueprint(users_bp)
