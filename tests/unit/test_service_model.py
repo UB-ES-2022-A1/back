@@ -1,12 +1,13 @@
 from marshmallow import ValidationError
+
+from init_app import init_app
 from models.service import Service
 from models.user import User
 from routes.services import service_schema_all
-from app import app
-from database import db
 from sqlalchemy.exc import IntegrityError
 import json
 
+app, db = init_app("sqlite:///data_test.db")
 
 def test_new_service():
     with app.app_context():

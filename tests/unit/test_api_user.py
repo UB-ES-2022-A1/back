@@ -1,5 +1,7 @@
-from app import app, db
+from init_app import init_app
 import pytest
+
+app, db = init_app("sqlite:///data_test.db")
 
 
 @pytest.fixture(scope='function', autouse=True)
