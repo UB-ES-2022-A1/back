@@ -9,13 +9,13 @@ from flask_migrate import Migrate
 
 
 def init_app(database_location, develop=True):
+
     # creamos la app
     app = Flask(__name__)
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_location
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     if develop:
-        # URI a cambiar en producción.
-        app.config["SQLALCHEMY_DATABASE_URI"] = database_location
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         Migrate(app, db)
         db.app = app
