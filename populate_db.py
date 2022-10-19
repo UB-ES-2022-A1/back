@@ -4,8 +4,6 @@ from models.service import Service
 def populate(db):
 
     db.create_all()
-    User.query.delete()
-    Service.query.delete()
 
     for i in range(1,11):
         user = User(email="email"+str(i), pwd="password", name="name")
