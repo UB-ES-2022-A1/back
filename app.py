@@ -20,6 +20,9 @@ migrate = Migrate(app, db)
 db.app = app
 db.init_app(app)
 
+with app.app_context():
+    populate(db)
+
 
 # registramos los blueprints de los recursos
 app.register_blueprint(users_bp)
@@ -33,8 +36,8 @@ def hello_world():  # put application's code here
     return 'Hello World!'
 
 
+
 if __name__ == '__main__':
     # todo esto funciona para testing, hay que cambiarlo cuando estemos en produccion
     with app.app_context():
-        populate(db)
-    app.run()
+        app.run()
