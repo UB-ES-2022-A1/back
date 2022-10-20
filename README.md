@@ -24,4 +24,6 @@ En caso de que algo no vaya probar de borrar las migrations y ejecutar:
 
     flask db init
 
+Notemos que este proyecto está preparado para ejecutarse en local. Para prepararlo para producción, poner la variable develop de app.py a False, y rellenar la parte correspondiente a la configuración de producción de init_app.py
+
 
