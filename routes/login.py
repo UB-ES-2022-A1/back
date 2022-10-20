@@ -16,7 +16,7 @@ class Login_Schema(Schema):
 login_schema = Login_Schema()
 
 
-@login_bp.route("", methods=["GET"])
+@login_bp.route("", methods=["POST"])
 def login():
     data = login_schema.load(request.json)
     usr = User.query.get(data['email'])
