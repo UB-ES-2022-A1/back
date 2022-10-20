@@ -6,12 +6,13 @@ from routes.error import error_bp
 from routes.login import login_bp
 from database import db
 from flask_migrate import Migrate
-
+from flask_cors import CORS
 
 def init_app(database_location, develop=True):
 
     # creamos la app
     app = Flask(__name__)
+    CORS(app)
     app.config["SQLALCHEMY_DATABASE_URI"] = database_location
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
