@@ -38,6 +38,8 @@ user_schema_repr = UserSchema(only=("name", "email", "birthday"))
 # Para crear usuario
 user_schema_create = UserSchema()
 
+user_schema_profile = UserSchema(exclude=['pwd'])
+
 
 @users_bp.route("", methods=["GET"])
 def get_all_users():
@@ -68,4 +70,4 @@ def create_user():
 
     db.session.add(new_user)
     db.session.commit()
-    return Response(status=204)
+    return jsonify(user_schema_profile.dump(new_user, many=False)), 201
