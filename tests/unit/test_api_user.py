@@ -24,7 +24,7 @@ def test_post_get_user(client):
     # only required
     user1_dict = {'email': 'pepito@gmail.com', 'pwd': '12345678', 'name': 'Pepito'}
     r = client.post("users", json=user1_dict)
-    assert r.status_code == 204
+    assert r.status_code == 201
 
     # check user has been added correctly
     r = client.get("users")
@@ -48,7 +48,7 @@ def test_post_get_user(client):
     # check we can add user with different email
     user1_dict = {'email': 'pepito2@gmail.com', 'pwd': '12345678', 'name': 'Pepito'}
     r = client.post("users", json=user1_dict)
-    assert r.status_code == 204
+    assert r.status_code == 201
 
     # check user has been added correctly
     r = client.get("users")
