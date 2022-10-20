@@ -51,3 +51,12 @@ GET localhost:5000/users/email1
 
 ### DELETE concrete user
 DELETE localhost:5000/users/email1
+
+### GET an LOGIN
+GET localhost:5000/login
+Content-Type: application/json
+
+{
+  "email": "a.b@c.com",
+  "pwd": "pwddd"
+}
