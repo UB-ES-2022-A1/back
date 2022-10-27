@@ -27,3 +27,7 @@ En caso de que algo no vaya probar de borrar las migrations y ejecutar:
 Notemos que este proyecto está preparado para ejecutarse en local. Para prepararlo para producción, poner la variable develop de app.py a False, y rellenar la parte correspondiente a la configuración de producción de init_app.py
 
 
+Para el secure login hay que borrar las bases de datos para que funcione ya que hay cosas actualizadas.
+En todos los métodos se añade el secure login. Si se pone con el 0 se puede entrar sin este. (ya que se devuelve por defecto)
+Para crear máximo admin hay que eliminar un método.
+
