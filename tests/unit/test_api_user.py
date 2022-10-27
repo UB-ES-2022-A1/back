@@ -1,5 +1,6 @@
 from init_app import init_app
 import pytest
+from flask_httpauth import HTTPBasicAuth
 
 app, db = init_app("sqlite:///data_test.db")
 
@@ -190,3 +191,41 @@ def test_user_post_wrong_fields(client):
     r = client.get("users")
     assert r.status_code == 200
     assert len(r.get_json()) == 0
+
+
+def test_post_bad_privilege_user(client):
+    # only required
+    user1_dict = {'email': 'pepito@gmail.com', 'pwd': '12345678', 'name': 'Pepito', 'acces': 9}
+    r = client.post("users", json=user1_dict)
+    assert r.status_code == 401
+
+
+def test_delete_user(client):
+    # user1
+    user1_dict = {'email': 'pepito1@gmail.com', 'pwd': '12345678', 'name': 'Pepito1', 'acces': 1}
+    r = client.post("users", json=user1_dict)
+    assert r.status_code == 201
+
+    # user2
+    user2_dict = {'email': 'pepito2@gmail.com', 'pwd': '12345678', 'name': 'Pepito2', 'acces': 1}
+    r = client.post("users", json=user2_dict)
+    assert r.status_code == 201
+
+    login1_dict = {'email': 'pepito1@gmail.com', "pwd": '12345678'}
+    r = client.post("login", json=login1_dict)
+    token1 = r.get_json()['token']
+
+    login2_dict = {'email': 'pepito2@gmail.com', "pwd": '12345678'}
+    r = client.post("login", json=login2_dict)
+    token2 = r.get_json()['token']
+
+    res1 = "Basic " + token1 + " contra"
+    res2 = "Basic " + token2 + " contra"
+
+    r = client.delete("users/pepito1@gmail.com", json={}, headers={"Authorization": res2})
+    assert r.status_code == 401
+
+    r = client.delete("users/pepito1@gmail.com", json={}, headers={"Authorization": res1})
+    assert r.status_code == 200
+
+

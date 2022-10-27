@@ -10,7 +10,7 @@ error_bp = Blueprint("errors", __name__)
 
 @error_bp.app_errorhandler(Conflict)
 def handle_validation(err):
-    return jsonify({"message": "El recurso ya existe"}), 409
+    return jsonify({"message": "El recurso ya existe" + str(err)}), 409
 
 
 @error_bp.app_errorhandler(ValidationError)
@@ -34,7 +34,7 @@ def handle_integrity_exception(err):
 # Error de integridad de la base de datos
 @error_bp.app_errorhandler(PrivilegeException)
 def handle_privilege_exception(err):
-    return jsonify({"message": err.description}), 401
+    return jsonify({"message": str(err)}), 401
 
 
 # Error genérico. Poner excepciones más concretas por encima de esta.
