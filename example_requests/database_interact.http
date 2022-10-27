@@ -9,9 +9,10 @@ POST localhost:5000/users
 Content-Type: application/json
 
 {
-  "email": "a.b@c.com",
-  "pwd": "pwddd",
-  "name": "userr"
+  "email": "antonio@b.com",
+  "pwd": "123456",
+  "phone": 123456434,
+  "name": "Pepito"
 }
 
 ### POST a service
@@ -47,16 +48,18 @@ GET localhost:5000/services/5/user
 GET localhost:5000/services/email2/ownservices
 
 ### GET concrete user
-GET localhost:5000/users/email1
+GET localhost:5000/users/email1223
 
 ### DELETE concrete user
 DELETE localhost:5000/users/email1
 
-### GET an LOGIN
-GET localhost:5000/login
+### POST an LOGIN
+POST localhost:5000/login
 Content-Type: application/json
 
 {
-  "email": "a.b@c.com",
-  "pwd": "pwddd"
+  "email": "antonio@b.com",
+  "pwd": "123456"
 }
+
+
