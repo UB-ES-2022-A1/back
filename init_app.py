@@ -7,7 +7,7 @@ from routes.login import login_bp
 from database import db
 from flask_migrate import Migrate
 from flask_cors import CORS
-
+from database import secret_key
 def init_app(database_location, develop=True):
 
     # creamos la app
@@ -15,6 +15,7 @@ def init_app(database_location, develop=True):
     CORS(app)
     app.config["SQLALCHEMY_DATABASE_URI"] = database_location
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SECRET_KEY'] = secret_key
 
     if develop:
 

@@ -4,6 +4,12 @@ from database import db
 from models.service import Service
 from passlib.apps import custom_app_context as pwd_context
 from jwt import encode, decode, ExpiredSignatureError, InvalidSignatureError
+from flask import g, current_app
+from utils.privilegies import acces
+from flask_httpauth import HTTPBasicAuth
+
+auth = HTTPBasicAuth()
+
 
 class User(db.Model):
     __tablename__ = "users"
@@ -12,7 +18,7 @@ class User(db.Model):
     email = db.Column(db.Text, primary_key=True)
     pwd = db.Column(db.Text, nullable=False)
     name = db.Column(db.Text, nullable=False)
-
+    acces = db.Column(db.Integer, nullable=False, default=1)
     # Campos opcionales
     phone = db.Column(db.Integer, nullable=True)
     birthday = db.Column(db.Date, nullable=True)
@@ -98,3 +104,34 @@ class User(db.Model):
         user = cls.query.filter_by(email=data['email']).first()
 
         return user
+
+    @auth.verify_password
+    def verify_password(token, password):
+        """
+        This method verifies if a token is correct
+        :param token: the token that contain all the information
+        :param password: not used
+        :return: the user itself
+        """
+
+        try:
+            data = decode(token, secret_key, algorithms=["HS256"])
+        except:
+            return False
+
+        if data['exp'] < time.time():
+            return False
+
+        user = User.get_by_name(data['email'])
+        if user:
+            g.user = user
+            return user
+
+    @auth.get_user_roles
+    def get_user_roles(user):
+        """
+        This method return the user acces level.
+        :return: acces level label
+        """
+        return acces[user.acces]
+

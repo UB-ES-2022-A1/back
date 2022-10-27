@@ -9,10 +9,11 @@ POST localhost:5000/users
 Content-Type: application/json
 
 {
-  "email": "antonio@b.com",
+  "email": "admin@ad.com",
   "pwd": "123456",
   "phone": 123456434,
-  "name": "Pepito"
+  "name": "Pepito",
+  "acces": 9
 }
 
 ### POST a service

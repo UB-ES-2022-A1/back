@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify
 from marshmallow import ValidationError
 from werkzeug.exceptions import NotFound, Conflict
 from sqlalchemy.exc import IntegrityError
+from utils.custom_exceptions import PrivilegeException
 
 error_bp = Blueprint("errors", __name__)
 
@@ -28,6 +29,12 @@ def handle_notfound(err):
 def handle_integrity_exception(err):
     atributes = err.args[0].split("failed:")[1]
     return jsonify({"message": "Duplicated instance found, change one of the following atributs: " + atributes}), 409
+
+
+# Error de integridad de la base de datos
+@error_bp.app_errorhandler(IntegrityError)
+def handle_integrity_exception(err):
+    return jsonify({"message": err.description}), 401
 
 # Error genérico. Poner excepciones más concretas por encima de esta.
 @error_bp.app_errorhandler(Exception)

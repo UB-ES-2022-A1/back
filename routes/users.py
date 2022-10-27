@@ -3,7 +3,7 @@ from marshmallow import validates, ValidationError, validate
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound, Conflict
 from database import db
-
+from utils.custom_exceptions import PrivilegeException
 from models.user import User
 
 # Todas las url de users empiezan por esto
@@ -30,6 +30,12 @@ class UserSchema(SQLAlchemyAutoSchema):
     def validates_email(self, value):
         validator = validate.Email()
         return validator(value)
+
+    # TODO remove para crear el admin maximo. Se quita esta función se crea el admin y se vuelve a añadir la función.
+    @validates("acces")
+    def validates_acces(self, value):
+        if value > 5:
+            raise PrivilegeException("No se pude crear un usuario con estos privilegios.")
 
 
 # Para representar usuario sin exponer info sensible

@@ -28,7 +28,6 @@ class ServiceSchema(SQLAlchemyAutoSchema):
         if value < 0:
             raise ValidationError("Price can't be negative!")
 
-
 # Para crear servicio
 service_schema_all = ServiceSchema()
 
