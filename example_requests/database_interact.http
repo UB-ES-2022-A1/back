@@ -1,3 +1,12 @@
+### POST an LOGIN
+POST localhost:5000/login
+Content-Type: application/json
+
+{
+  "email": "us2@email.com",
+  "pwd": "123456"
+}
+
 ### GET all users
 GET localhost:5000/users
 
@@ -9,35 +18,46 @@ POST localhost:5000/users
 Content-Type: application/json
 
 {
-  "email": "admin@ad.com",
+  "email": "us2@email.com",
   "pwd": "123456",
   "phone": 123456434,
-  "name": "Pepito",
-  "acces": 9
+  "name": "Pedro",
+  "acces": 1
 }
 
-### POST a service
-POST localhost:5000/services
+### GET concrete service
+GET localhost:5000/services/10
+
+### POST an LOGIN ---> After this all the following requests needs login(token)
+POST localhost:5000/login
 Content-Type: application/json
 
 {
-  "user": "email4",
-  "title": "titulo5",
+  "email": "us2@email.com",
+  "pwd": "123456"
+}
+
+### POST a service
+POST http://localhost:5000/services
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzMkBlbWFpbC5jb20iLCJleHAiOjE2NjY5NjA4ODh9.l2wcdYrRfKzmgrxHvE4bjYgnQUHeCW8VkHcpV0b56_o loquesea
+Content-Type: application/json
+
+{
+  "title": "titulo6",
   "description": "descripcion",
   "price" : 0
 }
 
 ### PUT a service
-PUT localhost:5000/services/3
+PUT localhost:5000/services/10
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzMkBlbWFpbC5jb20iLCJleHAiOjE2NjY5NjA4ODh9.l2wcdYrRfKzmgrxHvE4bjYgnQUHeCW8VkHcpV0b56_o loquesea
 Content-Type: application/json
 
 {
-  "title": "titulo6",
-  "price" : -100
+  "title": "titulo7",
+  "price" : 600
 }
 
-### GET concrete services
-GET localhost:5000/services/1
 
 ### DELETE concrete services
 DELETE localhost:5000/services/4
@@ -54,13 +74,5 @@ GET localhost:5000/users/email1223
 ### DELETE concrete user
 DELETE localhost:5000/users/email1
 
-### POST an LOGIN
-POST localhost:5000/login
-Content-Type: application/json
-
-{
-  "email": "antonio@b.com",
-  "pwd": "123456"
-}
 
 
