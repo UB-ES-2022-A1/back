@@ -32,14 +32,12 @@ def handle_integrity_exception(err):
 
 
 # Error de integridad de la base de datos
-@error_bp.app_errorhandler(IntegrityError)
-def handle_integrity_exception(err):
+@error_bp.app_errorhandler(PrivilegeException)
+def handle_privilege_exception(err):
     return jsonify({"message": err.description}), 401
+
 
 # Error genérico. Poner excepciones más concretas por encima de esta.
 @error_bp.app_errorhandler(Exception)
 def handle_generic_exception(err):
     return jsonify({"message": "error: " + str(err)}), 500
-    
-
-

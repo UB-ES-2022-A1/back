@@ -1,12 +1,3 @@
-### POST an LOGIN
-POST localhost:5000/login
-Content-Type: application/json
-
-{
-  "email": "us2@email.com",
-  "pwd": "123456"
-}
-
 ### GET all users
 GET localhost:5000/users
 
@@ -27,6 +18,15 @@ Content-Type: application/json
 
 ### GET concrete service
 GET localhost:5000/services/10
+
+### GET service's creator
+GET localhost:5000/services/5/user
+
+### GET user's services
+GET localhost:5000/services/email2/service
+
+### GET concrete user
+GET localhost:5000/users/email1223
 
 ### POST an LOGIN ---> After this all the following requests needs login(token)
 POST localhost:5000/login
@@ -58,18 +58,8 @@ Content-Type: application/json
   "price" : 600
 }
 
-
 ### DELETE concrete services
 DELETE localhost:5000/services/4
-
-### GET service creator
-GET localhost:5000/services/5/user
-
-### GET user services
-GET localhost:5000/services/email2/ownservices
-
-### GET concrete user
-GET localhost:5000/users/email1223
 
 ### DELETE concrete user
 DELETE localhost:5000/users/email1
