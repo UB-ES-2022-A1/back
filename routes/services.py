@@ -19,12 +19,12 @@ class ServiceSchema(SQLAlchemyAutoSchema):
         load_instance = True  # Para que se puedan crear los objetos
 
     @validates("user")
-    def validates_usr(self, value):
+    def validates_user(self, value):
         if not has_identity(value):
             raise NotFound("Usuario con id " + str(value.email) + " no encontrado!")
 
     @validates("price")
-    def validates_usr(self, value):
+    def validates_price(self, value):
         if value < 0:
             raise ValidationError("Price can't be negative!")
 
