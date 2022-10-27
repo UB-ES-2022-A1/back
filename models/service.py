@@ -17,17 +17,32 @@ class Service(db.Model):
 
     # TODO Añadir campos como foto, fecha, ubicación.
     def save_to_db(self):
+        """
+        This method saves the instance to the database
+        """
         db.session.add(self)
         db.session.commit()
 
     def delete_from_db(self):
+        """
+        This method deletes the instance from the database
+        """
         db.session.delete(self)
         db.session.commit()
 
     @classmethod
     def get_by_id(cls, instance_id):
+        """
+        Returns a service with the specified id
+        :param instance_id: the service id
+        :return: service with the corresponding id.
+        """
         return cls.query.get(instance_id)
 
     @classmethod
     def get_all(cls):
+        """
+        Returns a list with all services
+        :return: list with all services
+        """
         return cls.query.all()

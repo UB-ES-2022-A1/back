@@ -29,7 +29,7 @@ class UserSchema(SQLAlchemyAutoSchema):
     @validates("email")
     def validates_email(self, value):
         validator = validate.Email()
-        validator(value)
+        return validator(value)
 
 
 # Para representar usuario sin exponer info sensible
@@ -37,6 +37,8 @@ user_schema_repr = UserSchema(only=("name", "email", "birthday"))
 
 # Para crear usuario
 user_schema_create = UserSchema()
+
+user_schema_profile = UserSchema(exclude=['pwd'])
 
 
 @users_bp.route("", methods=["GET"])
@@ -61,11 +63,12 @@ def get_user(email):
 def create_user():
     d = request.json
     new_user = user_schema_create.load(d, session=db.session)
-
     # si ya existe no se puede
     if User.query.get(new_user.email) is not None:
         raise Conflict
 
-    db.session.add(new_user)
-    db.session.commit()
-    return Response(status=204)
+    new_user.pwd = User.hash_password(new_user.pwd)
+    new_user.save_to_db()
+    return jsonify(user_schema_profile.dump(new_user, many=False)), 201
+
+
