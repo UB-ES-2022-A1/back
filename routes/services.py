@@ -49,12 +49,50 @@ service_schema_all = ServiceSchema()
 
 @services_bp.route("", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
-def get_all_services():
+def get_many_services():
     """
-    This method returns all the services. It doesn't require privileges
+    This method returns a list of services. It doesn't require privileges.
     :return: Response with all the services
     """
     all_services = Service.get_all()
+
+    info = request.json
+
+    if 'search_text' in info:
+        pass
+
+    if 'sort' in info:
+
+        if 'by' not in info['sort']:
+            raise ValidationError('Specify what to sort by!')
+
+        if info['sort']['by'] == 'price':
+            pass
+        elif info['sort']['by'] == 'rating':
+            pass
+        elif info['sort']['by'] == 'popularity':
+            pass
+        else:
+            raise NotImplementedError('This rating method is not supported!')
+
+        if 'reverse' in info['sort']:
+            pass
+
+    if 'filters' in info:
+
+        for filter_name in info['filters']:
+
+            if not filter_name in ['price', 'rating']:
+                raise NotImplementedError('This filtering method is not supported!')
+
+            if 'min' in info['filters']['filter_name']:
+                min_value = info
+                pass
+
+            if 'max' in info['filters']['filter_name']:
+                max_value = info
+                pass
+
     return jsonify(service_schema_all.dump(all_services, many=True)), 200
 
 
