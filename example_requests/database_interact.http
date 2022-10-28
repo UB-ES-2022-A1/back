@@ -26,7 +26,7 @@ GET localhost:5000/services/5/user
 GET localhost:5000/services/email2/service
 
 ### GET concrete user
-GET localhost:5000/users/email1223
+GET localhost:5000/users/madmin@gmail.com
 
 ### POST an LOGIN ---> After this all the following requests needs login(token)
 POST localhost:5000/login

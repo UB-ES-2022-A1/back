@@ -56,6 +56,9 @@ Notemos que este proyecto está preparado para ejecutarse en local. Para prepara
 * Recordad borrar las bases de dats ya que han sido modificadas.
 * Casi todos los métodos contienen el secure login, si se incluye un 0 quiere decir que realmente no es necessario.
 * Hay un listado de los privilegios en utils.priviledies.py
+* El tema login se puede ver en utils.secure_request.py 
+* El máximo admin creado en develop con el populate es "madmin@gmail.com" con contra "password"
+
 
 *Seria interesante añadir una variable de active tanto en user como en service. 
 En service iria de 0,1,2 donde 0 es le aparece a todos los usuarios, 1 solo al creador

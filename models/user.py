@@ -68,7 +68,7 @@ class User(db.Model):
     def verify_password(self, pwd):
         """
         Verifies if a given password is given correctly
-        :param password: the password that it's going to be validated
+        :param pwd: the password that it's going to be validated
         :return: true if the password matched the hash, else False
         """
         return pwd_context.verify(pwd, self.pwd)

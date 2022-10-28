@@ -53,7 +53,7 @@ class UserSchema(SQLAlchemyAutoSchema):
     @validates("acces")
     def validates_acces(self, value):
         if value > 1:
-            raise PrivilegeException("No se pude crear un usuario con estos privilegios.")
+            raise PrivilegeException("No se puede crear un usuario con estos privilegios.")
 
 
 # Para representar usuario sin exponer info sensible
@@ -87,7 +87,7 @@ def get_user(email):
     usr = User.query.get(email)
     if not usr:
         raise NotFound
-    return jsonify(user_schema_repr.dump(usr, many=False)), 200
+    return jsonify(user_schema_profile.dump(usr, many=False)), 200
 
 @users_bp.route("/<string:email>", methods=["DELETE"])
 @auth.login_required(role=[acces[1], acces[8], acces[9]])
