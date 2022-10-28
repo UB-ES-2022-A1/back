@@ -9,7 +9,7 @@ from models.user import auth
 from routes.users import get_user
 from flask import g
 from utils.custom_exceptions import PrivilegeException
-from utils.privilegies import acces
+from utils.privilegies import access
 
 # Todas las url de servicios empiezan por esto
 services_bp = Blueprint("services", __name__, url_prefix="/services")
@@ -48,7 +48,7 @@ service_schema_all = ServiceSchema()
 
 
 @services_bp.route("", methods=["GET"])
-@auth.login_required(role=[acces[0], acces[1], acces[8], acces[9]])
+@auth.login_required(role=[access[0], access[1], access[8], access[9]])
 def get_all_services():
     """
     This method returns all the services. It doesn't require privileges
@@ -59,7 +59,7 @@ def get_all_services():
 
 
 @services_bp.route("/<int:service_id>", methods=["GET"])
-@auth.login_required(role=[acces[0], acces[1], acces[8], acces[9]])
+@auth.login_required(role=[access[0], access[1], access[8], access[9]])
 def get_service(service_id):
     """
     This method returns a concrete service. It doesn't require privileges
@@ -75,7 +75,7 @@ def get_service(service_id):
 
 
 @services_bp.route("/<int:service_id>/user", methods=["GET"])
-@auth.login_required(role=[acces[0], acces[1], acces[8], acces[9]])
+@auth.login_required(role=[access[0], access[1], access[8], access[9]])
 def get_service_user(service_id):
     """
     This method returns the user of a service. It doesn't require privileges.
@@ -90,7 +90,7 @@ def get_service_user(service_id):
 
 
 @services_bp.route("/<string:email>/service", methods=["GET"])
-@auth.login_required(role=[acces[0], acces[1], acces[8], acces[0]])
+@auth.login_required(role=[access[0], access[1], access[8], access[0]])
 def get_user_services(email):
     """
     This method returns a user services. It doesn't require privileges
@@ -102,7 +102,7 @@ def get_user_services(email):
 
 
 @services_bp.route("", methods=["POST"])
-@auth.login_required(role=[acces[1], acces[8], acces[9]])
+@auth.login_required(role=[access[1], access[8], access[9]])
 def create_service():
     """
     This method creates a new service. Requires a token of a user to do the post.
@@ -117,7 +117,7 @@ def create_service():
 
 
 @services_bp.route("/<int:service_id>", methods=["PUT", "DELETE"])
-@auth.login_required(role=[acces[1], acces[8], acces[9]])
+@auth.login_required(role=[access[1], access[8], access[9]])
 def interact_service(service_id):
     """
     Method used to delete or modify services. Requires a token. The token
@@ -130,7 +130,7 @@ def interact_service(service_id):
     if not service:
         raise NotFound
 
-    if service.user_email != g.user.email and g.user.acces < 8:
+    if service.user_email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to modify other resources.")
 
     elif request.method == "DELETE":

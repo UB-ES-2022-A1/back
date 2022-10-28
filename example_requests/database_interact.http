@@ -27,6 +27,7 @@ GET localhost:5000/services/email2/service
 
 ### GET concrete user
 GET localhost:5000/users/email1@gmail.com
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2NjcwMTQwMzF9.AeUqg7PaHtNpf9rFBQDsqriDm2CM3PKzaukXbrxigqo loquesea
 
 ### POST an LOGIN ---> After this all the following requests needs login(token)
 POST localhost:5000/login
@@ -48,7 +49,7 @@ Content-Type: application/json
 
 ### POST a service
 POST http://localhost:5000/services
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzMkBlbWFpbC5jb20iLCJleHAiOjE2NjY5NjA4ODh9.l2wcdYrRfKzmgrxHvE4bjYgnQUHeCW8VkHcpV0b56_o loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsMUBnbWFpbC5jb20iLCJleHAiOjE2NjcwMTM3Nzh9.eyPwTIhhztWOcsnE03UU_mYmRC20YIWaYHBO2PsfceI loquesea
 Content-Type: application/json
 
 {

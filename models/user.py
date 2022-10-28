@@ -5,7 +5,7 @@ from flask import g, current_app
 from flask_httpauth import HTTPBasicAuth
 from jwt import encode, decode, ExpiredSignatureError, InvalidSignatureError
 from passlib.apps import custom_app_context as pwd_context
-from utils.privilegies import acces
+from utils.privilegies import access
 
 auth = HTTPBasicAuth()
 
@@ -16,7 +16,7 @@ class User(db.Model):
     email = db.Column(db.Text, primary_key=True)
     pwd = db.Column(db.Text, nullable=False)
     name = db.Column(db.Text, nullable=False)
-    acces = db.Column(db.Integer, nullable=False, default=1)
+    access = db.Column(db.Integer, nullable=False, default=1)
     # Campos opcionales
     phone = db.Column(db.Integer, nullable=True)
     birthday = db.Column(db.Date, nullable=True)
@@ -111,10 +111,10 @@ def verify_password(token, password):
     :param password: not used
     :return: the user itself
     """
-    # When there is no credentials a visitor acces is given.
+    # When there is no credentials a visitor access is given.
     if len(token) == 0:
         u = User()
-        u.acces = 0
+        u.access = 0
         g.user = u
         return u
 
@@ -129,8 +129,8 @@ def verify_password(token, password):
 @auth.get_user_roles
 def get_user_roles(user):
     """
-    This method return the user acces level.
-    :return: acces level label
+    This method return the user access level.
+    :return: access level label
     """
-    return acces[user.acces]
+    return access[user.access]
 
