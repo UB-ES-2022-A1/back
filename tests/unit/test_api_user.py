@@ -197,9 +197,9 @@ def test_user_post_wrong_fields(client):
 
 def test_post_bad_privilege_user(client):
     # only required
-    user1_dict = {'email': 'pepito@gmail.com', 'pwd': '12345678', 'name': 'Pepito', 'acces': 9}
+    user1_dict = {'email': 'pepito@gmail.com', 'pwd': '12345678', 'name': 'Pepito', 'access': 9}
     r = client.post("users", json=user1_dict)
-    assert r.status_code == 401
+    assert r.status_code == 403
 
 
 def test_delete_user(client):
@@ -213,16 +213,16 @@ def test_delete_user(client):
     pwd2 = 'qqweas'
 
     # Post of the users.
-    user1_dict = {'email': email1, 'pwd': pwd1, 'name': 'Pepito1', 'acces': 1}
+    user1_dict = {'email': email1, 'pwd': pwd1, 'name': 'Pepito1', 'access': 1}
     r = client.post("users", json=user1_dict)
     assert r.status_code == 201
-    user2_dict = {'email': email2, 'pwd': pwd2, 'name': 'Pepito2', 'acces': 1}
+    user2_dict = {'email': email2, 'pwd': pwd2, 'name': 'Pepito2', 'access': 1}
     r = client.post("users", json=user2_dict)
     assert r.status_code == 201
 
     # A user only can delete itself
     r = request_with_login(login=client.post, request=client.delete, url="users/"+email1, json={}, email=email2, pwd=pwd2)
-    assert r.status_code == 401
+    assert r.status_code == 403
     r = request_with_login(login=client.post, request=client.delete, url="users/"+email1, json={}, email=email1, pwd=pwd1)
     assert r.status_code == 200
 
@@ -238,14 +238,80 @@ def test_admin_delete_user(client):
     pwd_a = 'qqweas'
 
     # We can create by this way a max admin user
-    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", acces=9)
+    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9)
     user_a.save_to_db()
 
     # Post of the user
-    user_dict = {'email': email_u, 'pwd': pwd_u, 'name': 'Pepito1', 'acces': 1}
+    user_dict = {'email': email_u, 'pwd': pwd_u, 'name': 'Pepito1', 'access': 1}
     r = client.post("users", json=user_dict)
     assert r.status_code == 201
 
     # Then we can do the request with admin privileges.
     r = request_with_login(login=client.post, request=client.delete, url="users/"+email_u, json={}, email=email_a, pwd=pwd_a)
     assert r.status_code == 200
+
+
+def test_admin_privileges_user(client):
+    """
+    This method tests the correct privilege modification
+    :param client: used for requests.
+    """
+    email_u = 'pepito1@gmail.com'
+    email_a = 'admin@gmail.com'
+    pwd_u = '12345678'
+    pwd_a = 'qqweas'
+
+    # We can create by this way a max admin user
+    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9)
+    user_a.save_to_db()
+
+    # Post of the user
+    user_dict = {'email': email_u, 'pwd': pwd_u, 'name': 'Pepito1', 'access': 1}
+    r = client.post("users", json=user_dict)
+    assert r.status_code == 201
+
+    # Normal user can't modify privileges.
+    r = request_with_login(login=client.post, request=client.put, url="users/"+email_u+"/privileges/5", json={}, email=email_u, pwd=pwd_u)
+    assert r.status_code == 403
+
+    # MaxAdmin can modify privileges.
+    r = request_with_login(login=client.post, request=client.put, url="users/"+email_u+"/privileges/5", json={}, email=email_a, pwd=pwd_a)
+    assert r.status_code == 200
+
+    # Bad privilege assignation
+    r = request_with_login(login=client.post, request=client.put, url="users/"+email_u+"/privileges/21", json={}, email=email_a, pwd=pwd_a)
+    assert r.status_code == 400
+
+
+def test_admin_display_privilege(client):
+    """
+    This method checks whether admin sees the access and the normal users not
+    :param client: used for requests.
+    """
+
+    email_a = 'admin@gmail.com'
+    pwd_a = 'qqweas'
+    email1 = 'pepito1@gmail.com'
+    email2 = 'pepito2@gmail.com'
+    pwd1 = '12345678'
+    pwd2 = 'qqweas'
+
+    # Post of the users.
+    user1_dict = {'email': email1, 'pwd': pwd1, 'name': 'Pepito1', 'access': 1}
+    r = client.post("users", json=user1_dict)
+    assert r.status_code == 201
+    user2_dict = {'email': email2, 'pwd': pwd2, 'name': 'Pepito2', 'access': 1}
+    r = client.post("users", json=user2_dict)
+    assert r.status_code == 201
+
+    # We can create by this way a max admin user
+    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9)
+    user_a.save_to_db()
+
+    # Admin can see the access privileges of the user
+    r = request_with_login(login=client.post, request=client.get, url="users/"+email1, json={}, email=email_a, pwd=pwd_a)
+    assert "access" in r.get_json()
+
+    # Normal user cannot see the privileges
+    r = request_with_login(login=client.post, request=client.get, url="users/"+email1, json={}, email=email1, pwd=pwd1)
+    assert "access" not in r.get_json()

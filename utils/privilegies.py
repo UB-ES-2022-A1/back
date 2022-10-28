@@ -1,1 +1,1 @@
-acces = ["visitant","user","nan","nan","nan","nan","nan","nan","admin","admin_max"]
+access = ["visitant", "user", "nan", "nan", "nan", "nan", "nan", "nan", "admin", "admin_max"]

@@ -26,20 +26,30 @@ GET localhost:5000/services/5/user
 GET localhost:5000/services/email2/service
 
 ### GET concrete user
-GET localhost:5000/users/email1223
+GET localhost:5000/users/email1@gmail.com
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2NjcwMTQwMzF9.AeUqg7PaHtNpf9rFBQDsqriDm2CM3PKzaukXbrxigqo loquesea
 
 ### POST an LOGIN ---> After this all the following requests needs login(token)
 POST localhost:5000/login
 Content-Type: application/json
 
 {
-  "email": "us35@email.com",
-  "pwd": "123456"
+  "email": "email1@gmail.com",
+  "pwd": "password"
+}
+
+### POST an admin LOGIN ---> After this all the following requests needs login(token)
+POST localhost:5000/login
+Content-Type: application/json
+
+{
+  "email": "madmin@gmail.com",
+  "pwd": "password"
 }
 
 ### POST a service
 POST http://localhost:5000/services
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzMkBlbWFpbC5jb20iLCJleHAiOjE2NjY5NjA4ODh9.l2wcdYrRfKzmgrxHvE4bjYgnQUHeCW8VkHcpV0b56_o loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsMUBnbWFpbC5jb20iLCJleHAiOjE2NjcwMTM3Nzh9.eyPwTIhhztWOcsnE03UU_mYmRC20YIWaYHBO2PsfceI loquesea
 Content-Type: application/json
 
 {
@@ -65,5 +75,8 @@ DELETE localhost:5000/services/4
 DELETE localhost:5000/users/us2@email.com
 Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzNUBlbWFpbC5jb20iLCJleHAiOjE2NjY5Njc3MzJ9.MmEjGuHsvFUkpiHtnrlJawt7M6S-GHz376kvIeZVOFs loquesea
 
+### PUT update privileges of a user
+PUT localhost:5000/users/email1@gmail.com/privileges/7
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzNUBlbWFpbC5jb20iLCJleHAiOjE2NjY5Njc3MzJ9.MmEjGuHsvFUkpiHtnrlJawt7M6S-GHz376kvIeZVOFs loquesea
 
 

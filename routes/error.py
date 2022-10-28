@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify
 from marshmallow import ValidationError
 from werkzeug.exceptions import NotFound, Conflict
 from sqlalchemy.exc import IntegrityError
-from utils.custom_exceptions import PrivilegeException
+from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege
 
 error_bp = Blueprint("errors", __name__)
 
@@ -31,10 +31,18 @@ def handle_integrity_exception(err):
     return jsonify({"message": "Duplicated instance found, change one of the following atributs: " + atributes}), 409
 
 
-# Error de integridad de la base de datos
+# Error de privilegios
 @error_bp.app_errorhandler(PrivilegeException)
 def handle_privilege_exception(err):
-    return jsonify({"message": str(err)}), 401
+    return jsonify({"message": str(err)}), 403
+
+
+# Error al dar privilegios no acceptados.
+@error_bp.app_errorhandler(NotAcceptedPrivilege)
+def handle_not_accepted_privilege_exception(err):
+    return jsonify({"message": str(err)}), 400
+
+    return jsonify(user_schema_profile.dump(usr, many=False)), 200
 
 
 # Error genérico. Poner excepciones más concretas por encima de esta.
