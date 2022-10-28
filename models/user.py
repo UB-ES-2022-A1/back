@@ -115,6 +115,7 @@ def verify_password(token, password):
     if len(token) == 0:
         u = User()
         u.acces = 0
+        g.user = u
         return u
 
     try:

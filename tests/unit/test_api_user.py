@@ -1,6 +1,6 @@
+import base64
 from init_app import init_app
 import pytest
-from flask_httpauth import HTTPBasicAuth
 
 app, db = init_app("sqlite:///data_test.db")
 
@@ -111,7 +111,7 @@ def test_user_post_missing_fields(client):
     assert r.status_code == 400
     j = r.get_json()
     assert j['message'] == 'Datos incorrectos'
-    j['campos']['pwd'] == ['Missing data for required field.']
+    assert j['campos']['pwd'] == ['Missing data for required field.']
     assert 'email' not in j['campos']
     assert 'name' not in j['campos']
     assert 'phone' not in j['campos']
@@ -219,13 +219,11 @@ def test_delete_user(client):
     r = client.post("login", json=login2_dict)
     token2 = r.get_json()['token']
 
-    res1 = "Basic " + token1 + " contra"
-    res2 = "Basic " + token2 + " contra"
+    credentials_1 = base64.b64encode((token1 + ":contra").encode()).decode('utf-8')
+    credentials_2 = base64.b64encode((token2 + ":contra").encode()).decode('utf-8')
 
-    r = client.delete("users/pepito1@gmail.com", json={}, headers={"Authorization": res2})
+    r = client.delete("users/pepito1@gmail.com", headers={"Authorization": "Basic {}".format(credentials_2)})
     assert r.status_code == 401
 
-    r = client.delete("users/pepito1@gmail.com", json={}, headers={"Authorization": res1})
+    r = client.delete("users/pepito1@gmail.com", headers={"Authorization": "Basic {}".format(credentials_1)})
     assert r.status_code == 200
-
-
