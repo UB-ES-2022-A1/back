@@ -44,6 +44,7 @@ def handle_not_accepted_privilege_exception(err):
 
     return jsonify(user_schema_profile.dump(usr, many=False)), 200
 
+
 # Error genérico. Poner excepciones más concretas por encima de esta.
 @error_bp.app_errorhandler(Exception)
 def handle_generic_exception(err):

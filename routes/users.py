@@ -65,6 +65,7 @@ user_schema_create = UserSchema()
 user_schema_profile = UserSchema(exclude=['pwd', 'access'])
 user_schema_profile_adm = UserSchema(exclude=['pwd'])
 
+
 @users_bp.route("", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
 def get_all_users():
@@ -88,7 +89,7 @@ def get_user(email):
     if not usr:
         raise NotFound
     if g.user.access == 9 or g.user.access == 8:
-        return jsonify(user_schema_profile_adm.dump(usr, many=False)), 200
+        return jsonify(user_schema_profile_adm.dump(usr, many=False)), 200  # Mostramos los accesos de privilegio a los administradores
     return jsonify(user_schema_profile.dump(usr, many=False)), 200
 
 
