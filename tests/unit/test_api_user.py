@@ -1,3 +1,5 @@
+from models.user import User
+from utils.secure_request import  request_with_login
 from init_app import init_app
 import pytest
 
@@ -10,6 +12,7 @@ def client():
         db.drop_all()
         db.create_all()
         db.session.commit()
+
         yield app.test_client()
 
 
@@ -110,7 +113,7 @@ def test_user_post_missing_fields(client):
     assert r.status_code == 400
     j = r.get_json()
     assert j['message'] == 'Datos incorrectos'
-    j['campos']['pwd'] == ['Missing data for required field.']
+    assert j['campos']['pwd'] == ['Missing data for required field.']
     assert 'email' not in j['campos']
     assert 'name' not in j['campos']
     assert 'phone' not in j['campos']
@@ -190,3 +193,59 @@ def test_user_post_wrong_fields(client):
     r = client.get("users")
     assert r.status_code == 200
     assert len(r.get_json()) == 0
+
+
+def test_post_bad_privilege_user(client):
+    # only required
+    user1_dict = {'email': 'pepito@gmail.com', 'pwd': '12345678', 'name': 'Pepito', 'acces': 9}
+    r = client.post("users", json=user1_dict)
+    assert r.status_code == 401
+
+
+def test_delete_user(client):
+    """
+    This method tests if a user can delete itself and not other users
+    :param client: used for requests.
+    """
+    email1 = 'pepito1@gmail.com'
+    email2 = 'pepito2@gmail.com'
+    pwd1 = '12345678'
+    pwd2 = 'qqweas'
+
+    # Post of the users.
+    user1_dict = {'email': email1, 'pwd': pwd1, 'name': 'Pepito1', 'acces': 1}
+    r = client.post("users", json=user1_dict)
+    assert r.status_code == 201
+    user2_dict = {'email': email2, 'pwd': pwd2, 'name': 'Pepito2', 'acces': 1}
+    r = client.post("users", json=user2_dict)
+    assert r.status_code == 201
+
+    # A user only can delete itself
+    r = request_with_login(login=client.post, request=client.delete, url="users/"+email1, json={}, email=email2, pwd=pwd2)
+    assert r.status_code == 401
+    r = request_with_login(login=client.post, request=client.delete, url="users/"+email1, json={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+
+
+def test_admin_delete_user(client):
+    """
+    This method checks if an admin can delete a user
+    :param client: used for requests.
+    """
+    email_u = 'pepito1@gmail.com'
+    email_a = 'admin@gmail.com'
+    pwd_u = '12345678'
+    pwd_a = 'qqweas'
+
+    # We can create by this way a max admin user
+    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", acces=9)
+    user_a.save_to_db()
+
+    # Post of the user
+    user_dict = {'email': email_u, 'pwd': pwd_u, 'name': 'Pepito1', 'acces': 1}
+    r = client.post("users", json=user_dict)
+    assert r.status_code == 201
+
+    # Then we can do the request with admin privileges.
+    r = request_with_login(login=client.post, request=client.delete, url="users/"+email_u, json={}, email=email_a, pwd=pwd_a)
+    assert r.status_code == 200
