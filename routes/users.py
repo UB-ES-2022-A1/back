@@ -3,7 +3,7 @@ from marshmallow import validates, ValidationError, validate
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound, Conflict
 from database import db
-from utils.custom_exceptions import PrivilegeException
+from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege
 from models.user import User
 from models.user import auth
 from utils.privilegies import acces
@@ -89,6 +89,7 @@ def get_user(email):
         raise NotFound
     return jsonify(user_schema_profile.dump(usr, many=False)), 200
 
+
 @users_bp.route("/<string:email>", methods=["DELETE"])
 @auth.login_required(role=[acces[1], acces[8], acces[9]])
 def delete_user(email):
@@ -108,7 +109,6 @@ def delete_user(email):
     return Response("Se ha eliminado correctamente el usuario con identificador: " + str(email), status=200)
 
 
-
 @users_bp.route("", methods=["POST"])
 @auth.login_required(role=[acces[0], acces[1], acces[8], acces[9]])
 def create_user():
@@ -125,3 +125,24 @@ def create_user():
     new_user.pwd = User.hash_password(new_user.pwd)
     new_user.save_to_db()
     return jsonify(user_schema_profile.dump(new_user, many=False)), 201
+
+
+@users_bp.route("/<string:email>/privileges/<int:privilege>", methods=["PUT"])
+@auth.login_required(role=[acces[9]])
+def changes_privileges(email, privilege):
+    """
+    This method changes the access privileges of a user
+    :param email: the email address of the user whose privileges will change
+    :param privilege: the privilege that is going to be assigned
+    :return: Response
+    """
+    usr = User.query.get(email)
+    if not usr:
+        raise NotFound
+
+    if privilege > 8 or privilege < 0:
+        raise NotAcceptedPrivilege("No se puede dar este nivel de privilegio.")
+    usr.acces = privilege
+    usr.save_to_db()
+
+    return jsonify("Privilegios modificados correctamente"), 200
