@@ -18,6 +18,9 @@ login_schema = LoginSchema()
 
 @login_bp.route("", methods=["POST"])
 def login():
+    """
+    This method logs the user in returning a token.
+    """
     data = login_schema.load(request.json)
     user = User.get_by_id(data['email'])
     if not user:

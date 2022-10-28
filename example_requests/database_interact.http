@@ -33,7 +33,7 @@ POST localhost:5000/login
 Content-Type: application/json
 
 {
-  "email": "us5@email.com",
+  "email": "us35@email.com",
   "pwd": "123456"
 }
 

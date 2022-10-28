@@ -49,10 +49,10 @@ class UserSchema(SQLAlchemyAutoSchema):
         validator = validate.Email()
         return validator(value)
 
-    # TODO remove para crear el admin maximo. Se quita esta función se crea el admin y se vuelve a añadir la función.
+    # TODO remove para crear el admin maximo. Se quita esta función se crea el admin y se vuelve a añadir la función. También se puede hacer atentando contra la base de datos.
     @validates("acces")
     def validates_acces(self, value):
-        if value > 5:
+        if value > 1:
             raise PrivilegeException("No se pude crear un usuario con estos privilegios.")
 
 
@@ -76,7 +76,7 @@ def get_all_users():
     return jsonify(user_schema_repr.dump(all_users, many=True)), 200
 
 
-@users_bp.route("/<string:email>", methods=["GET", "DELETE"])
+@users_bp.route("/<string:email>", methods=["GET"])
 @auth.login_required(role=[acces[0], acces[1], acces[8], acces[9]])
 def get_user(email):
     """
@@ -87,14 +87,26 @@ def get_user(email):
     usr = User.query.get(email)
     if not usr:
         raise NotFound
-    if request.method == "DELETE":
-        # If there is no privilege we can't do this action.
-        if email != g.user.email and g.user.acces < 8:
-            raise PrivilegeException("Not enough privileges to modify other resources.")
-        usr.delete_from_db()
-        return Response("Se ha eliminado correctamente el usuario con identificador: " + str(email), status=200)
-
     return jsonify(user_schema_repr.dump(usr, many=False)), 200
+
+@users_bp.route("/<string:email>", methods=["DELETE"])
+@auth.login_required(role=[acces[1], acces[8], acces[9]])
+def delete_user(email):
+    """
+    This method deletes a user given an email
+    :param email: the mail of the user that we are searching the information
+    :return: Response with the user
+    """
+    usr = User.query.get(email)
+    if not usr:
+        raise NotFound
+
+    # If there is no privilege we can't do this action.
+    if email != g.user.email and g.user.acces < 8:
+        raise PrivilegeException("Not enough privileges to modify other resources.")
+    usr.delete_from_db()
+    return Response("Se ha eliminado correctamente el usuario con identificador: " + str(email), status=200)
+
 
 
 @users_bp.route("", methods=["POST"])
