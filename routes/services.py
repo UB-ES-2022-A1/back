@@ -138,6 +138,7 @@ def interact_service(service_id):
         return Response("Se ha eliminado correctamente el servicio con identificador: " + str(service_id), status=200)
 
     elif request.method == "PUT":
+        # All this code is to be able to use all the checks of the marshmallow schema.
         info = request.json
         iterator = iter(service.__dict__.items())
         next(iterator)  # Metadata
