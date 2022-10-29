@@ -4,6 +4,14 @@ GET localhost:5000/users
 ### GET all services
 GET localhost:5000/services
 
+### search services
+GET localhost:5000/services
+Content-Type: application/json
+
+{
+  "search_text": "program cheese"
+}
+
 ### POST an user
 POST localhost:5000/users
 Content-Type: application/json

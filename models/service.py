@@ -1,5 +1,5 @@
 from database import db
-from models.search import SearchCoincidende, SearchTerm
+from models.search import SearchCoincidende
 
 
 class Service(db.Model):
@@ -24,7 +24,7 @@ class Service(db.Model):
         """
         db.session.add(self)
         db.session.commit()
-        SearchTerm.put_service(self)
+        SearchCoincidende.put_service(self)
 
     def delete_from_db(self):
         """

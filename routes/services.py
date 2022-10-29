@@ -1,3 +1,4 @@
+from collections import defaultdict
 from flask import Blueprint, jsonify, request, Response
 from marshmallow import validates, ValidationError
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
@@ -5,6 +6,7 @@ from werkzeug.exceptions import NotFound
 from database import db
 from sqlalchemy.orm.util import has_identity
 from models.service import Service
+from models.search import SearchCoincidende
 from models.user import auth
 from routes.users import get_user
 from flask import g
@@ -44,7 +46,7 @@ class ServiceSchema(SQLAlchemyAutoSchema):
 
 
 # Para crear servicio
-service_schema_all = ServiceSchema()
+service_schema_all = ServiceSchema(exclude=['search_coincidences'])
 
 
 @services_bp.route("", methods=["GET"])
@@ -54,12 +56,28 @@ def get_many_services():
     This method returns a list of services. It doesn't require privileges.
     :return: Response with all the services
     """
-    all_services = Service.get_all()
+
+    if not request.headers.get('content-type') == 'application/json':
+
+        all_services = Service.get_all()
+        return jsonify(service_schema_all.dump(all_services, many=True)), 200
 
     info = request.json
 
     if 'search_text' in info:
-        pass
+
+        scores = defaultdict(float)
+
+        for coincidences_word in SearchCoincidende.search_text(info['search_text']):
+            for coincidence in coincidences_word:
+
+                count = int.from_bytes(coincidence.count, "little")
+                scores[coincidence.service] += 1 - 0.5 ** count
+
+        all_services = sorted(scores.keys(), key=lambda x: scores[x], reverse=True)
+
+    else:
+        all_services = Service.get_all()
 
     if 'sort' in info:
 
