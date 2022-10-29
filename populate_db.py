@@ -14,6 +14,7 @@ def populate(db):
             for j in range(2, i // 2):
                 serviceT = Service(title="title_" + str(i) + "_" + str(j), user=user, description="description",
                                    price=i + j)
+                serviceT.save_to_db()
 
     db.session.commit()
     try:
