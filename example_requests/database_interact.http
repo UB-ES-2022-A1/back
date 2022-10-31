@@ -9,7 +9,11 @@ GET localhost:5000/services
 Content-Type: application/json
 
 {
-  "search_text": "program cheese"
+  "search_text": "cheese",
+  "sort": {
+    "by": "price",
+    "reverse": false
+  }
 }
 
 ### POST an user

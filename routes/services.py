@@ -1,4 +1,6 @@
 from collections import defaultdict
+from math import log
+
 from flask import Blueprint, jsonify, request, Response
 from marshmallow import validates, ValidationError
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
@@ -6,7 +8,7 @@ from werkzeug.exceptions import NotFound
 from database import db
 from sqlalchemy.orm.util import has_identity
 from models.service import Service
-from models.search import SearchCoincidende
+from models.search import term_frequency
 from models.user import auth
 from routes.users import get_user
 from flask import g
@@ -58,7 +60,6 @@ def get_many_services():
     """
 
     if not request.headers.get('content-type') == 'application/json':
-
         all_services = Service.get_all()
         return jsonify(service_schema_all.dump(all_services, many=True)), 200
 
@@ -68,13 +69,39 @@ def get_many_services():
 
         scores = defaultdict(float)
 
-        for coincidences_word in SearchCoincidende.search_text(info['search_text']):
-            for coincidence in coincidences_word:
+        total_documents = Service.get_count()
+        coincidences = term_frequency.search_text(info['search_text'])
 
-                count = int.from_bytes(coincidence.count, "little")
-                scores[coincidence.service] += 1 - 0.5 ** count
+        for coincidences_word in coincidences:
 
-        all_services = sorted(scores.keys(), key=lambda x: scores[x], reverse=True)
+            if len(coincidences_word) > 0:
+
+                idf = log(1 + total_documents / len(coincidences_word))
+                for coincidence in coincidences_word:
+
+                    if 'sort' in info:
+                        scores[coincidence.service] += idf
+                    else:
+                        count = int.from_bytes(coincidence.count, "little")
+                        tf = log(1 + count / (len(coincidence.service.description) + len(coincidence.service.title)))
+                        scores[coincidence.service] += tf * idf
+
+        all_scored = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+
+        if 'sort' in info:
+
+            if len(all_scored) == 0:
+                return jsonify(service_schema_all.dump([], many=True)), 200
+
+            threshold = 0.9
+            n = 0
+            while n < len(all_scored) and all_scored[n][1] >= all_scored[0][1] * threshold:
+                n += 1
+
+            all_services = [all_scored[i][0] for i in range(n)]
+
+        else:
+            all_services = [scored[0] for scored in all_scored]
 
     else:
         all_services = Service.get_all()
@@ -85,18 +112,27 @@ def get_many_services():
             raise ValidationError('Specify what to sort by!')
 
         if info['sort']['by'] == 'price':
-            pass
+            def reverse_criterion(s: Service):
+                return s.price
+
         elif info['sort']['by'] == 'rating':
-            pass
+            raise NotImplementedError('This sorting method is not supported!')
+
         elif info['sort']['by'] == 'popularity':
-            pass
+            raise NotImplementedError('This sorting method is not supported!')
         else:
-            raise NotImplementedError('This rating method is not supported!')
+            raise NotImplementedError('This sorting method is not supported!')
 
         if 'reverse' in info['sort']:
-            pass
+            if not info['sort']['reverse'] in [True, False]:
+                raise ValidationError('reverse parameter must be True or False!')
+
+            all_services.sort(key=reverse_criterion, reverse=info['sort']['reverse'])
+
+    """
 
     if 'filters' in info:
+
 
         for filter_name in info['filters']:
 
@@ -110,6 +146,8 @@ def get_many_services():
             if 'max' in info['filters']['filter_name']:
                 max_value = info
                 pass
+                
+    """
 
     return jsonify(service_schema_all.dump(all_services, many=True)), 200
 

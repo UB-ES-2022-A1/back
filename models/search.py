@@ -2,8 +2,8 @@ from database import db
 from sklearn.feature_extraction.text import CountVectorizer
 
 
-class SearchCoincidende(db.Model):
-    __table_name__ = 'search_coincidences'
+class term_frequency(db.Model):
+    __table_name__ = 'term_frequency'
 
     # id = db.Column(db.Integer, primary_key='True')
     word = db.Column(db.Text, nullable=False, primary_key=True)
@@ -36,7 +36,11 @@ class SearchCoincidende(db.Model):
     def search_text(cls, s: str):
         cv = CountVectorizer(stop_words='english')
         cv.fit_transform([s.lower()])
-        return [cls.get_coincidences(word) for word in cv.get_feature_names()]
+        words = cv.get_feature_names()
+        return [cls.get_coincidences(word).all() for word in words]
+
+
+
 
 
 """
