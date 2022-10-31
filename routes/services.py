@@ -2,7 +2,8 @@ from collections import defaultdict
 from math import log
 
 from flask import Blueprint, jsonify, request, Response
-from marshmallow import validates, ValidationError
+from marshmallow import validates
+from werkzeug.exceptions import BadRequest
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound
 from database import db
@@ -44,11 +45,33 @@ class ServiceSchema(SQLAlchemyAutoSchema):
         :return: None. Raises an Exception
         """
         if value < 0:
-            raise ValidationError("Price can't be negative!")
+            raise BadRequest("Price can't be negative!")
 
 
 # Para crear servicio
 service_schema_all = ServiceSchema(exclude=['search_coincidences'])
+
+
+def passes_filters(s, filters):
+
+    for filter_name in filters:
+
+        if filter_name == 'price':
+            filter_quantity = s.price
+        elif filter_name == 'rating':
+            raise BadRequest('filter by rating not implemented yet')
+        else:
+            raise BadRequest('filter ' + filter_name + ' not yet implemented')
+
+        if 'min' in filters[filter_name]:
+            if filter_quantity < filters[filter_name]['min']:
+                return False
+
+        if 'max' in filters[filter_name]:
+            if filter_quantity > filters[filter_name]['max']:
+                return False
+
+    return True
 
 
 @services_bp.route("", methods=["GET"])
@@ -87,6 +110,8 @@ def get_many_services():
                         scores[coincidence.service] += tf * idf
 
         all_scored = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+        if 'filters' in info:
+            all_scored = [scored for scored in all_scored if passes_filters(scored[0], info['filters'])]
 
         if 'sort' in info:
 
@@ -105,11 +130,13 @@ def get_many_services():
 
     else:
         all_services = Service.get_all()
+        if 'filters' in info:
+            all_scored = [s for s in all_services if passes_filters(s, info['filters'])]
 
     if 'sort' in info:
 
         if 'by' not in info['sort']:
-            raise ValidationError('Specify what to sort by!')
+            raise BadRequest('Specify what to sort by!')
 
         if info['sort']['by'] == 'price':
             def reverse_criterion(s: Service):
@@ -125,7 +152,7 @@ def get_many_services():
 
         if 'reverse' in info['sort']:
             if not info['sort']['reverse'] in [True, False]:
-                raise ValidationError('reverse parameter must be True or False!')
+                raise BadRequest('reverse parameter must be True or False!')
 
             all_services.sort(key=reverse_criterion, reverse=info['sort']['reverse'])
 

@@ -1,7 +1,7 @@
 from sqlite3 import IntegrityError
 from flask import Blueprint, jsonify
 from marshmallow import ValidationError
-from werkzeug.exceptions import NotFound, Conflict
+from werkzeug.exceptions import NotFound, Conflict, BadRequest
 from sqlalchemy.exc import IntegrityError
 from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege
 
@@ -24,6 +24,11 @@ def handle_notfound(err):
     return jsonify({"message": err.description}), 404
 
 
+@error_bp.app_errorhandler(BadRequest)
+def handle_notfound(err):
+    return jsonify({"message": err.description}), 400
+
+
 # Error de integridad de la base de datos
 @error_bp.app_errorhandler(IntegrityError)
 def handle_integrity_exception(err):
@@ -44,9 +49,8 @@ def handle_not_accepted_privilege_exception(err):
 
     return jsonify(user_schema_profile.dump(usr, many=False)), 200
 
-"""
+
 # Error genérico. Poner excepciones más concretas por encima de esta.
 @error_bp.app_errorhandler(Exception)
 def handle_generic_exception(err):
     return jsonify({"message": "error: " + str(err)}), 500
-"""
