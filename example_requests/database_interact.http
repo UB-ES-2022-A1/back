@@ -9,15 +9,15 @@ GET localhost:5000/services
 Content-Type: application/json
 
 {
-  "search_text": "computer cheese",
+  "search_text": "cheese",
   "sort": {
-    "by": "price",
-    "reverse": false
+      "by": "price",
+      "reverse": true
   },
-  "filters":{
-    "price": {
-      "min": 50,
-      "max": 200
+  "filters": {
+    "price":{
+      "min": 0,
+      "max": 54
     }
   }
 }

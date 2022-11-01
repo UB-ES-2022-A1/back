@@ -2,7 +2,7 @@ from collections import defaultdict
 from math import log
 
 from flask import Blueprint, jsonify, request, Response
-from marshmallow import validates
+from marshmallow import validates, ValidationError
 from werkzeug.exceptions import BadRequest
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound
@@ -45,35 +45,17 @@ class ServiceSchema(SQLAlchemyAutoSchema):
         :return: None. Raises an Exception
         """
         if value < 0:
-            raise BadRequest("Price can't be negative!")
+            raise ValidationError("Price can't be negative!")
 
 
 # Para crear servicio
 service_schema_all = ServiceSchema(exclude=['search_coincidences'])
 
 
-def passes_filters(s, filters):
-    for filter_name in filters:
+def filter_query(q, filters, coincidence=False):
 
-        if filter_name == 'price':
-            filter_quantity = s.price
-        elif filter_name == 'rating':
-            raise BadRequest('filter by rating not implemented yet')
-        else:
-            raise BadRequest('filter ' + filter_name + ' not yet implemented')
-
-        if 'min' in filters[filter_name]:
-            if filter_quantity < filters[filter_name]['min']:
-                return False
-
-        if 'max' in filters[filter_name]:
-            if filter_quantity > filters[filter_name]['max']:
-                return False
-
-    return True
-
-
-def filter_query(q, filters):
+    if coincidence:
+        q = q.join(Service)
 
     for filter_name in filters:
 
@@ -85,15 +67,16 @@ def filter_query(q, filters):
             raise BadRequest('filter ' + filter_name + ' not yet implemented')
 
         if 'min' in filters[filter_name]:
-            q = q.filter_by(filter_quantity < filters[filter_name]['min'])
+            q = q.filter(filter_quantity >= filters[filter_name]['min'])
 
         if 'max' in filters[filter_name]:
-            q = q.filter_by(filter_quantity < filters[filter_name]['max'])
+            q = q.filter(filter_quantity <= filters[filter_name]['max'])
 
     return q
 
 
 def sort_services(list_to_sort, passed_arguments):
+
     if 'by' not in passed_arguments:
         raise BadRequest('Specify what to sort by!')
 
@@ -112,7 +95,7 @@ def sort_services(list_to_sort, passed_arguments):
     if 'reverse' in passed_arguments:
         reverse = passed_arguments['reverse']
 
-        if not reverse in [True, False]:
+        if reverse not in [True, False]:
             raise BadRequest('reverse parameter must be True or False!')
 
     else:
@@ -121,13 +104,17 @@ def sort_services(list_to_sort, passed_arguments):
     list_to_sort.sort(key=sort_criterion, reverse=reverse)
 
 
-def get_matches_text(search_text, search_order, filters=None, threshold=0.9):
+def get_matches_text(search_text, search_order, filters=(), threshold=0.9):
     scores = defaultdict(float)
 
     total_documents = Service.get_count()
-    coincidences = term_frequency.search_text(search_text)
 
-    for coincidences_word in coincidences:
+    coincidences_queries = term_frequency.search_text(search_text)
+
+    for coincidences_query in coincidences_queries:
+
+        coincidences_query = filter_query(coincidences_query, filters=filters, coincidence=True)
+        coincidences_word = coincidences_query.all()
 
         if len(coincidences_word) > 0:
 
@@ -143,7 +130,6 @@ def get_matches_text(search_text, search_order, filters=None, threshold=0.9):
                     scores[coincidence.service] += idf
 
     all_scored = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-    all_scored = [scored for scored in all_scored if passes_filters(scored[0], filters)]
 
     if not search_order:
 
@@ -154,10 +140,10 @@ def get_matches_text(search_text, search_order, filters=None, threshold=0.9):
         while n < len(all_scored) and all_scored[n][1] >= all_scored[0][1] * threshold:
             n += 1
 
-        all_services = [all_scored[i][0] for i in range(n)]
+        return [scored[0] for scored in all_scored[:n]]
 
     else:
-        all_services = [scored[0] for scored in all_scored]
+        return [scored[0] for scored in all_scored]
 
 
 @services_bp.route("", methods=["GET"])
@@ -174,50 +160,17 @@ def get_many_services():
 
     info = request.json
 
-    if 'search_text' in info:
-
-        scores = defaultdict(float)
-
-        total_documents = Service.get_count()
-        coincidences = term_frequency.search_text(info['search_text'])
-
-        for coincidences_word in coincidences:
-
-            if len(coincidences_word) > 0:
-
-                idf = log(1 + total_documents / len(coincidences_word))
-                for coincidence in coincidences_word:
-
-                    if 'sort' in info:
-                        scores[coincidence.service] += idf
-                    else:
-                        count = int.from_bytes(coincidence.count, "little")
-                        tf = log(1 + count / (len(coincidence.service.description) + len(coincidence.service.title)))
-                        scores[coincidence.service] += tf * idf
-
-        all_scored = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-        if 'filters' in info:
-            all_scored = [scored for scored in all_scored if passes_filters(scored[0], info['filters'])]
-
-        if 'sort' in info:
-
-            if len(all_scored) == 0:
-                return jsonify(service_schema_all.dump([], many=True)), 200
-
-            threshold = 0.9
-            n = 0
-            while n < len(all_scored) and all_scored[n][1] >= all_scored[0][1] * threshold:
-                n += 1
-
-            all_services = [all_scored[i][0] for i in range(n)]
-
-        else:
-            all_services = [scored[0] for scored in all_scored]
-
+    if 'filters' in info:
+        filters = info['filters']
     else:
-        all_services = Service.get_all()
-        if 'filters' in info:
-            all_services = [s for s in all_services if passes_filters(s, info['filters'])]
+        filters = ()
+
+    if 'search_text' in info:
+        all_services = get_matches_text(info['search_text'], search_order='sort' not in info, filters=filters, threshold=0.9)
+    else:
+        services_query = Service.query
+        services_query = filter_query(services_query, filters=filters, coincidence=False)
+        all_services = services_query.all()
 
     if 'sort' in info:
         sort_services(all_services, info['sort'])
