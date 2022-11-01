@@ -9,6 +9,7 @@ from utils.privilegies import access
 
 auth = HTTPBasicAuth()
 
+
 class User(db.Model):
     __tablename__ = "users"
 
@@ -103,6 +104,7 @@ class User(db.Model):
 
         return user
 
+
 @auth.verify_password
 def verify_password(token, password):
     """
@@ -126,6 +128,7 @@ def verify_password(token, password):
         g.user = user
         return user
 
+
 @auth.get_user_roles
 def get_user_roles(user):
     """
@@ -133,4 +136,3 @@ def get_user_roles(user):
     :return: access level label
     """
     return access[user.access]
-

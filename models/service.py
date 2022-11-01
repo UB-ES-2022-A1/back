@@ -1,5 +1,5 @@
-from sqlalchemy.orm import relationship
 from database import db
+from models.search import term_frequency
 
 
 class Service(db.Model):
@@ -13,7 +13,7 @@ class Service(db.Model):
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String, nullable=False)
     price = db.Column(db.Integer, nullable=False, default=0)
-
+    search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
 
     # TODO Añadir campos como foto, fecha, ubicación.
     def save_to_db(self):
@@ -22,6 +22,7 @@ class Service(db.Model):
         """
         db.session.add(self)
         db.session.commit()
+        term_frequency.put_service(self)
 
     def delete_from_db(self):
         """
@@ -46,3 +47,7 @@ class Service(db.Model):
         :return: list with all services
         """
         return cls.query.all()
+
+    @classmethod
+    def get_count(cls):
+        return cls.query.count()
