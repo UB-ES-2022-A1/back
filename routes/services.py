@@ -131,7 +131,7 @@ def get_many_services():
     else:
         all_services = Service.get_all()
         if 'filters' in info:
-            all_scored = [s for s in all_services if passes_filters(s, info['filters'])]
+            all_services = [s for s in all_services if passes_filters(s, info['filters'])]
 
     if 'sort' in info:
 

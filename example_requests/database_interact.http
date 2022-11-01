@@ -15,9 +15,10 @@ Content-Type: application/json
     "reverse": false
   },
   "filters":{
-  "price": {
-    "min": 100
-  }
+    "price": {
+      "min": 50,
+      "max": 200
+    }
   }
 }
 
