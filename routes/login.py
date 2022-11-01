@@ -7,16 +7,20 @@ from marshmallow import ValidationError
 login_bp = Blueprint("login", __name__, url_prefix="/login")
 
 
-class Login_Schema(Schema):
+class LoginSchema(Schema):
     email = fields.Str()
     pwd = fields.Str()
 
 
 # Para crear usuario
-login_schema = Login_Schema()
+login_schema = LoginSchema()
+
 
 @login_bp.route("", methods=["POST"])
 def login():
+    """
+    This method logs the user in returning a token.
+    """
     data = login_schema.load(request.json)
     user = User.get_by_id(data['email'])
     if not user:

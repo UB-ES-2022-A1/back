@@ -1,9 +1,13 @@
 import time
-from database import secret_key
 from database import db
 from models.service import Service
-from passlib.apps import custom_app_context as pwd_context
+from flask import g, current_app
+from flask_httpauth import HTTPBasicAuth
 from jwt import encode, decode, ExpiredSignatureError, InvalidSignatureError
+from passlib.apps import custom_app_context as pwd_context
+from utils.privilegies import access
+
+auth = HTTPBasicAuth()
 
 class User(db.Model):
     __tablename__ = "users"
@@ -12,7 +16,7 @@ class User(db.Model):
     email = db.Column(db.Text, primary_key=True)
     pwd = db.Column(db.Text, nullable=False)
     name = db.Column(db.Text, nullable=False)
-
+    access = db.Column(db.Integer, nullable=False, default=1)
     # Campos opcionales
     phone = db.Column(db.Integer, nullable=True)
     birthday = db.Column(db.Date, nullable=True)
@@ -64,12 +68,12 @@ class User(db.Model):
     def verify_password(self, pwd):
         """
         Verifies if a given password is given correctly
-        :param password: the password that it's going to be validated
+        :param pwd: the password that it's going to be validated
         :return: true if the password matched the hash, else False
         """
         return pwd_context.verify(pwd, self.pwd)
 
-    def generate_auth_token(self, expiration=600):
+    def generate_auth_token(self, expiration=60000):
         """
         This method generates the token used to encode user information
         :param expiration: when the token will expire
@@ -77,19 +81,19 @@ class User(db.Model):
         """
         return encode(
             {"email": self.email, "exp": int(time.time()) + expiration},
-            secret_key,
+            current_app.secret_key,
             algorithm="HS256"
         )
 
     @classmethod
     def verify_auth_token(cls, token):
         """
-        This methods uses the given token to check if it is valid and then return the corresponding user
+        This method uses the given token to check if it is valid and then return the corresponding user
         :param token: token that encodes all the information
         :return: the user corresponding to the token
         """
         try:
-            data = decode(token, secret_key, algorithms=["HS256"])
+            data = decode(token, current_app.secret_key, algorithms=["HS256"])
         except ExpiredSignatureError:
             return None  # expired token
         except InvalidSignatureError:
@@ -98,3 +102,35 @@ class User(db.Model):
         user = cls.query.filter_by(email=data['email']).first()
 
         return user
+
+@auth.verify_password
+def verify_password(token, password):
+    """
+    This method verifies if a token is correct
+    :param token: the token that contain all the information
+    :param password: not used
+    :return: the user itself
+    """
+    # When there is no credentials a visitor access is given.
+    if len(token) == 0:
+        u = User()
+        u.access = 0
+        g.user = u
+        return u
+
+    try:
+        user = User.verify_auth_token(token)
+    except:
+        return False
+    if user:
+        g.user = user
+        return user
+
+@auth.get_user_roles
+def get_user_roles(user):
+    """
+    This method return the user access level.
+    :return: access level label
+    """
+    return access[user.access]
+

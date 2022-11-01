@@ -9,57 +9,74 @@ POST localhost:5000/users
 Content-Type: application/json
 
 {
-  "email": "antonio@b.com",
+  "email": "us5@email.com",
   "pwd": "123456",
   "phone": 123456434,
-  "name": "Pepito"
+  "name": "Jordi",
+  "acces": 1
 }
 
-### POST a service
-POST localhost:5000/services
+### GET concrete service
+GET localhost:5000/services/10
+
+### GET service's creator
+GET localhost:5000/services/5/user
+
+### GET user's services
+GET localhost:5000/services/email2/service
+
+### GET concrete user
+GET localhost:5000/users/email1@gmail.com
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2NjcwMTQwMzF9.AeUqg7PaHtNpf9rFBQDsqriDm2CM3PKzaukXbrxigqo loquesea
+
+### POST an LOGIN ---> After this all the following requests needs login(token)
+POST localhost:5000/login
 Content-Type: application/json
 
 {
-  "user": "email4",
-  "title": "titulo5",
+  "email": "email1@gmail.com",
+  "pwd": "password"
+}
+
+### POST an admin LOGIN ---> After this all the following requests needs login(token)
+POST localhost:5000/login
+Content-Type: application/json
+
+{
+  "email": "madmin@gmail.com",
+  "pwd": "password"
+}
+
+### POST a service
+POST http://localhost:5000/services
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsMUBnbWFpbC5jb20iLCJleHAiOjE2NjcwMTM3Nzh9.eyPwTIhhztWOcsnE03UU_mYmRC20YIWaYHBO2PsfceI loquesea
+Content-Type: application/json
+
+{
+  "title": "titulo6",
   "description": "descripcion",
   "price" : 0
 }
 
 ### PUT a service
-PUT localhost:5000/services/3
+PUT localhost:5000/services/10
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzNUBlbWFpbC5jb20iLCJleHAiOjE2NjY5NjU4NDR9.BZWScf1fn4pV3ztRuR6aXy3yQzEr4OvGtWqy-jh8LUM loquesea
 Content-Type: application/json
 
 {
-  "title": "titulo6",
-  "price" : -100
+  "title": "titulo7",
+  "price": 600
 }
-
-### GET concrete services
-GET localhost:5000/services/1
 
 ### DELETE concrete services
 DELETE localhost:5000/services/4
 
-### GET service creator
-GET localhost:5000/services/5/user
-
-### GET user services
-GET localhost:5000/services/email2/ownservices
-
-### GET concrete user
-GET localhost:5000/users/email1223
-
 ### DELETE concrete user
-DELETE localhost:5000/users/email1
+DELETE localhost:5000/users/us2@email.com
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzNUBlbWFpbC5jb20iLCJleHAiOjE2NjY5Njc3MzJ9.MmEjGuHsvFUkpiHtnrlJawt7M6S-GHz376kvIeZVOFs loquesea
 
-### POST an LOGIN
-POST localhost:5000/login
-Content-Type: application/json
-
-{
-  "email": "antonio@b.com",
-  "pwd": "123456"
-}
+### PUT update privileges of a user
+PUT localhost:5000/users/email1@gmail.com/privileges/7
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzNUBlbWFpbC5jb20iLCJleHAiOjE2NjY5Njc3MzJ9.MmEjGuHsvFUkpiHtnrlJawt7M6S-GHz376kvIeZVOFs loquesea
 
 

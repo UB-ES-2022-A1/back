@@ -23,4 +23,3 @@ def test_login_correct_incorrect(client):
     r = client.post("login", json=login_dict)
     assert r.status_code == 200
     assert "token" in r.get_json()
-
