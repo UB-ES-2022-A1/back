@@ -54,7 +54,7 @@ service_schema_all = ServiceSchema(exclude=['search_coincidences'])
 
 def filter_query(q, filters, coincidence=False):
     if coincidence:
-        q = q.join(Service)
+        q = q.join(Service, aliased=True)
 
     for filter_name in filters:
 
@@ -132,7 +132,7 @@ def sort_services(list_to_sort, passed_arguments):
     list_to_sort.sort(key=sort_criterion, reverse=reverse)
 
 
-def get_matches_text(search_text, search_order, filters=(), threshold=0.9):
+def get_matches_text(search_text, search_order, filters=(), threshold=0.9, user_email=None):
     scores = defaultdict(float)
 
     total_documents = Service.get_count()
@@ -140,7 +140,8 @@ def get_matches_text(search_text, search_order, filters=(), threshold=0.9):
     coincidences_queries = term_frequency.search_text(search_text)
 
     for coincidences_query in coincidences_queries:
-
+        if user_email is not None:
+            coincidences_query = coincidences_query.join(Service, aliased=True).filter_by(user_email=user_email)
         coincidences_query = filter_query(coincidences_query, filters=filters, coincidence=True)
         coincidences_word = coincidences_query.all()
 
@@ -176,7 +177,7 @@ def get_matches_text(search_text, search_order, filters=(), threshold=0.9):
 
 @services_bp.route("", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
-def get_many_services(user=None):
+def get_many_services(user_email=None):
     """
     This method returns a list of services. It doesn't require privileges.
     :return: Response with all the services
@@ -195,11 +196,13 @@ def get_many_services(user=None):
 
     if 'search_text' in info:
         all_services = get_matches_text(info['search_text'], search_order='sort' not in info, filters=filters,
-                                        threshold=0.9)
+                                        threshold=0.9, user_email=user_email)
         if 'sort' in info:
             sort_services(all_services, info['sort'])
     else:
         services_query = Service.query
+        if user_email is not None:
+            services_query = services_query.filter_by(user_email=user_email)
         services_query = filter_query(services_query, filters=filters, coincidence=False)
         if 'sort' in info:
             services_query = sort_query_services(services_query, info['sort'])
@@ -247,8 +250,7 @@ def get_user_services(email):
     :param email: the user mail that we want to obtain services
     :return: Response
     """
-    services = Service.query.filter_by(user_email=email)
-    return jsonify(service_schema_all.dump(services, many=True)), 200
+    return get_many_services(user_email=email)
 
 
 @services_bp.route("", methods=["POST"])
