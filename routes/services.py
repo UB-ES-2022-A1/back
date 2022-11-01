@@ -53,7 +53,6 @@ service_schema_all = ServiceSchema(exclude=['search_coincidences'])
 
 
 def passes_filters(s, filters):
-
     for filter_name in filters:
 
         if filter_name == 'price':
@@ -72,6 +71,93 @@ def passes_filters(s, filters):
                 return False
 
     return True
+
+
+def filter_query(q, filters):
+
+    for filter_name in filters:
+
+        if filter_name == 'price':
+            filter_quantity = Service.price
+        elif filter_name == 'rating':
+            raise BadRequest('filter by rating not implemented yet')
+        else:
+            raise BadRequest('filter ' + filter_name + ' not yet implemented')
+
+        if 'min' in filters[filter_name]:
+            q = q.filter_by(filter_quantity < filters[filter_name]['min'])
+
+        if 'max' in filters[filter_name]:
+            q = q.filter_by(filter_quantity < filters[filter_name]['max'])
+
+    return q
+
+
+def sort_services(list_to_sort, passed_arguments):
+    if 'by' not in passed_arguments:
+        raise BadRequest('Specify what to sort by!')
+
+    if passed_arguments['by'] == 'price':
+        def sort_criterion(s: Service):
+            return s.price
+
+    elif passed_arguments['by'] == 'rating':
+        raise NotImplementedError('This sorting method is not supported!')
+
+    elif passed_arguments['by'] == 'popularity':
+        raise NotImplementedError('This sorting method is not supported!')
+    else:
+        raise NotImplementedError('This sorting method is not supported!')
+
+    if 'reverse' in passed_arguments:
+        reverse = passed_arguments['reverse']
+
+        if not reverse in [True, False]:
+            raise BadRequest('reverse parameter must be True or False!')
+
+    else:
+        reverse = False
+
+    list_to_sort.sort(key=sort_criterion, reverse=reverse)
+
+
+def get_matches_text(search_text, search_order, filters=None, threshold=0.9):
+    scores = defaultdict(float)
+
+    total_documents = Service.get_count()
+    coincidences = term_frequency.search_text(search_text)
+
+    for coincidences_word in coincidences:
+
+        if len(coincidences_word) > 0:
+
+            idf = log(1 + total_documents / len(coincidences_word))
+            for coincidence in coincidences_word:
+
+                if search_order:
+                    count = int.from_bytes(coincidence.count, "little")
+                    tf = log(1 + count / (len(coincidence.service.description) + len(coincidence.service.title)))
+                    scores[coincidence.service] += tf * idf
+
+                else:
+                    scores[coincidence.service] += idf
+
+    all_scored = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    all_scored = [scored for scored in all_scored if passes_filters(scored[0], filters)]
+
+    if not search_order:
+
+        if len(all_scored) == 0:
+            return []
+
+        n = 0
+        while n < len(all_scored) and all_scored[n][1] >= all_scored[0][1] * threshold:
+            n += 1
+
+        all_services = [all_scored[i][0] for i in range(n)]
+
+    else:
+        all_services = [scored[0] for scored in all_scored]
 
 
 @services_bp.route("", methods=["GET"])
@@ -134,47 +220,7 @@ def get_many_services():
             all_services = [s for s in all_services if passes_filters(s, info['filters'])]
 
     if 'sort' in info:
-
-        if 'by' not in info['sort']:
-            raise BadRequest('Specify what to sort by!')
-
-        if info['sort']['by'] == 'price':
-            def reverse_criterion(s: Service):
-                return s.price
-
-        elif info['sort']['by'] == 'rating':
-            raise NotImplementedError('This sorting method is not supported!')
-
-        elif info['sort']['by'] == 'popularity':
-            raise NotImplementedError('This sorting method is not supported!')
-        else:
-            raise NotImplementedError('This sorting method is not supported!')
-
-        if 'reverse' in info['sort']:
-            if not info['sort']['reverse'] in [True, False]:
-                raise BadRequest('reverse parameter must be True or False!')
-
-            all_services.sort(key=reverse_criterion, reverse=info['sort']['reverse'])
-
-    """
-
-    if 'filters' in info:
-
-
-        for filter_name in info['filters']:
-
-            if not filter_name in ['price', 'rating']:
-                raise NotImplementedError('This filtering method is not supported!')
-
-            if 'min' in info['filters']['filter_name']:
-                min_value = info
-                pass
-
-            if 'max' in info['filters']['filter_name']:
-                max_value = info
-                pass
-                
-    """
+        sort_services(all_services, info['sort'])
 
     return jsonify(service_schema_all.dump(all_services, many=True)), 200
 
