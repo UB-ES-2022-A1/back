@@ -1,6 +1,6 @@
 from collections import defaultdict
 from math import log
-
+from sqlalchemy import desc
 from flask import Blueprint, jsonify, request, Response
 from marshmallow import validates, ValidationError
 from werkzeug.exceptions import BadRequest
@@ -53,7 +53,6 @@ service_schema_all = ServiceSchema(exclude=['search_coincidences'])
 
 
 def filter_query(q, filters, coincidence=False):
-
     if coincidence:
         q = q.join(Service)
 
@@ -75,8 +74,37 @@ def filter_query(q, filters, coincidence=False):
     return q
 
 
-def sort_services(list_to_sort, passed_arguments):
+def sort_query_services(q, passed_arguments):
+    if 'by' not in passed_arguments:
+        raise BadRequest('Specify what to sort by!')
 
+    if passed_arguments['by'] == 'price':
+        sort_criterion = Service.price
+
+    elif passed_arguments['by'] == 'rating':
+        raise NotImplementedError('This sorting method is not supported!')
+
+    elif passed_arguments['by'] == 'popularity':
+        raise NotImplementedError('This sorting method is not supported!')
+    else:
+        raise NotImplementedError('This sorting method is not supported!')
+
+    if 'reverse' in passed_arguments:
+        reverse = passed_arguments['reverse']
+
+        if reverse not in [True, False]:
+            raise BadRequest('reverse parameter must be True or False!')
+
+    else:
+        reverse = False
+
+    if reverse:
+        return q.order_by(desc(sort_criterion))
+    else:
+        return q.order_by(sort_criterion)
+
+
+def sort_services(list_to_sort, passed_arguments):
     if 'by' not in passed_arguments:
         raise BadRequest('Specify what to sort by!')
 
@@ -148,7 +176,7 @@ def get_matches_text(search_text, search_order, filters=(), threshold=0.9):
 
 @services_bp.route("", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
-def get_many_services():
+def get_many_services(user=None):
     """
     This method returns a list of services. It doesn't require privileges.
     :return: Response with all the services
@@ -166,14 +194,16 @@ def get_many_services():
         filters = ()
 
     if 'search_text' in info:
-        all_services = get_matches_text(info['search_text'], search_order='sort' not in info, filters=filters, threshold=0.9)
+        all_services = get_matches_text(info['search_text'], search_order='sort' not in info, filters=filters,
+                                        threshold=0.9)
+        if 'sort' in info:
+            sort_services(all_services, info['sort'])
     else:
         services_query = Service.query
         services_query = filter_query(services_query, filters=filters, coincidence=False)
+        if 'sort' in info:
+            services_query = sort_query_services(services_query, info['sort'])
         all_services = services_query.all()
-
-    if 'sort' in info:
-        sort_services(all_services, info['sort'])
 
     return jsonify(service_schema_all.dump(all_services, many=True)), 200
 
