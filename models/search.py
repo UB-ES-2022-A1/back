@@ -35,7 +35,10 @@ class term_frequency(db.Model):
     @classmethod
     def search_text(cls, s: str):
         cv = CountVectorizer(stop_words='english')
-        cv.fit_transform([s.lower()])
+        try:
+            cv.fit_transform([s.lower()])
+        except ValueError:
+            return []
         words = cv.get_feature_names()
         return [cls.get_coincidences(word) for word in words]
 
