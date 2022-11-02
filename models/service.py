@@ -14,6 +14,11 @@ class Service(db.Model):
     description = db.Column(db.String, nullable=False)
     price = db.Column(db.Integer, nullable=False, default=0)
     search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
+    #
+    begin = db.Column(db.Time, nullable=True) # time at wich service can begin
+    end = db.Column(db.Time, nullable=True) # time at wich service will stop being available for the day
+    cooldown = db.Column(db.Time, nullable=True) # minimum time after service is given to rest
+    requiresPlace = db.Column(db.Boolean, default=False)
 
     # TODO Añadir campos como foto, fecha, ubicación.
     def save_to_db(self):
