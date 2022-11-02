@@ -129,6 +129,29 @@ def create_user():
     new_user.save_to_db()
     return jsonify(user_schema_profile.dump(new_user, many=False)), 201
 
+@users_bp.route("/<string:email>", methods=["PUT"])
+@auth.login_required(role=[access[1], access[8], access[9]])
+def edit_user(email):
+    usr = User.query.get(email)
+    d = request.json
+    if User.query.get(email) is None:
+        raise Conflict
+    if "email" in d:
+        if User.query.get(d["email"]) is not None:
+            raise Conflict
+        usr.email = d["email"]
+    if "name" in d:
+        usr.name = d["name"]
+
+    # Campos opcionales
+    if "phone" in d:
+        usr.phone = d["phone"]
+    if "birthday" in d:
+        usr.birthday = d["birthday"]
+    if "address" in d:
+        usr.address = d["address"]
+    db.session.commit()
+    return Response("Se ha editado correctamente el usuario con identificador: " + str(email), status=200)
 
 @users_bp.route("/<string:email>/privileges/<int:privilege>", methods=["PUT"])
 @auth.login_required(role=[access[9]])
