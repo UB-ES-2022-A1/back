@@ -1,3 +1,5 @@
+#!/usr/bin/env python3 
+
 from init_app import init_app
 
 # TODO METER A FALSE EN PRODUCCIÓN
