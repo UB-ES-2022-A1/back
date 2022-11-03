@@ -10,4 +10,4 @@ else:
 
 app, _ = init_app(db_url, develop=develop)
 with app.app_context():
-    app.run()
+    app.run(host='0.0.0.0')
