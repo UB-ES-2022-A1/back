@@ -1,10 +1,15 @@
+from collections import defaultdict
+from math import log
+from sqlalchemy import desc
 from flask import Blueprint, jsonify, request, Response
 from marshmallow import validates, ValidationError
+from werkzeug.exceptions import BadRequest
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound
 from database import db
 from sqlalchemy.orm.util import has_identity
 from models.service import Service
+from models.search import term_frequency
 from models.user import auth
 from routes.users import get_user
 from flask import g
@@ -44,17 +49,165 @@ class ServiceSchema(SQLAlchemyAutoSchema):
 
 
 # Para crear servicio
-service_schema_all = ServiceSchema()
+service_schema_all = ServiceSchema(exclude=['search_coincidences'])
+
+
+def filter_query(q, filters, coincidence=False):
+    if coincidence:
+        q = q.join(Service, aliased=True)
+
+    for filter_name in filters:
+
+        if filter_name == 'price':
+            filter_quantity = Service.price
+        elif filter_name == 'rating':
+            raise BadRequest('filter by rating not implemented yet')
+        else:
+            raise BadRequest('filter ' + filter_name + ' not yet implemented')
+
+        if 'min' in filters[filter_name]:
+            q = q.filter(filter_quantity >= filters[filter_name]['min'])
+
+        if 'max' in filters[filter_name]:
+            q = q.filter(filter_quantity <= filters[filter_name]['max'])
+
+    return q
+
+
+def sort_query_services(q, passed_arguments):
+    if 'by' not in passed_arguments:
+        raise BadRequest('Specify what to sort by!')
+
+    if passed_arguments['by'] == 'price':
+        sort_criterion = Service.price
+
+    elif passed_arguments['by'] == 'rating':
+        raise NotImplementedError('This sorting method is not supported!')
+
+    elif passed_arguments['by'] == 'popularity':
+        raise NotImplementedError('This sorting method is not supported!')
+    else:
+        raise NotImplementedError('This sorting method is not supported!')
+
+    if 'reverse' in passed_arguments:
+        reverse = passed_arguments['reverse']
+
+        if reverse not in [True, False]:
+            raise BadRequest('reverse parameter must be True or False!')
+
+    else:
+        reverse = False
+
+    if reverse:
+        return q.order_by(desc(sort_criterion))
+    else:
+        return q.order_by(sort_criterion)
+
+
+def sort_services(list_to_sort, passed_arguments):
+    if 'by' not in passed_arguments:
+        raise BadRequest('Specify what to sort by!')
+
+    if passed_arguments['by'] == 'price':
+        def sort_criterion(s: Service):
+            return s.price
+
+    elif passed_arguments['by'] == 'rating':
+        raise NotImplementedError('This sorting method is not supported!')
+
+    elif passed_arguments['by'] == 'popularity':
+        raise NotImplementedError('This sorting method is not supported!')
+    else:
+        raise NotImplementedError('This sorting method is not supported!')
+
+    if 'reverse' in passed_arguments:
+        reverse = passed_arguments['reverse']
+
+        if reverse not in [True, False]:
+            raise BadRequest('reverse parameter must be True or False!')
+
+    else:
+        reverse = False
+
+    list_to_sort.sort(key=sort_criterion, reverse=reverse)
+
+
+def get_matches_text(search_text, search_order, filters=(), threshold=0.9, user_email=None):
+    scores = defaultdict(float)
+
+    total_documents = Service.get_count()
+
+    coincidences_queries = term_frequency.search_text(search_text)
+
+    for coincidences_query in coincidences_queries:
+        if user_email is not None:
+            coincidences_query = coincidences_query.join(Service, aliased=True).filter_by(user_email=user_email)
+        coincidences_query = filter_query(coincidences_query, filters=filters, coincidence=True)
+        coincidences_word = coincidences_query.all()
+
+        if len(coincidences_word) > 0:
+
+            idf = log(1 + total_documents / len(coincidences_word))
+            for coincidence in coincidences_word:
+
+                if search_order:
+                    count = int.from_bytes(coincidence.count, "little")
+                    tf = log(1 + count / (len(coincidence.service.description) + len(coincidence.service.title)))
+                    scores[coincidence.service] += tf * idf
+
+                else:
+                    scores[coincidence.service] += idf
+
+    all_scored = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+
+    if not search_order:
+
+        if len(all_scored) == 0:
+            return []
+
+        n = 0
+        while n < len(all_scored) and all_scored[n][1] >= all_scored[0][1] * threshold:
+            n += 1
+
+        return [scored[0] for scored in all_scored[:n]]
+
+    else:
+        return [scored[0] for scored in all_scored]
 
 
 @services_bp.route("", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
-def get_all_services():
+def get_many_services(user_email=None):
     """
-    This method returns all the services. It doesn't require privileges
+    This method returns a list of services. It doesn't require privileges.
     :return: Response with all the services
     """
-    all_services = Service.get_all()
+
+    if not request.headers.get('content-type') == 'application/json':
+        all_services = Service.get_all()
+        return jsonify(service_schema_all.dump(all_services, many=True)), 200
+
+    info = request.json
+
+    if 'filters' in info:
+        filters = info['filters']
+    else:
+        filters = ()
+
+    if 'search_text' in info:
+        all_services = get_matches_text(info['search_text'], search_order='sort' not in info, filters=filters,
+                                        threshold=0.9, user_email=user_email)
+        if 'sort' in info:
+            sort_services(all_services, info['sort'])
+    else:
+        services_query = Service.query
+        if user_email is not None:
+            services_query = services_query.filter_by(user_email=user_email)
+        services_query = filter_query(services_query, filters=filters, coincidence=False)
+        if 'sort' in info:
+            services_query = sort_query_services(services_query, info['sort'])
+        all_services = services_query.all()
+
     return jsonify(service_schema_all.dump(all_services, many=True)), 200
 
 
@@ -97,8 +250,7 @@ def get_user_services(email):
     :param email: the user mail that we want to obtain services
     :return: Response
     """
-    services = Service.query.filter_by(user_email=email)
-    return jsonify(service_schema_all.dump(services, many=True)), 200
+    return get_many_services(user_email=email)
 
 
 @services_bp.route("", methods=["POST"])

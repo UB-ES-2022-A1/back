@@ -1,3 +1,5 @@
+#!/usr/bin/env python3 
+
 from init_app import init_app
 
 # TODO METER A FALSE EN PRODUCCIÓN
@@ -10,4 +12,4 @@ else:
 
 app, _ = init_app(db_url, develop=develop)
 with app.app_context():
-    app.run()
+    app.run(host='0.0.0.0', port=8000)

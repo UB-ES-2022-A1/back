@@ -4,6 +4,43 @@ GET localhost:5000/users
 ### GET all services
 GET localhost:5000/services
 
+### search services
+GET localhost:5000/services
+Content-Type: application/json
+
+{
+  "search_text": "cheese",
+  "sort": {
+      "by": "price",
+      "reverse": true
+  },
+  "filters": {
+    "price":{
+      "min": 0,
+      "max": 54
+    }
+  }
+}
+
+
+### search services by a user
+GET localhost:5000/services/email9@gmail.com/service
+Content-Type: application/json
+
+{
+  "search_text": "cheese",
+  "sort": {
+      "by": "price",
+      "reverse": true
+  },
+  "filters": {
+    "price":{
+      "min": 0,
+      "max": 54
+    }
+  }
+}
+
 ### POST an user
 POST localhost:5000/users
 Content-Type: application/json

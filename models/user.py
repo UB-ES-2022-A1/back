@@ -10,6 +10,7 @@ from utils.privilegies import access
 
 auth = HTTPBasicAuth()
 
+
 class User(db.Model):
     __tablename__ = "users"
 
@@ -18,6 +19,8 @@ class User(db.Model):
     pwd = db.Column(db.Text, nullable=False)
     name = db.Column(db.Text, nullable=False)
     access = db.Column(db.Integer, nullable=False, default=1)
+    # https://docs.sqlalchemy.org/en/20/core/type_basics.html
+    wallet = db.Column(db.Numeric(scale=2), default=0.0)
     # Campos opcionales
     phone = db.Column(db.Integer, nullable=True)
     birthday = db.Column(db.Date, nullable=True)
@@ -105,6 +108,7 @@ class User(db.Model):
 
         return user
 
+
 @auth.verify_password
 def verify_password(token, password):
     """
@@ -128,6 +132,7 @@ def verify_password(token, password):
         g.user = user
         return user
 
+
 @auth.get_user_roles
 def get_user_roles(user):
     """
@@ -135,4 +140,3 @@ def get_user_roles(user):
     :return: access level label
     """
     return access[user.access]
-

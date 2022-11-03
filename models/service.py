@@ -1,6 +1,7 @@
 from sqlalchemy.orm import relationship
 from database import db
 from models.contracted_service import ContractedService
+from models.search import term_frequency
 
 
 class Service(db.Model):
@@ -17,6 +18,12 @@ class Service(db.Model):
 
     contracts = db.relationship(ContractedService, backref="service", cascade="all, delete-orphan")
 
+    search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
+    #
+    begin = db.Column(db.Time, nullable=True) # time at wich service can begin
+    end = db.Column(db.Time, nullable=True) # time at wich service will stop being available for the day
+    cooldown = db.Column(db.Time, nullable=True) # minimum time after service is given to rest
+    requiresPlace = db.Column(db.Boolean, default=False)
 
     # TODO Añadir campos como foto, fecha, ubicación.
     def save_to_db(self):
@@ -25,6 +32,7 @@ class Service(db.Model):
         """
         db.session.add(self)
         db.session.commit()
+        term_frequency.put_service(self)
 
     def delete_from_db(self):
         """
@@ -49,3 +57,7 @@ class Service(db.Model):
         :return: list with all services
         """
         return cls.query.all()
+
+    @classmethod
+    def get_count(cls):
+        return cls.query.count()
