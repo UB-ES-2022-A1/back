@@ -29,4 +29,5 @@ tomli==2.0.1
 Werkzeug==2.2.2
 zipp==3.9.0
 gunicorn
+sklearn
 
