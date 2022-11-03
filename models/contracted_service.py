@@ -5,11 +5,11 @@ from database import db
 class ContractedService(db.Model):
     __tablename__ = "contracted_services"
     __table_args__ = (
-        db.UniqueConstraint('user_email', 'service_id', 'state', 'price', name='unq_cons1'),
+        db.UniqueConstraint('user_email', 'service_id', 'state', 'price', name='unq_cons2'),
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    user_email = db.Column(db.Integer, db.ForeignKey('users.email'), nullable=False)
+    user_email = db.Column(db.String(50), db.ForeignKey('users.email'), nullable=False)
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
     state = db.Column(db.String, nullable=False)
     price = db.Column(db.Integer, nullable=False, default=0)

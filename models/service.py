@@ -1,5 +1,6 @@
 from sqlalchemy.orm import relationship
 from database import db
+from models.contracted_service import ContractedService
 
 
 class Service(db.Model):
@@ -13,6 +14,8 @@ class Service(db.Model):
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String, nullable=False)
     price = db.Column(db.Integer, nullable=False, default=0)
+
+    contracts = db.relationship(ContractedService, backref="service", cascade="all, delete-orphan")
 
 
     # TODO Añadir campos como foto, fecha, ubicación.

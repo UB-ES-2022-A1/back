@@ -9,11 +9,11 @@ POST localhost:5000/users
 Content-Type: application/json
 
 {
-  "email": "us5@email.com",
-  "pwd": "123456",
+  "email": "pepito@gmail.com",
+  "pwd": "12345678",
   "phone": 123456434,
   "name": "Jordi",
-  "acces": 1
+  "access": 1
 }
 
 ### GET concrete service
@@ -34,8 +34,8 @@ POST localhost:5000/login
 Content-Type: application/json
 
 {
-  "email": "email1@gmail.com",
-  "pwd": "password"
+  "email": "pepito@gmail.com",
+  "pwd": "12345678"
 }
 
 ### POST an admin LOGIN ---> After this all the following requests needs login(token)
@@ -49,12 +49,12 @@ Content-Type: application/json
 
 ### POST a service
 POST http://localhost:5000/services
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsMUBnbWFpbC5jb20iLCJleHAiOjE2NjcwMTM3Nzh9.eyPwTIhhztWOcsnE03UU_mYmRC20YIWaYHBO2PsfceI loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBlcGl0b0BnbWFpbC5jb20iLCJleHAiOjE2Njc1NTM0MDN9.XQ_KH0ibjwfr96uXipv9U_GpFi0qdZS2bLRfd0ldjP0 loquesea
 Content-Type: application/json
 
 {
-  "title": "titulo6",
-  "description": "descripcion",
+  "title": "titleT2",
+  "description": "description",
   "price" : 0
 }
 
@@ -79,4 +79,13 @@ Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzNUBlbW
 PUT localhost:5000/users/email1@gmail.com/privileges/7
 Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzNUBlbWFpbC5jb20iLCJleHAiOjE2NjY5Njc3MzJ9.MmEjGuHsvFUkpiHtnrlJawt7M6S-GHz376kvIeZVOFs loquesea
 
+### POST a contract
+POST http://localhost:5000/contracted_services
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBlcGl0b0BnbWFpbC5jb20iLCJleHAiOjE2Njc1NTM0MDN9.XQ_KH0ibjwfr96uXipv9U_GpFi0qdZS2bLRfd0ldjP0 loquesea
+Content-Type: application/json
 
+{
+  "service": 1,
+  "state": "active",
+  "price" : 0
+}

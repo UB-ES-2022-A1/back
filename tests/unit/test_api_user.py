@@ -221,9 +221,9 @@ def test_delete_user(client):
     assert r.status_code == 201
 
     # A user only can delete itself
-    r = request_with_login(login=client.post, request=client.delete, url="users/"+email1, json={}, email=email2, pwd=pwd2)
+    r = request_with_login(login=client.post, request=client.delete, url="users/"+email1, json_r={}, email=email2, pwd=pwd2)
     assert r.status_code == 403
-    r = request_with_login(login=client.post, request=client.delete, url="users/"+email1, json={}, email=email1, pwd=pwd1)
+    r = request_with_login(login=client.post, request=client.delete, url="users/"+email1, json_r={}, email=email1, pwd=pwd1)
     assert r.status_code == 200
 
 
@@ -247,7 +247,7 @@ def test_admin_delete_user(client):
     assert r.status_code == 201
 
     # Then we can do the request with admin privileges.
-    r = request_with_login(login=client.post, request=client.delete, url="users/"+email_u, json={}, email=email_a, pwd=pwd_a)
+    r = request_with_login(login=client.post, request=client.delete, url="users/"+email_u, json_r={}, email=email_a, pwd=pwd_a)
     assert r.status_code == 200
 
 
@@ -271,15 +271,15 @@ def test_admin_privileges_user(client):
     assert r.status_code == 201
 
     # Normal user can't modify privileges.
-    r = request_with_login(login=client.post, request=client.put, url="users/"+email_u+"/privileges/5", json={}, email=email_u, pwd=pwd_u)
+    r = request_with_login(login=client.post, request=client.put, url="users/"+email_u+"/privileges/5", json_r={}, email=email_u, pwd=pwd_u)
     assert r.status_code == 403
 
     # MaxAdmin can modify privileges.
-    r = request_with_login(login=client.post, request=client.put, url="users/"+email_u+"/privileges/5", json={}, email=email_a, pwd=pwd_a)
+    r = request_with_login(login=client.post, request=client.put, url="users/"+email_u+"/privileges/5", json_r={}, email=email_a, pwd=pwd_a)
     assert r.status_code == 200
 
     # Bad privilege assignation
-    r = request_with_login(login=client.post, request=client.put, url="users/"+email_u+"/privileges/21", json={}, email=email_a, pwd=pwd_a)
+    r = request_with_login(login=client.post, request=client.put, url="users/"+email_u+"/privileges/21", json_r={}, email=email_a, pwd=pwd_a)
     assert r.status_code == 400
 
 
@@ -309,9 +309,9 @@ def test_admin_display_privilege(client):
     user_a.save_to_db()
 
     # Admin can see the access privileges of the user
-    r = request_with_login(login=client.post, request=client.get, url="users/"+email1, json={}, email=email_a, pwd=pwd_a)
+    r = request_with_login(login=client.post, request=client.get, url="users/"+email1, json_r={}, email=email_a, pwd=pwd_a)
     assert "access" in r.get_json()
 
     # Normal user cannot see the privileges
-    r = request_with_login(login=client.post, request=client.get, url="users/"+email1, json={}, email=email1, pwd=pwd1)
+    r = request_with_login(login=client.post, request=client.get, url="users/"+email1, json_r={}, email=email1, pwd=pwd1)
     assert "access" not in r.get_json()

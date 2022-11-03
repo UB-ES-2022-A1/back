@@ -1,6 +1,7 @@
 import time
 from database import db
 from models.service import Service
+from models.contracted_service import ContractedService
 from flask import g, current_app
 from flask_httpauth import HTTPBasicAuth
 from jwt import encode, decode, ExpiredSignatureError, InvalidSignatureError
@@ -23,6 +24,7 @@ class User(db.Model):
     address = db.Column(db.Text, nullable=True)
 
     services = db.relationship(Service, backref="user", cascade="all, delete-orphan")
+    contracted_services = db.relationship(ContractedService, backref="user", cascade="all, delete-orphan")
 
     # Todo falta foto, gender (enum)
     def save_to_db(self):

@@ -1,6 +1,8 @@
 from init_app import init_app
 import pytest
 
+from utils.secure_request import request_with_login
+
 app, db = init_app("sqlite:///data_test.db")
 
 
@@ -21,11 +23,17 @@ def test_empty_db_services(client):
 
 
 def test_post_get_service(client):
+
+    # Credentials for user
+    email1 = 'pepito@gmail.com'
+    pwd1 = '12345678'
+
     # only required
-    user1_dict = {'email': 'pepito@gmail.com', 'pwd': '12345678', 'name': 'Pepito'}
+    user1_dict = {'email': email1, 'pwd': pwd1, 'name': 'Pepito', 'access': 1}
     r = client.post("users", json=user1_dict)
-    service1_dict = {'title': 'titleT2', 'user': 'pepito@gmail.com', 'description': 'description'}
-    r = client.post("services", json=service1_dict)
+    assert r.status_code == 201
+    service1_dict = {'title': 'titleT2', 'description': 'description', 'price': 1}
+    r = request_with_login(login=client.post, request=client.post, url="services", json_r=service1_dict, email=email1, pwd=pwd1)
     assert r.status_code == 200
 
     # check service has been added correctly
@@ -37,50 +45,53 @@ def test_post_get_service(client):
     # let's check the fields match
     service1_response = services[0]
     assert service1_response['title'] == service1_dict['title']
-    assert service1_response['user'] == service1_dict['user']
     assert service1_response['description'] == service1_dict['description']
 
-    # check we can not add service with non existant user
-    service1_dict = {'id': 1, 'title': 'titleT2', 'user': 'pepito', 'description': 'descriptionT2', 'price': '10'}
-    r = client.post("services", json=service1_dict)
-    assert r.status_code == 404
-
     # check service has not been added
-    r = client.get("services")
+    r = request_with_login(login=client.post, request=client.get, url="services", json_r={}, email=email1, pwd=pwd1)
     assert r.status_code == 200
     services = r.get_json()
     assert len(services) == 1
 
+    # Check we cannot add service without login
+    service1_dict = {'title': 'titleT2', 'description': 'descriptionT2', 'price': '10'}
+    r = client.post("services", json=service1_dict)
+    assert r.status_code == 403
+
 
 def test_service_post_missing_fields(client):
-    # missing all
-    r = client.post("services", json={})
+
+    # Credentials for user
+    email1 = 'pepito@gmail.com'
+    pwd1 = '12345678'
+
+    user1_dict = {'email': email1, 'pwd': pwd1, 'name': 'Pepito', 'access': 1}
+    r = client.post("users", json=user1_dict)
+    assert r.status_code == 201
+
+    # Missing all
+    r = request_with_login(login=client.post, request=client.post, url="services", json_r={}, email=email1, pwd=pwd1)
     assert r.status_code == 400
     j = r.get_json()
     assert j['message'] == 'Datos incorrectos'
     assert j['campos']['title'] == ['Missing data for required field.']
     assert j['campos']['description'] == ['Missing data for required field.']
 
-    # missing title
-    user1_dict = {'email': 'pepito@gmail.com', 'pwd': '12345678', 'name': 'Pepito'}
-    r = client.post("users", json=user1_dict)
-    assert r.status_code == 201
-    r = client.post("services", json={'user': 'pepito@gmail.com', 'description': 'descriptionT', 'price': '0'})
+    # Missing title
+    r = request_with_login(login=client.post, request=client.post, url="services", json_r={'description': 'descriptionT', 'price': '0'}, email=email1, pwd=pwd1)
     assert r.status_code == 400
     j = r.get_json()
     assert j['message'] == 'Datos incorrectos'
-    assert 'user' not in j['campos']
     assert 'description' not in j['campos']
     assert 'price' not in j['campos']
     assert j['campos']['title'] == ['Missing data for required field.']
 
     # missing description
-    r = client.post("services", json={'title': 'titleT', 'user': 'pepito@gmail.com', 'price': '0'})
+    r = request_with_login(login=client.post, request=client.post, url="services", json_r={'title': 'titleT', 'price': '0'}, email=email1, pwd=pwd1)
     assert r.status_code == 400
     j = r.get_json()
     assert j['message'] == 'Datos incorrectos'
     assert 'title' not in j['campos']
-    assert 'user' not in j['campos']
     assert 'price' not in j['campos']
     assert j['campos']['description'] == ['Missing data for required field.']
 

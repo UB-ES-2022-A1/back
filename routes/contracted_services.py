@@ -4,7 +4,6 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound
 from database import db
 from sqlalchemy.orm.util import has_identity
-from models.service import Service
 from models.contracted_service import ContractedService
 from models.user import auth
 from routes.users import get_user
@@ -33,6 +32,15 @@ class ContractedServiceSchema(SQLAlchemyAutoSchema):
         if not has_identity(value):
             raise NotFound("Usuario con id " + str(value.email) + " no encontrado!")
 
+    @validates("service")
+    def validates_service(self, value):
+        """
+        Validates that the service exists
+        :param value: service id
+        :return: None. Raises an Exception
+        """
+        if not has_identity(value):
+            raise NotFound("Servicio con id " + str(value.email) + " no encontrado!")
     @validates("price")
     def validates_price(self, value):
         """
@@ -98,7 +106,7 @@ def get_user_contracted_services(email):
     :param email: the user mail that we want to obtain services
     :return: Response
     """
-    services = Service.query.filter_by(user_email=email)
+    services = ContractedService.query.filter_by(user_email=email)
     return jsonify(contracted_service_schema_all.dump(services, many=True)), 200
 
 
@@ -110,7 +118,7 @@ def contract_service():
     :return: Response
     """
     info = request.json  # Leer la info del json
-    info["user_email"] = g.user.email
+    info["user"] = g.user.email
     new_contracted_service = contracted_service_schema_all.load(info, session=db.session)  # Crear el objeto mediante el schema
     new_contracted_service.save_to_db()  # Actualizamos la BD
 
