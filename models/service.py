@@ -1,4 +1,6 @@
+from sqlalchemy.orm import relationship
 from database import db
+from models.contracted_service import ContractedService
 from models.search import term_frequency
 
 
@@ -13,6 +15,9 @@ class Service(db.Model):
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String, nullable=False)
     price = db.Column(db.Integer, nullable=False, default=0)
+
+    contracts = db.relationship(ContractedService, backref="service", cascade="all, delete-orphan")
+
     search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
     #
     begin = db.Column(db.Time, nullable=True) # time at wich service can begin

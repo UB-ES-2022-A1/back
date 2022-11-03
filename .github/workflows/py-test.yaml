@@ -33,6 +33,6 @@ jobs:
           pip install pytest-cov
           pytest tests/unit/test_api_login.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
           pytest tests/unit/test_api_user.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
-          pytest tests/unit/test_api_service_api.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
-          pytest tests/unit/test_api_service_model.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
-          pytest tests/unit/test_api_user_model.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+          pytest tests/unit/test_service_api.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+          pytest tests/unit/test_service_model.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+          pytest tests/unit/test_user_model.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html

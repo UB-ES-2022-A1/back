@@ -65,6 +65,7 @@ def test_delete_user():
 
         assert len(User.get_all()) == 0
 
+
 def test_hashed_pwd():
     with app.app_context():
         db.create_all()
