@@ -2,28 +2,30 @@ from flask import Blueprint, jsonify, request
 from marshmallow import Schema, fields
 from werkzeug.exceptions import NotFound
 from models.user import User
+from marshmallow import ValidationError
 
 login_bp = Blueprint("login", __name__, url_prefix="/login")
 
 
-class Login_Schema(Schema):
+class LoginSchema(Schema):
     email = fields.Str()
     pwd = fields.Str()
-    pass
 
 
 # Para crear usuario
-login_schema = Login_Schema()
+login_schema = LoginSchema()
 
 
 @login_bp.route("", methods=["POST"])
 def login():
+    """
+    This method logs the user in returning a token.
+    """
     data = login_schema.load(request.json)
-    usr = User.query.get(data['email'])
-    if not usr:
-        raise NotFound
-    if usr.pwd == data['pwd']:
-        return jsonify(
-            {'User exists:': usr.email == data['email'], 'Password Match:': usr.pwd == data['pwd'], 'Name': usr.name})
+    user = User.get_by_id(data['email'])
+    if not user:
+        raise NotFound("User not found")
+    elif not user.verify_password(data['pwd']):
+        return ValidationError("Incorrect password")
     else:
-        return jsonify({'User exists:': usr.email == data['email'], 'Password Match:': usr.pwd == data['pwd']})
+        return {'token': user.generate_auth_token()}, 200

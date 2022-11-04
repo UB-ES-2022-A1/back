@@ -64,3 +64,11 @@ def test_delete_user():
         user_t.delete_from_db()
 
         assert len(User.get_all()) == 0
+
+
+def test_hashed_pwd():
+    with app.app_context():
+        db.create_all()
+        User.query.delete()
+        user_t = User(email="emailT", pwd=User.hash_password("SUU"), name="name")
+        assert user_t.verify_password("SUU")

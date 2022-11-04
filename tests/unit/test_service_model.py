@@ -10,6 +10,9 @@ import json
 app, db = init_app("sqlite:///data_test.db")
 
 def test_new_service():
+    """
+    This method tests if a service is added properly to the database
+    """
     with app.app_context():
         db.create_all()
         User.query.delete()
@@ -27,6 +30,9 @@ def test_new_service():
 
 
 def test_existing_service():
+    """
+    This method tests if there can be services with same values
+    """
     with app.app_context():
         db.create_all()
         User.query.delete()
@@ -45,6 +51,9 @@ def test_existing_service():
 
 
 def test_non_existing_user():
+    """
+    This method check if a service can be added to non existing user
+    """
     with app.app_context():
         db.create_all()
         User.query.delete()
@@ -64,6 +73,9 @@ def test_non_existing_user():
 
 
 def test_schema():
+    """
+    THis method checks if the marshmallow schema works well.
+    """
     with app.app_context():
         db.create_all()
         User.query.delete()
@@ -86,6 +98,9 @@ def test_schema():
 
 
 def test_delete_cascade():
+    """
+    This method checks if the cascade deletions work well.
+    """
     with app.app_context():
         db.create_all()
         User.query.delete()
