@@ -10,6 +10,7 @@ from flask_migrate import Migrate
 from flask_cors import CORS
 from database import secret_key
 
+
 def init_app(database_location, develop=True):
 
     # creamos la app

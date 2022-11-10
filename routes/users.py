@@ -74,6 +74,7 @@ user_schema_repr = UserSchema(only=("name", "email", "birthday"))
 user_schema_create = UserSchema()
 
 user_schema_profile = UserSchema(exclude=['pwd', 'access', 'wallet', 'verified_email'])
+user_schema_profile_self = UserSchema(exclude=['pwd', 'access', 'verified_email'])
 user_schema_profile_adm = UserSchema(exclude=['pwd'])
 
 
@@ -105,9 +106,12 @@ def get_user(email):
         raise NotFound("Usuario no encontrado")
     if g.user.access == 9 or g.user.access == 8:
         return jsonify(user_schema_profile_adm.dump(usr, many=False)), 200  # Mostramos los accesos de privilegio a los administradores
-    if usr.verified_email:
+    if not usr.verified_email:
+        raise NotFound("Usuario no encontrado")
+    elif usr.email == g.user.email:
+        return jsonify(user_schema_profile_self.dump(usr, many=False)), 200
+    else:
         return jsonify(user_schema_profile.dump(usr, many=False)), 200
-    raise NotFound("Usuario no encontrado")
 
 
 @users_bp.route("/<string:email>", methods=["DELETE"])
