@@ -142,11 +142,18 @@ def create_user():
     """
     d = request.json
     new_user = user_schema_create.load(d, session=db.session)
-    # si ya existe no se puede
+    # Check if not exists
     if User.query.get(new_user.email) is not None:
         raise Conflict
 
     new_user.pwd = User.hash_password(new_user.pwd)
+
+    # Only for tests
+    if db.app.config["SQLALCHEMY_DATABASE_URI"] == "sqlite:///data_test.db":
+        new_user.verified_email = True
+        new_user.save_to_db()
+        return jsonify(user_schema_profile.dump(new_user, many=False)), 201
+
     new_user.save_to_db()
 
     send_email('REGISTER', new_user.generate_auth_token(), new_user.email)
@@ -168,7 +175,7 @@ def edit_user(email):
     if "name" in d:
         usr.name = d["name"]
 
-    # Campos opcionales
+    # Optional fields
     if "phone" in d:
         usr.phone = d["phone"]
     if "birthday" in d:
