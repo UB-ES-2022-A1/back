@@ -4,6 +4,7 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound, Conflict
 from database import db
 from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege
+from utils.mail import send_email
 from models.user import User
 from models.user import auth
 from utils.privilegies import access
@@ -73,7 +74,7 @@ def get_all_users():
     This method return all users
     :return: Response with a list of all users
     """
-    all_users = User.query.all()
+    all_users = User.query.filter_by(confirm_email=True)
     return jsonify(user_schema_repr.dump(all_users, many=True)), 200
 
 
@@ -90,7 +91,8 @@ def get_user(email):
         raise NotFound
     if g.user.access == 9 or g.user.access == 8:
         return jsonify(user_schema_profile_adm.dump(usr, many=False)), 200  # Mostramos los accesos de privilegio a los administradores
-    return jsonify(user_schema_profile.dump(usr, many=False)), 200
+    if usr.verified_email:
+       return jsonify(user_schema_profile.dump(usr, many=False)), 200
 
 
 @users_bp.route("/<string:email>", methods=["DELETE"])
@@ -127,6 +129,9 @@ def create_user():
 
     new_user.pwd = User.hash_password(new_user.pwd)
     new_user.save_to_db()
+
+    send_email('REGISTER', new_user.generate_auth_token() , new_user.email)
+
     return jsonify(user_schema_profile.dump(new_user, many=False)), 201
 
 @users_bp.route("/<string:email>", methods=["PUT"])
@@ -172,3 +177,12 @@ def changes_privileges(email, privilege):
     usr.save_to_db()
 
     return jsonify("Privilegios modificados correctamente"), 200
+
+
+@users_bp.route("/confirm_email/<token>", methods=["GET"])
+@auth.login_required(role=[access[0], access[1], access[8], access[9]])
+def confirm_email(token):
+    user: User = User.verify_auth_token(token)
+    user.verified_email = True
+    user.save_to_db()
+    return "Gracias por verificar su mail!"

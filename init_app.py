@@ -9,6 +9,7 @@ from database import db
 from flask_migrate import Migrate
 from flask_cors import CORS
 from database import secret_key
+
 def init_app(database_location, develop=True):
 
     # creamos la app
@@ -23,7 +24,6 @@ def init_app(database_location, develop=True):
     app.config['MAIL_PASSWORD'] = 'huotojlsvpgnlfaz'
     app.config['MAIL_USE_TLS'] = False
     app.config['MAIL_USE_SSL'] = True
-
     if develop:
 
         Migrate(app, db)
