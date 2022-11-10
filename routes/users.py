@@ -212,3 +212,4 @@ def confirm_email(token):
     user.verified_email = True
     user.save_to_db()
     return "Gracias por verificar su mail!"
+
