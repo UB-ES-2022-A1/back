@@ -1,9 +1,12 @@
 alembic==1.8.1
 attrs==22.1.0
+BareNecessities==0.2.8
+blinker==1.5
 click==8.1.3
 Flask==2.2.2
 Flask-Cors==3.0.10
 Flask-HTTPAuth==4.7.0
+Flask-Mail==0.9.1
 Flask-Migrate==3.1.0
 Flask-SQLAlchemy==3.0.0
 greenlet==1.1.3
@@ -14,6 +17,7 @@ iniconfig==1.1.1
 itsdangerous==2.1.2
 Jinja2==3.1.2
 joblib==1.2.0
+Mail==2.1.0
 Mako==1.2.3
 MarkupSafe==2.1.1
 marshmallow==3.18.0

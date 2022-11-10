@@ -1,5 +1,5 @@
 from models.user import User
-from utils.secure_request import  request_with_login
+from utils.secure_request import request_with_login
 from init_app import init_app
 import pytest
 
@@ -238,7 +238,7 @@ def test_admin_delete_user(client):
     pwd_a = 'qqweas'
 
     # We can create by this way a max admin user
-    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9)
+    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9, verified_email=True)
     user_a.save_to_db()
 
     # Post of the user
@@ -262,7 +262,7 @@ def test_admin_privileges_user(client):
     pwd_a = 'qqweas'
 
     # We can create by this way a max admin user
-    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9)
+    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9, verified_email=True)
     user_a.save_to_db()
 
     # Post of the user
@@ -305,7 +305,7 @@ def test_admin_display_privilege(client):
     assert r.status_code == 201
 
     # We can create by this way a max admin user
-    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9)
+    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9, verified_email=True)
     user_a.save_to_db()
 
     # Admin can see the access privileges of the user

@@ -8,7 +8,7 @@ def populate(db):
     user_emails = [u.email for u in User.get_all()]
 
     for i in range(1, 10):
-        user = User(email="email" + str(i) + "@gmail.com", pwd=User.hash_password("password"), name="Name" + str(i))
+        user = User(email="email" + str(i) + "@gmail.com", pwd=User.hash_password("password"), name="Name" + str(i), verified_email=True)
         if not user.email in user_emails:
             user.save_to_db()
 
