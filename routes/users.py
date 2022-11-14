@@ -168,6 +168,10 @@ def edit_user(email):
     d = request.json
     if User.query.get(email) is None:
         raise Conflict
+
+    # If there is no privilege we can't do this action.
+    if email != g.user.email and g.user.access < 8:
+        raise PrivilegeException("Not enough privileges to modify other resources.")
     if "email" in d:
         if User.query.get(d["email"]) is not None:
             raise Conflict
@@ -205,6 +209,21 @@ def changes_privileges(email, privilege):
     usr.save_to_db()
 
     return jsonify("Privilegios modificados correctamente"), 200
+
+@users_bp.route("/<string:email>/wallet", methods=["PUT"])
+@auth.login_required(role=[access[8], access[9]])
+def edit_wallet(email):
+
+    usr = User.query.get(email)
+    d = request.json
+    if not usr:
+        raise NotFound
+
+    usr.wallet = usr.wallet + d["money"]
+
+    usr.save_to_db()
+
+    return jsonify("Dinero añadido correctamente"), 200
 
 
 @users_bp.route("/confirm_email/<token>", methods=["GET"])
