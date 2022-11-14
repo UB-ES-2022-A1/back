@@ -150,7 +150,7 @@ def create_user():
 
     # Only for tests
     if db.app.config["SQLALCHEMY_DATABASE_URI"] == "sqlite:///data_test.db":
-        new_user.verified_email = True
+        new_user.verified_email = False
         new_user.save_to_db()
         return jsonify(user_schema_profile.dump(new_user, many=False)), 201
 
