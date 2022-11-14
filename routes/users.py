@@ -208,7 +208,7 @@ def changes_privileges(email, privilege):
     usr.access = privilege
     usr.save_to_db()
 
-    return jsonify("Privilegios modificados correctamente"), 200
+    return jsonify("Privilegios modificados correctamentAe"), 200
 
 @users_bp.route("/<string:email>/wallet", methods=["PUT"])
 @auth.login_required(role=[access[8], access[9]])
