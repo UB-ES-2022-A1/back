@@ -24,11 +24,14 @@ def login():
     """
     data = login_schema.load(request.json)
     user = User.get_by_id(data['email'])
-    if not user:
-        raise NotFound("User not found")
-    elif not user.verify_password(data['pwd']):
-        raise ValidationError("Incorrect password")
-    elif not user.verified_email:
-        raise EmailNotVerified("Verifica tu correo antes!")
-    else:
-        return {'token': user.generate_auth_token(), 'username': user.name, 'email': user.email, 'rol': access[user.access]}, 200
+    try:
+        if not user:
+            raise NotFound("User not found")
+        elif not user.verify_password(data['pwd']):
+            raise ValidationError("Incorrect email or password")
+        elif not user.verified_email:
+            raise EmailNotVerified("Verifica tu correo antes!")
+        else:
+            return {'token': user.generate_auth_token(), 'username': user.name, 'email': user.email, 'rol': access[user.access]}, 200
+    except:
+        raise ValidationError("Incorrect email or password")

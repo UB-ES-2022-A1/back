@@ -15,7 +15,7 @@ def handle_validation(err):
 
 @error_bp.app_errorhandler(ValidationError)
 def handle_validation(err):
-    return jsonify({"message": "Datos incorrectos", "campos": err.messages_dict}), 400
+    return jsonify({"message": "Datos incorrectos", "campos": err.messages}), 400
 
 
 # 404 not found
