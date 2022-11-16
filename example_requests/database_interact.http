@@ -125,3 +125,15 @@ Content-Type: application/json
   "state": "active",
   "price" : 0
 }
+
+### POST petición reseteo de contra
+POST localhost:5000/users/forget_pwd/xxnazarxx@hotmail.es
+
+### POST resetear contra
+POST localhost:5000/users/reset_pwd
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjY4NjU5Njc5fQ.bX4TedXWbP9Fj2CdjaitJHHkpY_brRN9g_4m9Wn5q9I loquesea
+Content-Type: application/json
+
+{
+  "pwd": "12345"
+}

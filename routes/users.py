@@ -3,7 +3,7 @@ from marshmallow import validates, ValidationError, validate
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound, Conflict
 from database import db
-from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege
+from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege, EmailNotVerified
 from utils.mail import send_email
 from models.user import User
 from models.user import auth
@@ -224,10 +224,45 @@ def confirm_email(token):
 @users_bp.route("/back_reset/<token>", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
 def back_reset_mail(token):
-    return "El token es     " + token, 200
+    """
+    This method is used to obtain the token for testing with reset mail in back. It shouldn't be used in production
+    :param token: The token of the user
+    :return: Response with the token
+    """
+    return "El token es    " + token, 200
+
+
+@users_bp.route("/forget_pwd/<email>", methods=["POST"])
+@auth.login_required(role=[access[0], access[1], access[8], access[9]])
+def forget_pwd(email):
+    """
+    This method checks if the given email is correct and if so it sends a link to the users mail in which they would be
+    able to change the pwd
+    :param email: the email of the user.
+    :return: Response
+    """
+    usr = User.query.get(email)
+    if not usr:
+        raise NotFound("Usuario no encontrado")
+    send_email('RECOVER', usr.generate_auth_token(), email)
+    return "Mail enviado", 201
 
 
 @users_bp.route("/reset_pwd", methods=["POST"])
-@auth.login_required(role=[access[0], access[1], access[8], access[9]])
-def back_reset_mail(token):
-    return "El token es     " + token, 200
+@auth.login_required(role=[access[1], access[8], access[9]])
+def update_password():
+    """
+    This method updates the user pwd. Also validates user mail if it wasn't.
+    :return: Response
+    """
+    if 'pwd' not in request.json:
+        raise NotFound('Contraseña no encotrada')
+    pwd = request.json['pwd']
+
+    user_schema_create.validates_pwd(value=pwd)
+
+    g.user.verified_email = True
+    g.user.pwd = pwd
+    g.user.save_to_db()
+
+    return "Contraseña cambiada", 200

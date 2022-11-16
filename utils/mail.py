@@ -3,10 +3,10 @@ from flask import url_for
 
 mail = Mail()
 
-mail_type = ['REGISTER']
+mail_type = ['REGISTER', 'RECOVER']
 
 
-def send_email(m_type, message="", recipient=[]):
+def send_email(m_type, message="", recipient=None):
     """
     This method sends en email.
     :param m_type: Type of the email, used to redirect the method.
@@ -14,6 +14,8 @@ def send_email(m_type, message="", recipient=[]):
     :param recipient: Who receives the email.
     :return:
     """
+    if recipient is None:
+        recipient = []
     if m_type == "REGISTER":
         send_register(message, recipient)
     if m_type == "RECOVER":
@@ -22,7 +24,7 @@ def send_email(m_type, message="", recipient=[]):
 
 def send_register(message, recipient):
     """
-    This method sends an email with a confirmation link.
+    This method sends an email with a confirmation link
     :param message: It's the user token used later to change its status of validation
     :param recipient: User mail
     :return: None
@@ -38,7 +40,7 @@ def send_register(message, recipient):
 
 def send_reset_password(message, recipient):
     """
-    This method sends an email with reset password link.
+    This method sends an email with reset password link
     :param message: It's the user token used later to change its status of validation
     :param recipient: User mail
     :return: None
