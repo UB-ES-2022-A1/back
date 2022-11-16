@@ -211,7 +211,7 @@ def changes_privileges(email, privilege):
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
 def confirm_email(token):
     """
-    This method is used to verify a user email.
+    This method is used to verify a user email
     :param token: Contains user information. Is sent to him in the email.
     :return: Message.
     """
@@ -220,3 +220,14 @@ def confirm_email(token):
     user.save_to_db()
     return "Gracias por verificar su mail!"
 
+
+@users_bp.route("/back_reset/<token>", methods=["GET"])
+@auth.login_required(role=[access[0], access[1], access[8], access[9]])
+def back_reset_mail(token):
+    return "El token es     " + token, 200
+
+
+@users_bp.route("/reset_pwd", methods=["POST"])
+@auth.login_required(role=[access[0], access[1], access[8], access[9]])
+def back_reset_mail(token):
+    return "El token es     " + token, 200
