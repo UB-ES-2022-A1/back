@@ -135,5 +135,5 @@ Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YX
 Content-Type: application/json
 
 {
-  "pwd": "12345"
+  "pwd": "12345678"
 }

@@ -37,7 +37,7 @@ def populate(db):
 
     db.session.commit()
     try:
-        user_a = User(email="madmin@gmail.com", pwd=User.hash_password("password"), name="MaxAdm", access=9)
+        user_a = User(email="madmin@gmail.com", pwd=User.hash_password("password"), name="MaxAdm", access=9, verified_email=True)
         user_a.save_to_db()
     except Exception as e:
         print(e)

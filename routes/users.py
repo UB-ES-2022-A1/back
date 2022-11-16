@@ -262,7 +262,7 @@ def update_password():
     user_schema_create.validates_pwd(value=pwd)
 
     g.user.verified_email = True
-    g.user.pwd = pwd
+    g.user.pwd = User.hash_password(pwd)
     g.user.save_to_db()
 
     return "Contraseña cambiada", 200
