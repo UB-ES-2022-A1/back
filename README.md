@@ -36,6 +36,7 @@ Notemos que este proyecto está preparado para ejecutarse en local. Para prepara
 | /users                                         | POST        | 0,1,8,9  | Creates a new user with the data provided in the json                            |
 | /services                                      | POST        | 1,8,9    | Creates a new service with the data provided in the json if correct token        |            
 | /services                                      | GET         | 0,1,8,9  | Returns all services                                                             |
+| /services/search                               | GET, POST   | 0,1,8,9  | Returns all services constrained by passed search text, filters and ordering     |
 | /services/@id                                  | GET         | 0,1,8,9  | Returns a concrete service                                                       |
 | /services/@id/user                             | GET         | 0,1,8,9  | Returns the creator of a service                                                 |
 | /services/@email/service                       | GET         | 0,1,8,9  | Returns the services of a user                                                   |
