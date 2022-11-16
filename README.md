@@ -45,10 +45,12 @@ Notemos que este proyecto está preparado para ejecutarse en local. Para prepara
 | /service/@id                                   | PUT, DELETE | 1,8,9    | Deletes or upgrades concrete service if the correct token                                                     |
 | /contracted_services                           | POST        | 1,8,9    | Creates a contracted service with the data provided in the json                                               | 
 | /contracted_services                           | GET         | 0,1,8,9  | Returns all contracted services                                                                               | 
+| /services/search                               | GET, POST   | 0,1,8,9  | Returns all services constrained by passed search text, filters and ordering                                  |
 | /contracted_services/@id                       | GET         | 0,1,8,9  | Returns a concrete contracted service                                                                         |
 | /contracted_services/@id/user                  | GET         | 0,1,8,9  | Returns the creator of a contracted service                                                                   |
 | /contracted_services/@email/contracted_service | GET         | 0,1,8,9  | Returns the contracted services of a user                                                                     |
 | /contracted_service/@id                        | PUT, DELETE | 1,8,9    | Deletes or upgrades concrete contracted service if the correct token                                          |
+
 
 *Comment
 If the user doesn't exist return not found. If the request maker(RM) is admin return whole user profile minus pwd. If RM not admin and the user that is searched is not verified (email) return not found.
