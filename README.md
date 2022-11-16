@@ -27,30 +27,32 @@ En caso de que algo no vaya probar de borrar las migrations y ejecutar:
 Notemos que este proyecto está preparado para ejecutarse en local. Para prepararlo para producción, poner la variable develop de app.py a False, y rellenar la parte correspondiente a la configuración de producción de init_app.py
 
 # ENDPOINTS
-| URL                                            | METHODS     | SECURITY | FUNCTIONALITY                                                                    | 
-|------------------------------------------------|-------------|----------|----------------------------------------------------------------------------------|
-| /login                                         | POST        | None     | If the json(email and pwd) are correct returns user token                        |
-| /users                                         | GET         | 0,1,8,9  | Returns all users (name,email, birthday // whole information minus pwd if admin) |
-| /users/@email                                  | GET         | 0,1,8,9  | Return a concrete user. (*See comment below)                                     |
-| /users/@email                                  | DELETE      | 1,8,9    | Deletes concrete user if correct token                                           |                         
-| /users                                         | POST        | 0,1,8,9  | Creates a new user with the data provided in the json                            |
-| /services                                      | POST        | 1,8,9    | Creates a new service with the data provided in the json if correct token        |            
-| /services                                      | GET         | 0,1,8,9  | Returns all services                                                             |
-| /services/@id                                  | GET         | 0,1,8,9  | Returns a concrete service                                                       |
-| /services/@id/user                             | GET         | 0,1,8,9  | Returns the creator of a service                                                 |
-| /services/@email/service                       | GET         | 0,1,8,9  | Returns the services of a user                                                   |
-| /service/@id                                   | PUT, DELETE | 1,8,9    | Deletes or upgrades concrete service if the correct token                        |
-| /users/@email/privileges/@value                | PUT         | 9        | Used to change other user privileges by max admin                                | 
-| /contracted_services                           | POST        | 1,8,9    | Creates a contracted service with the data provided in the json                  | 
-| /contracted_services                           | GET         | 0,1,8,9  | Returns all contracted services                                                  | 
-| /contracted_services/@id                       | GET         | 0,1,8,9  | Returns a concrete contracted service                                            |
-| /contracted_services/@id/user                  | GET         | 0,1,8,9  | Returns the creator of a contracted service                                      |
-| /contracted_services/@email/contracted_service | GET         | 0,1,8,9  | Returns the contracted services of a user                                        |
-| /contracted_service/@id                        | PUT, DELETE | 1,8,9    | Deletes or upgrades concrete contracted service if the correct token             |
+| URL                                            | METHODS     | SECURITY | FUNCTIONALITY                                                                                                 | 
+|------------------------------------------------|-------------|----------|---------------------------------------------------------------------------------------------------------------|
+| /login                                         | POST        | None     | If the json(email and pwd) are correct returns user token                                                     |
+| /users                                         | GET         | 0,1,8,9  | Returns all users (name,email, birthday // whole information minus pwd if admin)                              |
+| /users/@email                                  | GET         | 0,1,8,9  | Return a concrete user. (*See comment below)                                                                  |
+| /users/@email                                  | DELETE      | 1,8,9    | Deletes concrete user if correct token                                                                        |                         
+| /users                                         | POST        | 0,1,8,9  | Creates a new user with the data provided in the json                                                         |
+| /users/forget_pwd/@email                       | POST        | 0,1,8,9  | If the given email is correct it sends to the mail an URL to change the password                              | 
+| /users/reset_pwd                               | POST        | 1,8,9    | This method needs the token. It takes a pwd from the body which is used to change the user's (given by token) | 
+| /users/@email/privileges/@value                | PUT         | 9        | Used to change other user privileges by max admin                                                             |
+| /services                                      | POST        | 1,8,9    | Creates a new service with the data provided in the json if correct token                                     |            
+| /services                                      | GET         | 0,1,8,9  | Returns all services                                                                                          |
+| /services/@id                                  | GET         | 0,1,8,9  | Returns a concrete service                                                                                    |
+| /services/@id/user                             | GET         | 0,1,8,9  | Returns the creator of a service                                                                              |
+| /services/@email/service                       | GET         | 0,1,8,9  | Returns the services of a user                                                                                |
+| /service/@id                                   | PUT, DELETE | 1,8,9    | Deletes or upgrades concrete service if the correct token                                                     |
+| /contracted_services                           | POST        | 1,8,9    | Creates a contracted service with the data provided in the json                                               | 
+| /contracted_services                           | GET         | 0,1,8,9  | Returns all contracted services                                                                               | 
+| /contracted_services/@id                       | GET         | 0,1,8,9  | Returns a concrete contracted service                                                                         |
+| /contracted_services/@id/user                  | GET         | 0,1,8,9  | Returns the creator of a contracted service                                                                   |
+| /contracted_services/@email/contracted_service | GET         | 0,1,8,9  | Returns the contracted services of a user                                                                     |
+| /contracted_service/@id                        | PUT, DELETE | 1,8,9    | Deletes or upgrades concrete contracted service if the correct token                                          |
 
 *Comment
 If the user doesn't exist return not found. If the request maker(RM) is admin return whole user profile minus pwd. If RM not admin and the user that is searched is not verified (email) return not found.
-Otherwise (mail verified), if the RM is the searched user returns whole minus pwd, acces, verified_email. FInally, if the RM is not the searched user returns same as before minus wallet.
+Otherwise (mail verified), if the RM is the searched user returns whole minus pwd, access, verified_email. Finally, if the RM is not the searched user returns same as before minus wallet.
 
 
 **0 corresponds to a not logged user, and it's created by default**
@@ -65,13 +67,16 @@ Otherwise (mail verified), if the RM is the searched user returns whole minus pw
 
 Values used in POST methods (PUT may contain only a subset of them). Other parameters are extra ones from de db.
 
-| CLASS    | REQUEST PARAMETERS                                                         | OTHER PARAMETERS               |
-|----------|----------------------------------------------------------------------------|--------------------------------|
-| USER     | email, pwd, name, phone, birthday, address                                 | access, verified_email, wallet |
-| SERVICE  | user_email, title, description, price, begin, end, cooldown, requiresplace | id                             | 
-| CONTRACT | user_email, service_id, state, price                                       | None                           |
+| CLASS    | REQUEST PARAMETERS                                                          | OTHER PARAMETERS               |
+|----------|-----------------------------------------------------------------------------|--------------------------------|
+| USER     | email, pwd, name, phone, birthday, address                                  | access, verified_email, wallet |
+| SERVICE  | user_email, title, description, price, begin, end, cooldown, requires-place | id                             | 
+| CONTRACT | user_email, service_id, state, price                                        | None                           |
 
-.
+
+MaxAdmin: "madmin@gmail.com" ; with password "password"
+
+Other users: "emailX@gmail.com" where X is a number between 1 and 9; with password "password"
 
 .
 
