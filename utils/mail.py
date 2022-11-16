@@ -47,6 +47,7 @@ def send_reset_password(message, recipient):
     """
     email = recipient
     msg = Message('AtYourService', sender="atyourservice.noreply@gmail.com", recipients=[email])
-    link = url_for('users.back_reset_mail', token=message, _external=True)
+    # link = url_for('users.back_reset_mail', token=message, _external=True)
+    link = "https://atyourservice.onrender.com/update_password/" + message
     msg.html = '<p>Cambia la contraseña des del siguiente enlace <a href=' + link + '>enlace</a>.</p> '
     mail.send(msg)
