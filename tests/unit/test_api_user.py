@@ -338,7 +338,7 @@ def test_put_user(client):
     pwd_a = 'qqweas'
 
     # We can create by this way a max admin user
-    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9)
+    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9, verified_email=True)
     user_a.save_to_db()
 
     # displayed fields
@@ -378,43 +378,35 @@ def test_edit_wallet(client):
     # check user has been added correctly
     r = client.get("users")
     assert r.status_code == 200
-    users = r.get_json()
-    assert len(users) == 1
-
-    # let's check the fields match
-    user1_response = users[0]
-    assert user1_response['wallet'] == 00.00
 
     # admin datta
     email_a = 'admin@gmail.com'
     pwd_a = 'qqweas'
 
     # We can create by this way a max admin user
-    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9)
+    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9, verified_email=True)
     user_a.save_to_db()
-
-    # displayed fields
-    assert user1_response['email'] == user1_dict['email']
-    assert user1_response['name'] == user1_dict['name']
-    assert user1_response['birthday'] is None
-
-    # Then we can do the request with admin privileges.
-    r = request_with_login(login=client.post, request=client.put, url="users/pepito@gmail.com/wallet", json_r={'money':20.13}, email=email_a, pwd=pwd_a)
-    assert r.status_code == 200
-    r = client.get("users")
     users = r.get_json()
-    user1_response = users[0]
-    assert user1_response['wallet'] == 20.13
+    assert len(users) == 1
 
-    # user cant change wallet
-    r = request_with_login(login=client.post, request=client.put, url="users/pepito@gmail.com/wallet", json_r={'money':20.13}, email='pepito@gmail.com', pwd='12345678')
-    assert r.status_code == 403
-
-    # Admin can substract money
-    r = request_with_login(login=client.post, request=client.put, url="users/pepito@gmail.com/wallet", json_r={'money':-10.13}, email=email_a, pwd=pwd_a)
+    # user has 0.00 money by default
+    r = request_with_login(login=client.post, request=client.get, url="users/pepito@gmail.com", json_r={}, email=email_a, pwd=pwd_a)
     assert r.status_code == 200
-    r = client.get("users")
-    users = r.get_json()
-    user1_response = users[0]
-    assert user1_response['wallet'] == 10.00
+    assert r.get_json()['wallet'] == '0.00'
+
+    # Then we can do the request to add money with admin privileges.
+    r = request_with_login(login=client.post, request=client.put, url="users/pepito@gmail.com/wallet", json_r={'money':'20.13'}, email=email_a, pwd=pwd_a)
+    assert r.status_code == 200
+
+    r = request_with_login(login=client.post, request=client.get, url="users/pepito@gmail.com", json_r={}, email=email_a, pwd=pwd_a)
+    assert r.status_code == 200
+    assert r.get_json()['wallet'] == '20.13'
+
+    # Then we can do the request to remove money with admin privileges.
+    r = request_with_login(login=client.post, request=client.put, url="users/pepito@gmail.com/wallet", json_r={'money':'-10.13'}, email=email_a, pwd=pwd_a)
+    assert r.status_code == 200
+
+    r = request_with_login(login=client.post, request=client.get, url="users/pepito@gmail.com", json_r={}, email=email_a, pwd=pwd_a)
+    assert r.status_code == 200
+    assert r.get_json()['wallet'] == '10.00'
 
