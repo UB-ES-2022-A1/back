@@ -186,7 +186,7 @@ def edit_user(email):
         usr.birthday = d["birthday"]
     if "address" in d:
         usr.address = d["address"]
-    db.session.commit()
+    usr.save_to_db()
     return Response("Se ha editado correctamente el usuario con identificador: " + str(email), status=200)
 
 
