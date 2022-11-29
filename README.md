@@ -32,11 +32,13 @@ Notemos que este proyecto está preparado para ejecutarse en local. Para prepara
 | /login                                         | POST        | None     | If the json(email and pwd) are correct returns user token                                                     |
 | /users                                         | GET         | 0,1,8,9  | Returns all users (name,email, birthday // whole information minus pwd if admin)                              |
 | /users/@email                                  | GET         | 0,1,8,9  | Return a concrete user. (*See comment below)                                                                  |
-| /users/@email                                  | DELETE      | 1,8,9    | Deletes concrete user if correct token                                                                        |                         
+| /users/@email                                  | DELETE      | 1,8,9    | Deletes concrete user if correct token                                                                        |
+| /users/@email                                  | PUT         | 1,8,9    | Edits concrete user data if correct token, data is stored in json                                             |                         
 | /users                                         | POST        | 0,1,8,9  | Creates a new user with the data provided in the json                                                         |
 | /users/forget_pwd/@email                       | POST        | 0,1,8,9  | If the given email is correct it sends to the mail an URL to change the password                              | 
 | /users/reset_pwd                               | POST        | 1,8,9    | This method needs the token. It takes a pwd from the body which is used to change the user's (given by token) | 
-| /users/@email/privileges/@value                | PUT         | 9        | Used to change other user privileges by max admin                                                             |
+| /users/@email/privileges/@value                | PUT         | 9        | Used to change other user privileges by max admin                                                             | 
+| /users/@email/wallet                           | PUT         | 8,9      | Admin method used to add or substract money from any user                                                     |
 | /services                                      | POST        | 1,8,9    | Creates a new service with the data provided in the json if correct token                                     |            
 | /services                                      | GET         | 0,1,8,9  | Returns all services                                                                                          |
 | /services/@id                                  | GET         | 0,1,8,9  | Returns a concrete service                                                                                    |
