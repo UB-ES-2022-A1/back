@@ -5,7 +5,6 @@ from werkzeug.exceptions import NotFound
 from database import db
 from sqlalchemy.orm.util import has_identity
 from models.contracted_service import ContractedService
-from models.service import Service
 from models.user import auth
 from routes.users import get_user
 from flask import g
@@ -118,8 +117,8 @@ def get_user_contracted_services(email):
     if email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to access other users' contracts.")
 
-    services = ContractedService.query.filter_by(user_email=email)
-    return jsonify(contracted_service_schema_all.dump(services, many=True)), 200
+    contracts = ContractedService.query.filter_by(user_email=email).all()
+    return jsonify(contracted_service_schema_all.dump(contracts, many=True)), 200
 
 
 @contracted_services_bp.route("/contractor/<string:email>", methods=["GET"])
@@ -132,8 +131,8 @@ def get_contractor_offered_contracts(email):
     if email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to access other users' contracts.")
 
-    services = ContractedService.query.join(Service).filter_by(Service.user_email == email)
-    return jsonify(contracted_service_schema_all.dump(services, many=True)), 200
+    contracts = ContractedService.query.filter(ContractedService.service.has(user_email=email)).all()
+    return jsonify(contracted_service_schema_all.dump(contracts, many=True)), 200
 
 
 @contracted_services_bp.route("", methods=["POST"])
@@ -149,8 +148,8 @@ def contract_service():
                                                                 session=db.session)  # Crear el objeto mediante el schema
     new_contracted_service.save_to_db()  # Actualizamos la BD
 
-    return Response("Servicio contratado correctamente con el identificador: " + str(new_contracted_service.id),
-                    status=200)
+    return Response("Servicio pedido correctamente con el identificador: " + str(new_contracted_service.id),
+                    status=201)
 
 
 @contracted_services_bp.route("/<int:contracted_service_id>", methods=["PUT", "DELETE"])

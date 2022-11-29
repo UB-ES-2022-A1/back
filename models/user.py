@@ -27,8 +27,8 @@ class User(db.Model):
     birthday = db.Column(db.Date, nullable=True)
     address = db.Column(db.Text, nullable=True)
 
-    services = db.relationship(Service, backref="user")
-    contracted_services = db.relationship(ContractedService, backref="user")
+    services = db.relationship(Service, backref="user", cascade="all, delete-orphan")
+    contracted_services = db.relationship(ContractedService, backref="user", cascade="all, delete-orphan")
 
     # Todo falta foto, gender (enum)
     def save_to_db(self):
