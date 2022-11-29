@@ -124,7 +124,7 @@ def get_user_contracted_services(email):
 
 @contracted_services_bp.route("/contractor/<string:email>", methods=["GET"])
 @auth.login_required(role=[access[1], access[8], access[9]])
-def get_user_contracted_services(email):
+def get_contractor_offered_contracts(email):
     """
     :param email: the email of the contractor
     :return: all the contracts the contractor has been offered, regardless of wether they have accepted
