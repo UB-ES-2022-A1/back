@@ -16,7 +16,7 @@ class Service(db.Model):
     description = db.Column(db.String, nullable=False)
     price = db.Column(db.Numeric(scale=2), nullable=False, default=0)
 
-    contracts = db.relationship(ContractedService, backref="service")
+    contracts = db.relationship(ContractedService, backref="service", cascade="all, delete-orphan")
     created_at = db.Column(db.Date(), nullable=True)
 
     search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
