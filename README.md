@@ -52,7 +52,6 @@ Notemos que este proyecto está preparado para ejecutarse en local. Para prepara
 | /contracted_services/contractor/@email | GET         | 1,8,9    | Returns the services requested to a user                                                                      |
 | /contracted_service/@id                | PUT, DELETE | 1,8,9    | Deletes or upgrades concrete contracted service if the correct token                                          |
 
-
 *Comment
 If the user doesn't exist return not found. If the request maker(RM) is admin return whole user profile minus pwd. If RM not admin and the user that is searched is not verified (email) return not found.
 Otherwise (mail verified), if the RM is the searched user returns whole minus pwd, access, verified_email. Finally, if the RM is not the searched user returns same as before minus wallet.

@@ -6,6 +6,7 @@ from database import db
 from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege, EmailNotVerified
 from utils.mail import send_email
 from models.user import User
+from models.contracted_service import ContractedService
 from models.user import auth
 from utils.privilegies import access
 from flask import g
@@ -164,23 +165,27 @@ def create_user():
 @users_bp.route("/<string:email>", methods=["PUT"])
 @auth.login_required(role=[access[1], access[8], access[9]])
 def edit_user(email):
+    user_schema_create.validates_email(email)
     usr = User.query.get(email)
     d = request.json
-    if User.query.get(email) is None:
+    if usr is None:
         raise Conflict
 
     # If there is no privilege we can't do this action.
     if email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to modify other resources.")
     if "email" in d:
+        user_schema_create.validates_email(d["email"])
         if User.query.get(d["email"]) is not None:
-            raise Conflict
+            if d["email"] != email:
+                raise Conflict
         usr.email = d["email"]
     if "name" in d:
         usr.name = d["name"]
 
     # Optional fields
     if "phone" in d:
+        user_schema_create.validates_phone(d["phone"])
         usr.phone = d["phone"]
     if "birthday" in d:
         usr.birthday = d["birthday"]
@@ -285,3 +290,4 @@ def update_password():
     g.user.save_to_db()
 
     return "Contraseña cambiada", 200
+
