@@ -5,6 +5,7 @@ from werkzeug.exceptions import NotFound
 from database import db
 from sqlalchemy.orm.util import has_identity
 from models.contracted_service import ContractedService
+from models.service import Service
 from models.user import auth
 from routes.users import get_user
 from flask import g
@@ -150,6 +151,26 @@ def contract_service():
 
     return Response("Servicio pedido correctamente con el identificador: " + str(new_contracted_service.id),
                     status=201)
+
+@contracted_services_bp.route("/<int:id>/done", methods=["PUT"])
+@auth.login_required(role=[access[1], access[8], access[9]])
+def mark_as_done(id):
+    contract = ContractedService.get_by_id(id)
+    service = Service.get_by_id(contract.service_id)
+
+    # En caso de no encontrar el servicio retornamos un mensaje de error.
+    if not contract:
+        raise NotFound
+
+    if not service:
+        raise NotFound
+
+    if service.user_email != g.user.email and g.user.access < 8:
+        raise PrivilegeException("Not enough privileges to modify other resources.")
+
+    contract.state = 'done'
+    return ('State updated successfully', 200)
+    pass
 
 
 @contracted_services_bp.route("/<int:contracted_service_id>", methods=["PUT", "DELETE"])

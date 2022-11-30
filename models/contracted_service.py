@@ -11,7 +11,7 @@ class ContractedService(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_email = db.Column(db.String(50), db.ForeignKey('users.email'), nullable=False)
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
-    state = db.Column(db.String, nullable=False)
+    state = db.Column(db.String, nullable=False, default='on process')
     price = db.Column(db.Numeric(scale=2), nullable=False, default=0)
 
     def save_to_db(self):
