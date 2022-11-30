@@ -11,7 +11,7 @@ class Service(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     masterID = db.Column(db.Integer, nullable=True)
-    user_email = db.Column(db.String(50), db.ForeignKey('users.email'), nullable=False)
+    user_email = db.Column(db.String(50), db.ForeignKey('users.email'))
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String, nullable=False)
     price = db.Column(db.Numeric(scale=2), nullable=False, default=0)
@@ -32,7 +32,12 @@ class Service(db.Model):
         """
         This method saves the instance to the database
         """
-        self.masterID = self.id
+
+        if self.masterID is None:
+            self.masterID = self.id
+
+        self.created_at = db.func.current_date()
+
         db.session.add(self)
         db.session.commit()
         term_frequency.put_service(self)

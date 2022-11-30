@@ -113,3 +113,4 @@ def test_delete_service():
 
         # Comprovamos que al borrar el servicio el usuario sigue existiendo
         assert Service.query.all()[0].state == 2
+
