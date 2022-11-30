@@ -85,7 +85,7 @@ Content-Type: application/json
 
 ### POST a service
 POST http://localhost:5000/services
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBlcGl0b0BnbWFpbC5jb20iLCJleHAiOjE2Njc1NTM0MDN9.XQ_KH0ibjwfr96uXipv9U_GpFi0qdZS2bLRfd0ldjP0 loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2Njk4Mjc1NTV9.28V95gSz6VSuZH_ZtLPwOFfxT0W3aNMgesXNV-OrxFg loquesea
 Content-Type: application/json
 
 {
@@ -104,8 +104,23 @@ Content-Type: application/json
   "price": 600
 }
 
+### GET all reviews
+GET localhost:5000/reviews
+
+### PUT a review
+PUT localhost:5000/reviews
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2Njk4ODA0NDl9.L8GDq-_DhxH9sh0RQOmkdooczLmYg80USAMqAkontYE loquesea
+Content-Type: application/json
+
+{
+  "service": 1,
+  "title": "mi primera review",
+  "text": "ni mal ni bien",
+  "stars": 3
+}
+
 ### DELETE concrete services
-DELETE localhost:5000/services/4
+GET localhost:5000/services/1
 
 ### DELETE concrete user
 DELETE localhost:5000/users/xxnazarxx@hotmail.es
@@ -117,7 +132,7 @@ Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzNUBlbW
 
 ### POST a contract
 POST http://localhost:5000/contracted_services
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBlcGl0b0BnbWFpbC5jb20iLCJleHAiOjE2Njc1NTM0MDN9.XQ_KH0ibjwfr96uXipv9U_GpFi0qdZS2bLRfd0ldjP0 loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2Njk4MjUzODN9.d8j23UC2cHRtbQj60_f3Qh_7Xl1iXPZuqDQhYgaogOA loquesea
 Content-Type: application/json
 
 {
