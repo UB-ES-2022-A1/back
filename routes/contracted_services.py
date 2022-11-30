@@ -6,6 +6,7 @@ from database import db
 from sqlalchemy.orm.util import has_identity
 from models.contracted_service import ContractedService
 from models.service import Service
+from models.user import User
 from models.user import auth
 from routes.users import get_user
 from flask import g
@@ -168,7 +169,14 @@ def mark_as_done(id):
     if service.user_email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to modify other resources.")
 
+    contracted = User.get_by_id(service.user_email)
+    if not contracted:
+        raise NotFound
+
     contract.state = 'done'
+    contracted.wallet = str(float(contracted.wallet) + float(service.price))
+    contract.save_to_db()
+    contracted.save_to_db()
     return ('State updated successfully', 200)
     pass
 
