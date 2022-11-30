@@ -54,7 +54,7 @@ service_schema_all = ServiceSchema(exclude=['search_coincidences'])
 
 def filter_query(q, filters, coincidence=False):
     if coincidence:
-        q = q.join(Service, aliased=True)
+        q = q.join(Service, aliased=True).filter_by(state=0)
 
     for filter_name in filters:
 
@@ -112,6 +112,10 @@ def sort_services(list_to_sort, passed_arguments):
         def sort_criterion(s: Service):
             return s.price
 
+    elif passed_arguments['by'] == 'creation_date':
+        def sort_criterion(s: Service):
+            return s.created_at
+
     elif passed_arguments['by'] == 'rating':
         raise NotImplementedError('This sorting method is not supported!')
 
@@ -141,7 +145,7 @@ def get_matches_text(search_text, search_order, filters=(), threshold=0.9, user_
 
     for coincidences_query in coincidences_queries:
         if user_email is not None:
-            coincidences_query = coincidences_query.join(Service, aliased=True).filter_by(user_email=user_email)
+            coincidences_query = coincidences_query.join(Service, aliased=True).filter_by(user_email=user_email, state=0)
         coincidences_query = filter_query(coincidences_query, filters=filters, coincidence=True)
         coincidences_word = coincidences_query.all()
 
@@ -190,8 +194,10 @@ def get_many_services(user_email=None):
     :return: Response with all the services
     """
 
+    all_services = Service.query.filter(Service.state == 0)
+
+
     if not request.headers.get('content-type') == 'application/json':
-        all_services = Service.get_all()
         return jsonify(service_schema_all.dump(all_services, many=True)), 200
 
     info = request.json
@@ -207,9 +213,9 @@ def get_many_services(user_email=None):
         if 'sort' in info:
             sort_services(all_services, info['sort'])
     else:
-        services_query = Service.query
+        services_query = Service.query.filter(Service.state == 0)
         if user_email is not None:
-            services_query = services_query.filter_by(user_email=user_email)
+            services_query = services_query.filter_by(user_email=user_email, state=0)
         services_query = filter_query(services_query, filters=filters, coincidence=False)
         if 'sort' in info:
             services_query = sort_query_services(services_query, info['sort'])
@@ -250,7 +256,7 @@ def get_service_user(service_id):
 
 
 @services_bp.route("/<string:email>/service", methods=["GET", "POST"])
-@auth.login_required(role=[access[0], access[1], access[8], access[0]])
+@auth.login_required(role=[access[0], access[1], access[8], access[9]])
 def get_user_services(email):
     """
     This method returns a user services. It doesn't require privileges
@@ -302,9 +308,11 @@ def interact_service(service_id):
         iterator = iter(service.__dict__.items())
         next(iterator)  # Metadata
         for attr, value in iterator:
-            if attr == "user_email": attr = "user"
-            if attr not in info.keys():
-                info[attr] = value
+            if attr != "id" and attr != "created_at":
+                if attr == "user_email": attr = "user"
+                if attr not in info.keys():
+                    info[attr] = value
+
         service.state = 2
         service.save_to_db()
         n_service = service_schema_all.load(info, session=db.session)  # De esta forma pasamos todos los constrains.
