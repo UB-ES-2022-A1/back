@@ -36,7 +36,8 @@ class Service(db.Model):
         if self.masterID is None:
             self.masterID = self.id
 
-        self.created_at = db.func.current_date()
+        if self.created_at is None:
+            self.created_at = db.func.current_date()
 
         db.session.add(self)
         db.session.commit()
