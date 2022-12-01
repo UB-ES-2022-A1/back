@@ -302,7 +302,7 @@ def interact_service(service_id):
     elif request.method == "POST":
         service.state = 1
         service.save_to_db()
-        return Response("Se ha desactivado correctamente el servicio con identificador: " + str(service_id), status=200)
+        return {'service_disabled_id': service_id}, 200
 
     # Eliminates the service (only changes the state)
     elif request.method == "DELETE":
