@@ -3,19 +3,19 @@ from flask import Blueprint, jsonify
 from marshmallow import ValidationError
 from werkzeug.exceptions import NotFound, Conflict, BadRequest
 from sqlalchemy.exc import IntegrityError
-from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege
+from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege, EmailNotVerified
 
 error_bp = Blueprint("errors", __name__)
 
 
 @error_bp.app_errorhandler(Conflict)
-def handle_validation(err):
+def handle_conflict(err):
     return jsonify({"message": "El recurso ya existe" + str(err)}), 409
 
 
 @error_bp.app_errorhandler(ValidationError)
 def handle_validation(err):
-    return jsonify({"message": "Datos incorrectos", "campos": err.messages_dict}), 400
+    return jsonify({"message": "Datos incorrectos", "campos": err.messages}), 400
 
 
 # 404 not found
@@ -45,6 +45,12 @@ def handle_privilege_exception(err):
 # Error al dar privilegios no acceptados.
 @error_bp.app_errorhandler(NotAcceptedPrivilege)
 def handle_not_accepted_privilege_exception(err):
+    return jsonify({"message": str(err)}), 400
+
+
+# Error al acceder sin tener el mail verificado.
+@error_bp.app_errorhandler(EmailNotVerified)
+def handle_email_not_verified(err):
     return jsonify({"message": str(err)}), 400
 
 

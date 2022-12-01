@@ -4,7 +4,7 @@ GET localhost:5000/users
 ### GET all services
 GET localhost:5000/services
 
-### search services
+### Search services
 GET localhost:5000/services
 Content-Type: application/json
 
@@ -46,7 +46,7 @@ POST localhost:5000/users
 Content-Type: application/json
 
 {
-  "email": "pepito@gmail.com",
+  "email": "xxnazarxx@hotmail.es",
   "pwd": "12345678",
   "phone": 123456434,
   "name": "Jordi",
@@ -63,15 +63,14 @@ GET localhost:5000/services/5/user
 GET localhost:5000/services/email2/service
 
 ### GET concrete user
-GET localhost:5000/users/email1@gmail.com
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2NjcwMTQwMzF9.AeUqg7PaHtNpf9rFBQDsqriDm2CM3PKzaukXbrxigqo loquesea
+GET localhost:5000/users/xxnazarxx@hotmail.es
 
 ### POST an LOGIN ---> After this all the following requests needs login(token)
 POST localhost:5000/login
 Content-Type: application/json
 
 {
-  "email": "pepito@gmail.com",
+  "email": "xxnazarxx@hotmail.es",
   "pwd": "12345678"
 }
 
@@ -109,8 +108,8 @@ Content-Type: application/json
 DELETE localhost:5000/services/4
 
 ### DELETE concrete user
-DELETE localhost:5000/users/us2@email.com
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzNUBlbWFpbC5jb20iLCJleHAiOjE2NjY5Njc3MzJ9.MmEjGuHsvFUkpiHtnrlJawt7M6S-GHz376kvIeZVOFs loquesea
+DELETE localhost:5000/users/xxnazarxx@hotmail.es
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjY4MTQxNDE5fQ.GOuNonhgtzOx5XEawk40kvgIkVRRDGrgYKlLNaVZtCU loquesea
 
 ### PUT update privileges of a user
 PUT localhost:5000/users/email1@gmail.com/privileges/7
@@ -125,4 +124,16 @@ Content-Type: application/json
   "service": 1,
   "state": "active",
   "price" : 0
+}
+
+### POST petición reseteo de contra
+POST localhost:5000/users/forget_pwd/xxnazarxx@hotmail.es
+
+### POST resetear contra
+POST localhost:5000/users/reset_pwd
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjY4NjU5Njc5fQ.bX4TedXWbP9Fj2CdjaitJHHkpY_brRN9g_4m9Wn5q9I loquesea
+Content-Type: application/json
+
+{
+  "pwd": "12345678"
 }

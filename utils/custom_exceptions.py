@@ -9,3 +9,7 @@ class UserNotMatchException(Exception):
 
 class NotAcceptedPrivilege(Exception):
     """Raised when MaxAdmin tries to update the privileges of a user with not accepted ones"""
+
+
+class EmailNotVerified(Exception):
+    """Raised when the email is not verified"""
