@@ -1,12 +1,11 @@
-from flask import Blueprint, jsonify, request, Response
+from flask import Blueprint, jsonify, request
 from marshmallow import validates, ValidationError, validate
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound, Conflict
 from database import db
-from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege, EmailNotVerified
+from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege
 from utils.mail import send_email
 from models.user import User
-from models.contracted_service import ContractedService
 from models.user import auth
 from utils.privilegies import access
 from flask import g
@@ -131,7 +130,7 @@ def delete_user(email):
     if email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to modify other resources.")
     usr.delete_from_db()
-    return Response("Se ha eliminado correctamente el usuario con identificador: " + str(email), status=200)
+    return {"deleted user": email}, 200
 
 
 @users_bp.route("", methods=["POST"])
@@ -159,7 +158,7 @@ def create_user():
 
     send_email('REGISTER', new_user.generate_auth_token(), new_user.email)
 
-    return "Verifica el mail", 201
+    return {'message': "Verifica el mail"}, 201
 
 
 @users_bp.route("/<string:email>", methods=["PUT"])
@@ -192,7 +191,7 @@ def edit_user(email):
     if "address" in d:
         usr.address = d["address"]
     usr.save_to_db()
-    return Response("Se ha editado correctamente el usuario con identificador: " + str(email), status=200)
+    return {'edited user': str(email)}, 200
 
 
 @users_bp.route("/<string:email>/privileges/<int:privilege>", methods=["PUT"])
@@ -213,7 +212,7 @@ def changes_privileges(email, privilege):
     usr.access = privilege
     usr.save_to_db()
 
-    return jsonify("Privilegios modificados correctamente"), 200
+    return {'new privilege': privilege}, 200
 
 @users_bp.route("/<string:email>/wallet", methods=["PUT"])
 @auth.login_required(role=[access[8], access[9]])
@@ -242,7 +241,7 @@ def confirm_email(token):
     user: User = User.verify_auth_token(token)
     user.verified_email = True
     user.save_to_db()
-    return "Gracias por verificar su mail!"
+    return jsonify("Gracias por verificar su mail!"), 200
 
 
 @users_bp.route("/back_reset/<token>", methods=["GET"])
@@ -253,7 +252,7 @@ def back_reset_mail(token):
     :param token: The token of the user
     :return: Response with the token
     """
-    return "El token es    " + token, 200
+    return {'token': token}, 200
 
 
 @users_bp.route("/forget_pwd/<email>", methods=["POST"])
@@ -269,7 +268,7 @@ def forget_pwd(email):
     if not usr:
         raise NotFound("Usuario no encontrado")
     send_email('RECOVER', usr.generate_auth_token(), email)
-    return "Mail enviado", 201
+    return {'sent_to': email}, 201
 
 
 @users_bp.route("/reset_pwd", methods=["POST"])
@@ -289,5 +288,5 @@ def update_password():
     g.user.pwd = User.hash_password(pwd)
     g.user.save_to_db()
 
-    return "Contraseña cambiada", 200
+    return jsonify("Contraseña cambiada"), 200
 

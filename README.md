@@ -50,8 +50,9 @@ Notemos que este proyecto está preparado para ejecutarse en local. Para prepara
 | /contracted_services/@id/user          | GET         | 0,1,8,9  | Returns the creator of a contracted service                                                                   |
 | /contracted_services/client/@email     | GET         | 1,8,9    | Returns the services contracted by a user                                                                     |
 | /contracted_services/contractor/@email | GET         | 1,8,9    | Returns the services requested to a user                                                                      |
-| /contracted_service/@id                | PUT, DELETE | 1,8,9    | Deletes or upgrades concrete contracted service if the correct token                                          |
-
+| /contracted_services/@id               | PUT, DELETE | 1,8,9    | Deletes or upgrades concrete contracted service if the correct token                                          |
+| /contracted_services/@id/accept        | PUT         | 1,8,9    | Sets the contract as "accepted", only available to contracted user and admins                                 |
+| /contracted_services/@id/done          | PUT         | 1,8,9    | Sets the contract as "done", only available to contracted user and admins                                     |
 *Comment
 If the user doesn't exist return not found. If the request maker(RM) is admin return whole user profile minus pwd. If RM not admin and the user that is searched is not verified (email) return not found.
 Otherwise (mail verified), if the RM is the searched user returns whole minus pwd, access, verified_email. Finally, if the RM is not the searched user returns same as before minus wallet.
@@ -69,11 +70,14 @@ Otherwise (mail verified), if the RM is the searched user returns whole minus pw
 
 Values used in POST methods (PUT may contain only a subset of them). Other parameters are extra ones from de db.
 
-| CLASS    | REQUEST PARAMETERS                                                          | OTHER PARAMETERS               |
-|----------|-----------------------------------------------------------------------------|--------------------------------|
-| USER     | email, pwd, name, phone, birthday, address                                  | access, verified_email, wallet |
-| SERVICE  | user_email, title, description, price, begin, end, cooldown, requires-place | id                             | 
-| CONTRACT | user_email, service_id, state, price                                        | None                           |
+User states: 0 -> active, 1 -> not active
+Service states: 0 -> active, 1 -> paused (not implemented), 2 -> not active
+
+| CLASS    | REQUEST PARAMETERS                                                                             | OTHER PARAMETERS               |
+|----------|------------------------------------------------------------------------------------------------|--------------------------------|
+| USER     | email, pwd, name, phone, birthday, address, state                                              | access, verified_email, wallet |
+| SERVICE  | user_email, title, description, price, begin, end, cooldown, requires-place, created_at, state | id                             | 
+| CONTRACT | user_email, service_id, state, price                                                           | None                           |
 
 
 MaxAdmin: "madmin@gmail.com" ; with password "password"

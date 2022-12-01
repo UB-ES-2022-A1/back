@@ -70,6 +70,20 @@ def test_post_get_user(client):
     users = r.get_json()
     assert len(users) == 2
 
+def test_get_one_user(client):
+
+    r = client.get("users/pepito@gmail.com")
+    assert r.status_code == 404
+
+    user1_dict = {'email': 'pepito@gmail.com', 'pwd': '12345678', 'name': 'Pepito'}
+    r = client.post("users", json=user1_dict)
+    assert r.status_code == 201
+
+    r = request_with_login(login=client.post, request=client.get, url="users/pepito@gmail.com", json_r={}, email='pepito@gmail.com', pwd='12345678')
+    assert r.status_code == 200
+    assert 'wallet' in r.get_json()
+    assert 'wallet' not in client.get("users/pepito@gmail.com").get_json()
+
 
 def test_user_post_missing_fields(client):
     # missing all
