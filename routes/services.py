@@ -2,12 +2,14 @@ from collections import defaultdict
 from math import log
 from sqlalchemy import desc
 from flask import Blueprint, jsonify, request
-from marshmallow import validates, ValidationError
+from marshmallow import validates, ValidationError, pre_dump
 from werkzeug.exceptions import BadRequest
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound
 from database import db
 from sqlalchemy.orm.util import has_identity
+
+from models.review import Review
 from models.service import Service
 from models.search import term_frequency
 from models.user import auth
@@ -316,7 +318,7 @@ def interact_service(service_id):
         iterator = iter(service.__dict__.items())
         next(iterator)  # Metadata
         for attr, value in iterator:
-            if attr != "id" and attr != "created_at":
+            if attr in ['title', 'description', 'price', 'cooldown', 'begin', 'end', 'requiresPlace']:
                 if attr == "user_email": attr = "user"
                 if attr not in info.keys():
                     info[attr] = value
@@ -324,5 +326,6 @@ def interact_service(service_id):
         service.state = 2
         service.save_to_db()
         n_service = service_schema_all.load(info, session=db.session)  # De esta forma pasamos todos los constrains.
+        n_service.masterID = service.masterID
         n_service.save_to_db()
         return {'modified_service_id': n_service.id}, 200
