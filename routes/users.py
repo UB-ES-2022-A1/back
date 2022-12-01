@@ -3,10 +3,8 @@ from marshmallow import validates, ValidationError, validate
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound, Conflict
 from database import db
-from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege, EmailNotVerified
-from utils.mail import send_email
+from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege
 from models.user import User
-from models.contracted_service import ContractedService
 from models.user import auth
 from utils.privilegies import access
 from flask import g
@@ -44,22 +42,12 @@ class UserSchema(SQLAlchemyAutoSchema):
     @validates("email")
     def validates_email(self, value):
         """
-        This method validates the email
+        This phone validates the email
         :param value: the email
         :return: None. Raises an Exception
         """
         validator = validate.Email()
         return validator(value)
-
-    @validates("verified_email")
-    def verified(self, value):
-        """
-        This  method validates the verified_email
-        :param value: verified_email
-        :return: None. Raises an Exception
-        """
-        if value:
-            raise ValidationError("verified_email es un campo que no se puede editar")
 
     # TODO remove para crear el admin maximo. Se quita esta función se crea el admin y se vuelve a añadir la función. También se puede hacer atentando contra la base de datos.
     @validates("access")
@@ -74,8 +62,7 @@ user_schema_repr = UserSchema(only=("name", "email", "birthday"))
 # Para crear usuario
 user_schema_create = UserSchema()
 
-user_schema_profile = UserSchema(exclude=['pwd', 'access', 'wallet', 'verified_email'])
-user_schema_profile_self = UserSchema(exclude=['pwd', 'access', 'verified_email'])
+user_schema_profile = UserSchema(exclude=['pwd', 'access'])
 user_schema_profile_adm = UserSchema(exclude=['pwd'])
 
 
@@ -86,12 +73,8 @@ def get_all_users():
     This method return all users
     :return: Response with a list of all users
     """
-    if g.user.access == 9 or g.user.access == 8:
-        all_users = User.query.all()
-        return jsonify(user_schema_profile_adm.dump(all_users, many=True)), 200  # Mostramos los accesos de privilegio
-    else:
-        all_users = User.query.filter_by(verified_email=True)
-        return jsonify(user_schema_repr.dump(all_users, many=True)), 200
+    all_users = User.query.all()
+    return jsonify(user_schema_repr.dump(all_users, many=True)), 200
 
 
 @users_bp.route("/<string:email>", methods=["GET"])
@@ -104,15 +87,10 @@ def get_user(email):
     """
     usr = User.query.get(email)
     if not usr:
-        raise NotFound("Usuario no encontrado")
+        raise NotFound
     if g.user.access == 9 or g.user.access == 8:
         return jsonify(user_schema_profile_adm.dump(usr, many=False)), 200  # Mostramos los accesos de privilegio a los administradores
-    if not usr.verified_email:
-        raise NotFound("Usuario no encontrado")
-    elif usr.email == g.user.email:
-        return jsonify(user_schema_profile_self.dump(usr, many=False)), 200
-    else:
-        return jsonify(user_schema_profile.dump(usr, many=False)), 200
+    return jsonify(user_schema_profile.dump(usr, many=False)), 200
 
 
 @users_bp.route("/<string:email>", methods=["DELETE"])
@@ -143,57 +121,37 @@ def create_user():
     """
     d = request.json
     new_user = user_schema_create.load(d, session=db.session)
-    # Check if not exists
+    # si ya existe no se puede
     if User.query.get(new_user.email) is not None:
         raise Conflict
 
     new_user.pwd = User.hash_password(new_user.pwd)
-
-    # Only for tests
-    if db.app.config["SQLALCHEMY_DATABASE_URI"] == "sqlite:///data_test.db":
-        new_user.verified_email = True
-        new_user.save_to_db()
-        return jsonify(user_schema_profile.dump(new_user, many=False)), 201
-
     new_user.save_to_db()
-
-    send_email('REGISTER', new_user.generate_auth_token(), new_user.email)
-
-    return "Verifica el mail", 201
-
+    return jsonify(user_schema_profile.dump(new_user, many=False)), 201
 
 @users_bp.route("/<string:email>", methods=["PUT"])
 @auth.login_required(role=[access[1], access[8], access[9]])
 def edit_user(email):
-    user_schema_create.validates_email(email)
     usr = User.query.get(email)
     d = request.json
-    if usr is None:
+    if User.query.get(email) is None:
         raise Conflict
-
-    # If there is no privilege we can't do this action.
-    if email != g.user.email and g.user.access < 8:
-        raise PrivilegeException("Not enough privileges to modify other resources.")
     if "email" in d:
-        user_schema_create.validates_email(d["email"])
         if User.query.get(d["email"]) is not None:
-            if d["email"] != email:
-                raise Conflict
+            raise Conflict
         usr.email = d["email"]
     if "name" in d:
         usr.name = d["name"]
 
-    # Optional fields
+    # Campos opcionales
     if "phone" in d:
-        user_schema_create.validates_phone(d["phone"])
         usr.phone = d["phone"]
     if "birthday" in d:
         usr.birthday = d["birthday"]
     if "address" in d:
         usr.address = d["address"]
-    usr.save_to_db()
+    db.session.commit()
     return Response("Se ha editado correctamente el usuario con identificador: " + str(email), status=200)
-
 
 @users_bp.route("/<string:email>/privileges/<int:privilege>", methods=["PUT"])
 @auth.login_required(role=[access[9]])
@@ -214,80 +172,3 @@ def changes_privileges(email, privilege):
     usr.save_to_db()
 
     return jsonify("Privilegios modificados correctamente"), 200
-
-@users_bp.route("/<string:email>/wallet", methods=["PUT"])
-@auth.login_required(role=[access[8], access[9]])
-def edit_wallet(email):
-
-    usr = User.query.get(email)
-    d = request.json
-    if not usr:
-        raise NotFound
-
-    usr.wallet = str(float(usr.wallet) + float(d["money"]))
-
-    usr.save_to_db()
-
-    return jsonify("Dinero añadido correctamente"), 200
-
-
-@users_bp.route("/confirm_email/<token>", methods=["GET"])
-@auth.login_required(role=[access[0], access[1], access[8], access[9]])
-def confirm_email(token):
-    """
-    This method is used to verify a user email
-    :param token: Contains user information. Is sent to him in the email.
-    :return: Message.
-    """
-    user: User = User.verify_auth_token(token)
-    user.verified_email = True
-    user.save_to_db()
-    return "Gracias por verificar su mail!"
-
-
-@users_bp.route("/back_reset/<token>", methods=["GET"])
-@auth.login_required(role=[access[0], access[1], access[8], access[9]])
-def back_reset_mail(token):
-    """
-    This method is used to obtain the token for testing with reset mail in back. It shouldn't be used in production
-    :param token: The token of the user
-    :return: Response with the token
-    """
-    return "El token es    " + token, 200
-
-
-@users_bp.route("/forget_pwd/<email>", methods=["POST"])
-@auth.login_required(role=[access[0], access[1], access[8], access[9]])
-def forget_pwd(email):
-    """
-    This method checks if the given email is correct and if so it sends a link to the users mail in which they would be
-    able to change the pwd
-    :param email: the email of the user.
-    :return: Response
-    """
-    usr = User.query.get(email)
-    if not usr:
-        raise NotFound("Usuario no encontrado")
-    send_email('RECOVER', usr.generate_auth_token(), email)
-    return "Mail enviado", 201
-
-
-@users_bp.route("/reset_pwd", methods=["POST"])
-@auth.login_required(role=[access[1], access[8], access[9]])
-def update_password():
-    """
-    This method updates the user pwd. Also validates user mail if it wasn't.
-    :return: Response
-    """
-    if 'pwd' not in request.json:
-        raise NotFound('Contraseña no encotrada')
-    pwd = request.json['pwd']
-
-    user_schema_create.validates_pwd(value=pwd)
-
-    g.user.verified_email = True
-    g.user.pwd = User.hash_password(pwd)
-    g.user.save_to_db()
-
-    return "Contraseña cambiada", 200
-

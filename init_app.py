@@ -9,8 +9,6 @@ from database import db
 from flask_migrate import Migrate
 from flask_cors import CORS
 from database import secret_key
-
-
 def init_app(database_location, develop=True):
 
     # creamos la app
@@ -19,12 +17,7 @@ def init_app(database_location, develop=True):
     app.config["SQLALCHEMY_DATABASE_URI"] = database_location
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = secret_key
-    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-    app.config['MAIL_PORT'] = 465
-    app.config['MAIL_USERNAME'] = 'atyourservice.noreply@gmail.com'
-    app.config['MAIL_PASSWORD'] = 'huotojlsvpgnlfaz'
-    app.config['MAIL_USE_TLS'] = False
-    app.config['MAIL_USE_SSL'] = True
+
     if develop:
 
         Migrate(app, db)

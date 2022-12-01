@@ -8,7 +8,7 @@ def populate(db):
     user_emails = [u.email for u in User.get_all()]
 
     for i in range(1, 10):
-        user = User(email="email" + str(i) + "@gmail.com", pwd=User.hash_password("password"), name="Name" + str(i), verified_email=True)
+        user = User(email="email" + str(i) + "@gmail.com", pwd=User.hash_password("password"), name="Name" + str(i))
         if not user.email in user_emails:
             user.save_to_db()
 
@@ -37,7 +37,7 @@ def populate(db):
 
     db.session.commit()
     try:
-        user_a = User(email="madmin@gmail.com", pwd=User.hash_password("password"), name="MaxAdm", access=9, verified_email=True)
+        user_a = User(email="madmin@gmail.com", pwd=User.hash_password("password"), name="MaxAdm", access=9)
         user_a.save_to_db()
     except Exception as e:
         print(e)
