@@ -85,7 +85,7 @@ Content-Type: application/json
 
 ### POST a service
 POST http://localhost:5000/services
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2Njk4Mjc1NTV9.28V95gSz6VSuZH_ZtLPwOFfxT0W3aNMgesXNV-OrxFg loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2Njk5ODQ1Mzl9.5E1PFuw5eJNWQXvQLjifUT8IaQ9dzCnBe1GQcmKZoX8 loquesea
 Content-Type: application/json
 
 {
@@ -107,9 +107,9 @@ Content-Type: application/json
 ### GET all reviews
 GET localhost:5000/reviews
 
-### PUT a review
+### POST a review
 PUT localhost:5000/reviews
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2Njk4ODA0NDl9.L8GDq-_DhxH9sh0RQOmkdooczLmYg80USAMqAkontYE loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2Njk5ODU0NTJ9.zqrSr4dtmRT-aihVw3SRrmaq3tbitqEAO4yCReFAoS0 loquesea
 Content-Type: application/json
 
 {
