@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, Response
 from marshmallow import validates, ValidationError
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import NotFound, BadRequest
 from database import db
 from sqlalchemy.orm.util import has_identity
 from models.contracted_service import ContractedService
@@ -110,7 +110,6 @@ def get_contracted_service_user(contracted_service_id):
 @contracted_services_bp.route("/client/<string:email>", methods=["GET"])
 @auth.login_required(role=[access[1], access[8], access[9]])
 def get_user_contracted_services(email):
-
     """
     :param email: the email of the client
     :return: all the contracts the client has ordered
@@ -145,6 +144,9 @@ def contract_service():
     :return: Response
     """
     info = request.json  # Leer la info del json
+    if 'service' not in info:
+        raise ValidationError({'service': ['Missing data for required field.']})
+
     info["user"] = g.user.email
     new_contracted_service = contracted_service_schema_all.load(info,
                                                                 session=db.session)  # Crear el objeto mediante el schema
@@ -152,6 +154,7 @@ def contract_service():
 
     return Response("Servicio pedido correctamente con el identificador: " + str(new_contracted_service.id),
                     status=201)
+
 
 @contracted_services_bp.route("/<int:id>/done", methods=["PUT"])
 @auth.login_required(role=[access[1], access[8], access[9]])
