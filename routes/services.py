@@ -280,8 +280,7 @@ def create_service():
 
     return Response("Servicio añadido correctamente con el identificador: " + str(new_service.id), status=200)
 
-
-@services_bp.route("/<int:service_id>", methods=["PUT", "DELETE"])
+@services_bp.route("/<int:service_id>", methods=["POST","PUT", "DELETE"])
 @auth.login_required(role=[access[1], access[8], access[9]])
 def interact_service(service_id):
     """
@@ -298,10 +297,18 @@ def interact_service(service_id):
     if service.user_email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to modify other resources.")
 
+    # Disables the service (only changes the state)
+    elif request.method == "POST":
+        service.state = 1
+        service.save_to_db()
+        return Response("Se ha desactivado correctamente el servicio con identificador: " + str(service_id), status=200)
+
+    # Eliminates the service (only changes the state)
     elif request.method == "DELETE":
-        service.state = 2
+        service.delete_from_db()
         return Response("Se ha eliminado correctamente el servicio con identificador: " + str(service_id), status=200)
 
+    # Modifies the service by changing the state and creating a new one with the same parameters except the changed ones
     elif request.method == "PUT":
         # All this code is to be able to use all the checks of the marshmallow schema.
         info = request.json
