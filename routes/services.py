@@ -196,7 +196,11 @@ def get_many_services(user_email=None):
     :return: Response with all the services
     """
 
-    all_services = Service.query.filter(Service.state == 0)
+    q = Service.query
+    if user_email:
+        q = q.filter(Service.user_email == user_email)
+
+    all_services = q.filter(Service.state == 0)
 
 
     if not request.headers.get('content-type') == 'application/json':
