@@ -5,7 +5,6 @@ from models.service import Service
 from models.user import User
 from models.contracted_service import ContractedService
 from routes.contracted_services import contracted_service_schema_all
-from routes.services import service_schema_all
 from sqlalchemy.exc import IntegrityError
 import json
 
@@ -21,40 +20,14 @@ def test_new_contract():
         Service.query.delete()
 
         user_t = User(email="emailT", pwd="passwordT", name="name")
-        service_t = Service(title="titleT", user=user_t, description="descriptionT", price=0)
-        contract_t = ContractedService(user=user_t, service=service_t, state="active", price=0)
+        service_t = Service(title="titleT", user=user_t, description="descriptionT")
+        contract_t = ContractedService(user=user_t, service=service_t, state="active")
         user_t.save_to_db()
         service_t.save_to_db()
 
         assert contract_t.user_email == "emailT"
-        assert contract_t.price == 0
         assert contract_t.state == "active"
         assert contract_t.service_id == 1
-
-
-def test_existing_service():
-    """
-    This method tests if there can be contracted services with same values
-    """
-    with app.app_context():
-        db.create_all()
-        User.query.delete()
-        Service.query.delete()
-        ContractedService.query.delete()
-
-        user_t = User(email="emailT", pwd="password", name="name")
-        service_t = Service(title="titleT", user=user_t, description="descriptionT", price=0)
-        contract_t = ContractedService(user=user_t, service=service_t, state="active", price=0)
-        contract_t2 = ContractedService(user=user_t, service=service_t, state="active", price=0)
-
-        try:
-            user_t.save_to_db()
-            service_t.save_to_db()
-            contract_t.save_to_db()
-            contract_t2.save_to_db()
-            assert False
-        except IntegrityError:
-            assert True
 
 
 def test_non_existing_user():
@@ -69,13 +42,13 @@ def test_non_existing_user():
 
         user_t = User(email="emailT", pwd="password", name="name")
         user_t.save_to_db()
-        serviceT = Service(title="titleT", user=user_t, description="descriptionT", price=0)
+        serviceT = Service(title="titleT", user=user_t, description="descriptionT")
         serviceT.save_to_db()
         user_t.delete_from_db()
         serviceT.delete_from_db()
 
         try:
-            request_data = json.loads('{"user":"emailT", "service":"1","state":"active", "price":"0"}')
+            request_data = json.loads('{"user":"emailT", "service":"1","state":"active"}')
             contract_t = contracted_service_schema_all.load(request_data, session=db.session)
             contract_t.save_to_db()
             assert False
@@ -95,20 +68,12 @@ def test_schema():
 
         user_t = User(email="emailT", pwd="password", name="name")
         user_t.save_to_db()
-        serviceT = Service(title="titleT", user=user_t, description="descriptionT", price=0)
+        serviceT = Service(title="titleT", user=user_t, description="descriptionT",)
         serviceT.save_to_db()
-        request_data = json.loads('{"user":"emailT", "service":"1","state":"active", "price":"0"}')
+        request_data = json.loads('{"user":"emailT", "service":"1","state":"active"}')
         contract_t = contracted_service_schema_all.load(request_data, session=db.session)
 
         assert contract_t.state == "active"
-
-        request_data2 = json.loads('{"user":"emailT", "service":"1","state":"inactive", "price":"-10"}')
-        # No debería de funcionar ya que el precio es negativo
-        try:
-            contract_t2 = contracted_service_schema_all.load(request_data2, session=db.session)
-            assert False
-        except ValidationError:
-            assert True
 
 
 def test_delete_cascade():
@@ -122,9 +87,9 @@ def test_delete_cascade():
         ContractedService.query.delete()
         user_t = User(email="emailT", pwd="password", name="name")
         user_t.save_to_db()
-        service_t = Service(title="titleT", user=user_t, description="descriptionT", price=0)
+        service_t = Service(title="titleT", user=user_t, description="descriptionT")
         service_t.save_to_db()
-        contract_t = ContractedService(user=user_t, service=service_t, state="active", price=0)
+        contract_t = ContractedService(user=user_t, service=service_t, state="active")
 
         contract_t.save_to_db()
         contract_t.delete_from_db()
@@ -134,7 +99,7 @@ def test_delete_cascade():
 
         assert Service.query.all()[0].title == "titleT"
 
-        contract_t = ContractedService(user=user_t, service=service_t, state="active", price=0)
+        contract_t = ContractedService(user=user_t, service=service_t, state="active")
         user_t.delete_from_db()
         service_t.delete_from_db()
 

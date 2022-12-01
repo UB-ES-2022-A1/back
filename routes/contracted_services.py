@@ -44,16 +44,6 @@ class ContractedServiceSchema(SQLAlchemyAutoSchema):
         if not has_identity(value):
             raise NotFound("Servicio con id " + str(value.email) + " no encontrado!")
 
-    @validates("price")
-    def validates_price(self, value):
-        """
-        Validates that the price of the service is not negative
-        :param value: the price of the service
-        :return: None. Raises an Exception
-        """
-        if value < 0:
-            raise ValidationError("Price can't be negative!")
-
 
 # Para crear servicio
 contracted_service_schema_all = ContractedServiceSchema()
@@ -148,9 +138,17 @@ def contract_service():
         raise ValidationError({'service': ['Missing data for required field.']})
 
     info["user"] = g.user.email
-    new_contracted_service = contracted_service_schema_all.load(info,
-                                                                session=db.session)  # Crear el objeto mediante el schema
-    new_contracted_service.save_to_db()  # Actualizamos la BD
+    new_contracted_service = contracted_service_schema_all.load(info, session=db.session)
+    p = new_contracted_service.service.price
+    w = g.user.wallet
+    updated_w = w - p
+
+    if updated_w < 0:
+        return {'reason': 'Not enough funds'}, 555
+
+    g.user.wallet = updated_w
+    g.user.save_to_db()
+    new_contracted_service.save_to_db()
 
     return Response("Servicio pedido correctamente con el identificador: " + str(new_contracted_service.id),
                     status=201)
