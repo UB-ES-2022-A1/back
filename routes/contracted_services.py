@@ -209,7 +209,7 @@ def mark_as_accepted(id):
 
 @contracted_services_bp.route("/<int:contracted_service_id>", methods=["PUT", "DELETE"])
 @auth.login_required(role=[access[1], access[8], access[9]])
-def interact_contracted_service(contracted_service_id):
+def delete_contracted_service(contracted_service_id):
     """
     Method used to delete or modify services. Requires a token. The token
     user musts coincide with the service user or be an admin
@@ -224,9 +224,12 @@ def interact_contracted_service(contracted_service_id):
     if service.user_email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to modify other resources.")
 
-    #if service.state == 'on process'
+    if service.state == 'on process':
+        g.user.wallet += service.price
+    else:
+        raise BadRequest("Can't cancel or edit an ordered which has been accepted or delivered!")
 
-    elif request.method == "DELETE":
+    if request.method == "DELETE":
         service.delete_from_db()
         return {'deleted_request': contracted_service_id}, 200
 
@@ -240,7 +243,6 @@ def interact_contracted_service(contracted_service_id):
             if attr not in info.keys():
                 info[attr] = value
 
-        n_contracted_service = contracted_service_schema_all.load(info,
-                                                                  session=db.session)  # De esta forma pasamos todos los constrains.
+        n_contracted_service = contracted_service_schema_all.load(info, session=db.session)  # De esta forma pasamos todos los constrains.
         n_contracted_service.save_to_db()
-        return Response("Contrato modificado correctamente", status=200)
+        return {'modified_contract': n_contracted_service.id}, 200
