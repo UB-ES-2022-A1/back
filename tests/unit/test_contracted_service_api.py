@@ -46,7 +46,7 @@ def test_post_get_contracted_service(client):
                            pwd=pwd1)
     assert r.status_code == 200
 
-    service_id = int(r.text.split()[-1])
+    service_id = r.json()['added_service_id']
 
     # User2 requests the service
     c_service1_dict = {'service': service_id, 'state': 'active', 'price': 1}
