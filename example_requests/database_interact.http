@@ -85,11 +85,11 @@ Content-Type: application/json
 
 ### POST a service
 POST http://localhost:5000/services
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2Njk5ODQ1Mzl9.5E1PFuw5eJNWQXvQLjifUT8IaQ9dzCnBe1GQcmKZoX8 loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2Njk5OTMwMDh9.0YS6kTIH0CyabqP2zskha2PUAb4JPgtsk9rincIydh8 loquesea
 Content-Type: application/json
 
 {
-  "title": "titleT2",
+  "title": "titleTasdfasdf2",
   "description": "description",
   "price" : 0
 }
@@ -108,12 +108,11 @@ Content-Type: application/json
 GET localhost:5000/reviews
 
 ### POST a review
-PUT localhost:5000/reviews
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2Njk5ODU0NTJ9.zqrSr4dtmRT-aihVw3SRrmaq3tbitqEAO4yCReFAoS0 loquesea
+POST localhost:5000/reviews/1
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2Njk5ODcxMTJ9.1HYKZsMGKcjFAyfxO_HYL0LG5B1xBAscSyE7v8zJmwc loquesea
 Content-Type: application/json
 
 {
-  "service": 1,
   "title": "mi primera review",
   "text": "ni mal ni bien",
   "stars": 3

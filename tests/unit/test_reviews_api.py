@@ -39,6 +39,44 @@ def test_post_review(client):
     review1_dict = {'title': 'Mi pimera review', 'text': 'ni bien ni mal bro', 'stars': 3}
     r = request_with_login(login=client.post, request=client.post, url=f'reviews/{service_id}', json_r=review1_dict,
                            email=email2, pwd=pwd2)
-    #assert r.status_code == 200
-    assert r.get_json() == 'sdfasdf'
+
+    assert r.status_code == 200
+
+    review_id = r.get_json()['saved_review_id']
+
+    r = client.get('reviews')
+    assert r.status_code == 200
+    assert review_id in [rev['id'] for rev in r.get_json()]
+
+    r = client.get(f'reviews/service/{service_id}')
+    assert r.status_code == 200
+    assert review_id in [rev['id'] for rev in r.get_json()]
+
+    r = client.get(f'reviews/user/{email1}')
+    assert r.status_code == 200
+    assert review_id not in [rev['id'] for rev in r.get_json()]
+
+    r = client.get(f'reviews/user/{email2}')
+    assert r.status_code == 200
+    assert review_id in [rev['id'] for rev in r.get_json()]
+
+    service1_dict = {}
+    r = request_with_login(login=client.post, request=client.put, url=f"services/{service_id}", json_r=service1_dict, email=email1,
+                           pwd=pwd1)
+    assert r.status_code == 200
+
+    # changing a service yields 2 different service ids
+    service_id_2 = r.get_json()['modified_service_id']
+    assert service_id_2 != service_id
+
+    # but both have the correct review
+
+    r = client.get(f'reviews/service/{service_id}')
+    assert r.status_code == 200
+    assert review_id in [rev['id'] for rev in r.get_json()]
+
+    r = client.get(f'reviews/service/{service_id_2}')
+    assert r.status_code == 200
+    assert review_id in [rev['id'] for rev in r.get_json()]
+
 

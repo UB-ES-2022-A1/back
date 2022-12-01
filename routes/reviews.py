@@ -74,13 +74,15 @@ def get_service_reviews(service_id):
     if not service:
         raise NotFound('Servicio no encontrado.')
 
-    return jsonify(review_schema_all.dump(service.parent.reviews, many=True)), 200
+    master_service = Service.get_by_id(service.masterID)
+
+    return jsonify(review_schema_all.dump(master_service.reviews, many=True)), 200
 
 
-@reviews_bp.route("/user/<int:user_id>", methods=["GET"])
+@reviews_bp.route("/user/<string:user_email>", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
-def get_user_reviews(user_id):
-    user = User.get_by_id(user_id)
+def get_user_reviews(user_email):
+    user = User.get_by_id(user_email)
     if not user:
         raise NotFound('Usuario no encontrado.')
 
@@ -99,7 +101,7 @@ def get_user_service_review(service_id, user_id):
         raise NotFound('No se ha encontrado el usuario')
 
     review = Review.query.filter(Review.reviewer_email == user_id,
-                                 Review.service_id == service.parent.id
+                                 Review.service_id == service.masterID
                                  ).first()
 
     return jsonify(review_schema_all.dump(review, many=False)), 200
@@ -114,12 +116,16 @@ def post_review(service_id):
     """
     info = request.json  # Leer la info del json
     info["reviewer"] = g.user.email
-    info['service'] = service_id
+
+    mid = Service.get_by_id(service_id).masterID
+
+    info['service'] = mid
     new_review = review_schema_all.load(info, session=db.session)  # Crear el objeto mediante el schema
-    new_review.service = new_review.service.parent
+
+    new_review.service_id = mid
     new_review.save_to_db()  # Actualizamos la BD
 
-    return {'saved_review': new_review.id}, 200
+    return {'saved_review_id': new_review.id}, 200
 
 
 @reviews_bp.route("/<int:review_id>", methods=["DELETE"])
