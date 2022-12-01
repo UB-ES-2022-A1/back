@@ -150,7 +150,7 @@ def contract_service():
     g.user.save_to_db()
     new_contracted_service.save_to_db()
 
-    return {'request_id': new_contracted_service.id}, 200
+    return {'request_id': new_contracted_service.id}, 201
 
 
 @contracted_services_bp.route("/<int:id>/done", methods=["PUT"])
