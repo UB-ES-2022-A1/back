@@ -177,13 +177,6 @@ def get_matches_text(search_text, search_order, filters=(), threshold=0.9, user_
 
 @services_bp.route("", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
-def get_all_services():
-    all_services = Service.get_all()
-    return jsonify(service_schema_all.dump(all_services, many=True)), 200
-
-
-@services_bp.route("/search", methods=["GET", "POST"])
-@auth.login_required(role=[access[0], access[1], access[8], access[9]])
 def get_many_services(user_email=None):
     """
     This method returns a list of services. It doesn't require privileges.
@@ -249,7 +242,7 @@ def get_service_user(service_id):
     return get_user(service.user.email)
 
 
-@services_bp.route("/<string:email>/service", methods=["GET", "POST"])
+@services_bp.route("/<string:email>/service", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[0]])
 def get_user_services(email):
     """
@@ -293,7 +286,7 @@ def interact_service(service_id):
         raise PrivilegeException("Not enough privileges to modify other resources.")
 
     elif request.method == "DELETE":
-        service.state = 2
+        service.delete_from_db()
         return Response("Se ha eliminado correctamente el servicio con identificador: " + str(service_id), status=200)
 
     elif request.method == "PUT":
@@ -305,8 +298,6 @@ def interact_service(service_id):
             if attr == "user_email": attr = "user"
             if attr not in info.keys():
                 info[attr] = value
-        service.state = 2
-        service.save_to_db()
         n_service = service_schema_all.load(info, session=db.session)  # De esta forma pasamos todos los constrains.
         n_service.save_to_db()
         return Response("Servicio modificado correctamente", status=200)

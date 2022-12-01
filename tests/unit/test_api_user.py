@@ -1,5 +1,5 @@
 from models.user import User
-from utils.secure_request import request_with_login
+from utils.secure_request import  request_with_login
 from init_app import init_app
 import pytest
 
@@ -69,20 +69,6 @@ def test_post_get_user(client):
     assert r.status_code == 200
     users = r.get_json()
     assert len(users) == 2
-
-def test_get_one_user(client):
-
-    r = client.get("users/pepito@gmail.com")
-    assert r.status_code == 404
-
-    user1_dict = {'email': 'pepito@gmail.com', 'pwd': '12345678', 'name': 'Pepito'}
-    r = client.post("users", json=user1_dict)
-    assert r.status_code == 201
-
-    r = request_with_login(login=client.post, request=client.get, url="users/pepito@gmail.com", json_r={}, email='pepito@gmail.com', pwd='12345678')
-    assert r.status_code == 200
-    assert 'wallet' in r.get_json()
-    assert 'wallet' not in client.get("users/pepito@gmail.com").get_json()
 
 
 def test_user_post_missing_fields(client):
@@ -252,7 +238,7 @@ def test_admin_delete_user(client):
     pwd_a = 'qqweas'
 
     # We can create by this way a max admin user
-    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9, verified_email=True)
+    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9)
     user_a.save_to_db()
 
     # Post of the user
@@ -276,7 +262,7 @@ def test_admin_privileges_user(client):
     pwd_a = 'qqweas'
 
     # We can create by this way a max admin user
-    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9, verified_email=True)
+    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9)
     user_a.save_to_db()
 
     # Post of the user
@@ -319,7 +305,7 @@ def test_admin_display_privilege(client):
     assert r.status_code == 201
 
     # We can create by this way a max admin user
-    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9, verified_email=True)
+    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9)
     user_a.save_to_db()
 
     # Admin can see the access privileges of the user
@@ -329,98 +315,3 @@ def test_admin_display_privilege(client):
     # Normal user cannot see the privileges
     r = request_with_login(login=client.post, request=client.get, url="users/"+email1, json_r={}, email=email1, pwd=pwd1)
     assert "access" not in r.get_json()
-
-
-def test_put_user(client):
-
-    # only required
-    user1_dict = {'email': 'pepito@gmail.com', 'pwd': '12345678', 'name': 'Pepito'}
-    r = client.post("users", json=user1_dict)
-    assert r.status_code == 201
-
-    # check user has been added correctly
-    r = client.get("users")
-    assert r.status_code == 200
-    users = r.get_json()
-    assert len(users) == 1
-
-    # let's check the fields match
-    user1_response = users[0]
-
-    # admin datta
-    email_a = 'admin@gmail.com'
-    pwd_a = 'qqweas'
-
-    # We can create by this way a max admin user
-    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9, verified_email=True)
-    user_a.save_to_db()
-
-    # displayed fields
-    assert user1_response['email'] == user1_dict['email']
-    assert user1_response['name'] == user1_dict['name']
-    assert user1_response['birthday'] is None
-
-    # Then we can do the request with admin privileges.
-    r = request_with_login(login=client.post, request=client.put, url="users/pepito@gmail.com", json_r={'name': 'Pepito2'}, email=email_a, pwd=pwd_a)
-    assert r.status_code == 200
-    r = client.get("users")
-    users = r.get_json()
-    user1_response = users[0]
-    assert user1_response['name'] == 'Pepito2'
-
-    # user can edit itself
-    r = request_with_login(login=client.post, request=client.put, url="users/pepito@gmail.com", json_r={'name': 'Pepito3'}, email='pepito@gmail.com', pwd='12345678')
-    assert r.status_code == 200
-    r = client.get("users")
-    users = r.get_json()
-    user1_response = users[0]
-    assert user1_response['name'] == 'Pepito3'
-
-    # user can't edit other users
-    user1_dict = {'email': 'pepitofalso@gmail.com', 'pwd': '12345678', 'name': 'Pepito'}
-    r = client.post("users", json=user1_dict)
-    r = request_with_login(login=client.post, request=client.put, url="users/pepito@gmail.com", json_r={'name': 'Pepito3'}, email='pepitofalso@gmail.com', pwd='12345678')
-    assert r.status_code == 403
-
-def test_edit_wallet(client):
-
-    # only required
-    user1_dict = {'email': 'pepito@gmail.com', 'pwd': '12345678', 'name': 'Pepito'}
-    r = client.post("users", json=user1_dict)
-    assert r.status_code == 201
-
-    # check user has been added correctly
-    r = client.get("users")
-    assert r.status_code == 200
-
-    # admin datta
-    email_a = 'admin@gmail.com'
-    pwd_a = 'qqweas'
-
-    # We can create by this way a max admin user
-    user_a = User(email=email_a, pwd=User.hash_password(pwd_a), name="MaxAdm", access=9, verified_email=True)
-    user_a.save_to_db()
-    users = r.get_json()
-    assert len(users) == 1
-
-    # user has 0.00 money by default
-    r = request_with_login(login=client.post, request=client.get, url="users/pepito@gmail.com", json_r={}, email=email_a, pwd=pwd_a)
-    assert r.status_code == 200
-    assert r.get_json()['wallet'] == '0.00'
-
-    # Then we can do the request to add money with admin privileges.
-    r = request_with_login(login=client.post, request=client.put, url="users/pepito@gmail.com/wallet", json_r={'money':'20.13'}, email=email_a, pwd=pwd_a)
-    assert r.status_code == 200
-
-    r = request_with_login(login=client.post, request=client.get, url="users/pepito@gmail.com", json_r={}, email=email_a, pwd=pwd_a)
-    assert r.status_code == 200
-    assert r.get_json()['wallet'] == '20.13'
-
-    # Then we can do the request to remove money with admin privileges.
-    r = request_with_login(login=client.post, request=client.put, url="users/pepito@gmail.com/wallet", json_r={'money':'-10.13'}, email=email_a, pwd=pwd_a)
-    assert r.status_code == 200
-
-    r = request_with_login(login=client.post, request=client.get, url="users/pepito@gmail.com", json_r={}, email=email_a, pwd=pwd_a)
-    assert r.status_code == 200
-    assert r.get_json()['wallet'] == '10.00'
-
