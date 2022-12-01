@@ -40,6 +40,11 @@ def test_post_get_contracted_service(client):
     r = client.post("users", json=user2_dict)
     assert r.status_code == 201
 
+    r = request_with_login(login=client.post, request=client.put, url=f"users/{email2}/wallet", json_r={'money': 5},
+                           email="madmin@gmail.com", pwd="password")
+
+    assert r.status_code == 200
+
     # Post a service
     service1_dict = {'title': 'titleT2', 'description': 'description', 'price': 1}
     r = request_with_login(login=client.post, request=client.post, url="services", json_r=service1_dict, email=email1,
@@ -49,7 +54,7 @@ def test_post_get_contracted_service(client):
     service_id = int(r.text.split()[-1])
 
     # User2 requests the service
-    c_service1_dict = {'service': service_id, 'state': 'active', 'price': 1}
+    c_service1_dict = {'service': service_id}
     r = request_with_login(login=client.post, request=client.post, url="contracted_services", json_r=c_service1_dict,
                            email=email2, pwd=pwd2)
     assert r.status_code == 201
@@ -81,9 +86,65 @@ def test_post_get_contracted_service(client):
     assert r.status_code == 403
 
     # Check we cannot contract without login
-    c_service1_dict = {'state': 'active', 'price': 1}
+    c_service1_dict = {'service': service_id}
     r = client.post("contracted_services", json=c_service1_dict)
     assert r.status_code == 403
+
+
+def post_insufficient_funds(client):
+    # Credentials for contractor
+    email1 = 'pepito@gmail.com'
+    pwd1 = '12345678'
+    user1_dict = {'email': email1, 'pwd': pwd1, 'name': 'Pepito', 'access': 1}
+    r = client.post("users", json=user1_dict)
+    assert r.status_code == 201
+
+    # Credentials for client
+    email2 = 'pepita@gmail.com'
+    pwd2 = '12345678'
+    user2_dict = {'email': email2, 'pwd': pwd2, 'name': 'Pepita', 'access': 1}
+    r = client.post("users", json=user2_dict)
+    assert r.status_code == 201
+
+    r = request_with_login(login=client.post, request=client.put, url=f"users/{email2}/wallet", json_r={'money': 19},
+                           email="madmin@gmail.com", pwd="password")
+
+    assert r.status_code == 200
+
+    # Post a service
+    service1_dict = {'title': 'titleT2', 'description': 'description', 'price': 10}
+    r = request_with_login(login=client.post, request=client.post, url="services", json_r=service1_dict, email=email1,
+                           pwd=pwd1)
+    assert r.status_code == 200
+
+    service_id = int(r.text.split()[-1])
+
+    # User2 requests the service
+    c_service1_dict = {'service': service_id}
+
+    r = request_with_login(login=client.post, request=client.post, url="contracted_services", json_r=c_service1_dict,
+                           email=email2, pwd=pwd2)
+    assert r.status_code == 201
+
+    # Check the client can see the service
+    r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/client/{email2}",
+                           json_r={}, email=email2, pwd=pwd2)
+
+    assert r.status_code == 200
+    contracts = r.get_json()
+    assert len(contracts) == 1
+
+    r = request_with_login(login=client.post, request=client.post, url="contracted_services", json_r=c_service1_dict,
+                           email=email2, pwd=pwd2)
+    assert r.status_code == 400
+
+    # Check the client can't see the service
+    r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/client/{email2}",
+                           json_r={}, email=email2, pwd=pwd2)
+
+    assert r.status_code == 200
+    contracts = r.get_json()
+    assert len(contracts) == 1
 
 
 def test_service_post_missing_fields(client):
@@ -106,10 +167,112 @@ def test_service_post_missing_fields(client):
     j = r.get_json()
     print(j)
     assert j['message'] == 'Datos incorrectos'
-    assert j['campos']['state'] == ['Missing data for required field.']
+    assert j['campos']['service'] == ['Missing data for required field.']
 
     # check no contracted services have been created
     r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/client/{email1}",
                            json_r={}, email=email1, pwd=pwd1)
     assert r.status_code == 200
     assert len(r.get_json()) == 0
+
+
+def test_service_lifetime(client):
+    # Credentials for contractor
+    email1 = 'pepito@gmail.com'
+    pwd1 = '12345678'
+    user1_dict = {'email': email1, 'pwd': pwd1, 'name': 'Pepito', 'access': 1}
+    r = client.post("users", json=user1_dict)
+    assert r.status_code == 201
+
+    # Credentials for client
+    email2 = 'pepita@gmail.com'
+    pwd2 = '12345678'
+    user2_dict = {'email': email2, 'pwd': pwd2, 'name': 'Pepita', 'access': 1}
+    r = client.post("users", json=user2_dict)
+    assert r.status_code == 201
+
+    # give user2 some money to buy service
+    r = request_with_login(login=client.post, request=client.put, url=f"users/{email2}/wallet", json_r={'money': 5},
+                           email="madmin@gmail.com", pwd="password")
+
+    # Post a service
+    service1_dict = {'title': 'titleT2', 'description': 'description', 'price': 1}
+    r = request_with_login(login=client.post, request=client.post, url="services", json_r=service1_dict, email=email1,
+                           pwd=pwd1)
+    assert r.status_code == 200
+
+    service_id = int(r.text.split()[-1])
+
+    # User2 requests the service
+    c_service1_dict = {'service': service_id}
+    r = request_with_login(login=client.post, request=client.post, url="contracted_services", json_r=c_service1_dict,
+                           email=email2, pwd=pwd2)
+    assert r.status_code == 201
+
+    # Check the client can see the service
+    r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/client/{email2}",
+                           json_r={}, email=email2, pwd=pwd2)
+
+    assert r.status_code == 200
+    contracts = r.get_json()
+    assert len(contracts) == 1
+
+    # Check the contractor can see the service
+    r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/contractor/{email1}",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+    contracts = r.get_json()
+    assert len(contracts) == 1
+    cstate = contracts[0]['state']
+    cid = contracts[0]['id']
+    assert cstate == 'on process'
+
+    # Check the contracted can't mark the contract as done before accepting
+    r = request_with_login(login=client.post, request=client.put, url=f"contracted_services/{cid}/done",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 409
+
+    # Check the client cant mark it accepted
+    r = request_with_login(login=client.post, request=client.put, url=f"contracted_services/{cid}/accept",
+                           json_r={}, email=email2, pwd=pwd2)
+    assert r.status_code != 200
+
+    # Check the contracted can mark it accepted
+    r = request_with_login(login=client.post, request=client.put, url=f"contracted_services/{cid}/accept",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+
+    # Check the contractor can see the service
+    r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/contractor/{email1}",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+    contracts = r.get_json()
+    cstate = contracts[0]['state']
+    assert cstate == 'accepted'
+
+    # Check the client can see the service
+    r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/contractor/{email1}",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+    contracts = r.get_json()
+    cstate = contracts[0]['state']
+    assert cstate == 'accepted'
+
+    # Check the contracted can now mark the contract as done
+    r = request_with_login(login=client.post, request=client.put, url=f"contracted_services/{cid}/done",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+
+    # Check the client cant mark it done
+    r = request_with_login(login=client.post, request=client.put, url=f"contracted_services/{cid}/done",
+                           json_r={}, email=email2, pwd=pwd2)
+    assert r.status_code != 200
+
+
+    # Check the contractor can see the service
+    r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/contractor/{email1}",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+    contracts = r.get_json()
+    cstate = contracts[0]['state']
+    assert cstate == 'done'
