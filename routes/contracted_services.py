@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, Response
+from flask import Blueprint, jsonify, request
 from marshmallow import validates, ValidationError
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound, BadRequest, Conflict
@@ -150,8 +150,7 @@ def contract_service():
     g.user.save_to_db()
     new_contracted_service.save_to_db()
 
-    return Response("Servicio pedido correctamente con el identificador: " + str(new_contracted_service.id),
-                    status=201)
+    return {'request_id': new_contracted_service.id}, 201
 
 
 @contracted_services_bp.route("/<int:id>/done", methods=["PUT"])
@@ -210,7 +209,7 @@ def mark_as_accepted(id):
 
 @contracted_services_bp.route("/<int:contracted_service_id>", methods=["PUT", "DELETE"])
 @auth.login_required(role=[access[1], access[8], access[9]])
-def interact_contracted_service(contracted_service_id):
+def delete_contracted_service(contracted_service_id):
     """
     Method used to delete or modify services. Requires a token. The token
     user musts coincide with the service user or be an admin
@@ -225,10 +224,14 @@ def interact_contracted_service(contracted_service_id):
     if service.user_email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to modify other resources.")
 
-    elif request.method == "DELETE":
+    if service.state == 'on process':
+        g.user.wallet += service.price
+    else:
+        raise BadRequest("Can't cancel or edit an ordered which has been accepted or delivered!")
+
+    if request.method == "DELETE":
         service.delete_from_db()
-        return Response("Se ha eliminado correctamente el servicio con identificador: " + str(contracted_service_id),
-                        status=200)
+        return {'deleted_request': contracted_service_id}, 200
 
     elif request.method == "PUT":
         # All this code is to be able to use all the checks of the marshmallow schema.
@@ -239,7 +242,7 @@ def interact_contracted_service(contracted_service_id):
             if attr == "user_email": attr = "user"
             if attr not in info.keys():
                 info[attr] = value
-        n_contracted_service = contracted_service_schema_all.load(info,
-                                                                  session=db.session)  # De esta forma pasamos todos los constrains.
+
+        n_contracted_service = contracted_service_schema_all.load(info, session=db.session)  # De esta forma pasamos todos los constrains.
         n_contracted_service.save_to_db()
-        return Response("Contrato modificado correctamente", status=200)
+        return {'modified_contract': n_contracted_service.id}, 200
