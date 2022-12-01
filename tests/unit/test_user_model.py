@@ -21,6 +21,24 @@ def test_new_user():
         assert user_t.name == "name"
         assert user_t.pwd == "passwordT"
 
+def test_get_one_user():
+    with app.app_context():
+        db.create_all()
+        User.query.delete()
+
+        user_t = User(email="emailT", pwd="passwordT", name="name")
+        user_t.save_to_db()
+
+        assert user_t.email == "emailT"
+        assert user_t.name == "name"
+        assert user_t.pwd == "passwordT"
+
+        found = User.get_by_id("emailT")
+
+        assert found.email == "emailT"
+        assert found.name == "name"
+        assert found.pwd == "passwordT"
+
 
 def test_existing_user():
     with app.app_context():

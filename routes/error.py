@@ -8,7 +8,7 @@ error_bp = Blueprint("errors", __name__)
 
 
 @error_bp.app_errorhandler(Conflict)
-def handle_validation(err):
+def handle_conflict(err):
     return jsonify({"message": "El recurso ya existe" + str(err)}), 409
 
 
