@@ -51,7 +51,7 @@ def test_post_get_contracted_service(client):
                            pwd=pwd1)
     assert r.status_code == 200
 
-    service_id = int(r.text.split()[-1])
+    service_id = r.get_json()['added_service_id']
 
     # User2 requests the service
     c_service1_dict = {'service': service_id}
@@ -165,7 +165,6 @@ def test_service_post_missing_fields(client):
                            pwd=pwd1)
     assert r.status_code == 400
     j = r.get_json()
-    print(j)
     assert j['message'] == 'Datos incorrectos'
     assert j['campos']['service'] == ['Missing data for required field.']
 
@@ -201,7 +200,7 @@ def test_service_lifetime(client):
                            pwd=pwd1)
     assert r.status_code == 200
 
-    service_id = int(r.text.split()[-1])
+    service_id = r.get_json()['added_service_id']
 
     # User2 requests the service
     c_service1_dict = {'service': service_id}

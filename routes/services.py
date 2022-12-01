@@ -1,7 +1,7 @@
 from collections import defaultdict
 from math import log
 from sqlalchemy import desc
-from flask import Blueprint, jsonify, request, Response
+from flask import Blueprint, jsonify, request
 from marshmallow import validates, ValidationError
 from werkzeug.exceptions import BadRequest
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
@@ -65,10 +65,10 @@ def filter_query(q, filters, coincidence=False):
         else:
             raise BadRequest('filter ' + filter_name + ' not yet implemented')
 
-        if 'min' in filters[filter_name]:
+        if 'min' in filters[filter_name] and filters[filter_name]['min'] != -1:
             q = q.filter(filter_quantity >= filters[filter_name]['min'])
 
-        if 'max' in filters[filter_name]:
+        if 'max' in filters[filter_name] and filters[filter_name]['max'] != -1:
             q = q.filter(filter_quantity <= filters[filter_name]['max'])
 
     return q
@@ -278,7 +278,8 @@ def create_service():
     new_service = service_schema_all.load(info, session=db.session)  # Crear el objeto mediante el schema
     new_service.save_to_db()  # Actualizamos la BD
 
-    return Response("Servicio añadido correctamente con el identificador: " + str(new_service.id), status=200)
+    return {'added_service_id': new_service.id}, 200
+
 
 @services_bp.route("/<int:service_id>", methods=["POST","PUT", "DELETE"])
 @auth.login_required(role=[access[1], access[8], access[9]])
@@ -306,7 +307,7 @@ def interact_service(service_id):
     # Eliminates the service (only changes the state)
     elif request.method == "DELETE":
         service.delete_from_db()
-        return Response("Se ha eliminado correctamente el servicio con identificador: " + str(service_id), status=200)
+        return {'service_deleted_id': service_id}, 200
 
     # Modifies the service by changing the state and creating a new one with the same parameters except the changed ones
     elif request.method == "PUT":
@@ -324,4 +325,4 @@ def interact_service(service_id):
         service.save_to_db()
         n_service = service_schema_all.load(info, session=db.session)  # De esta forma pasamos todos los constrains.
         n_service.save_to_db()
-        return Response("Servicio modificado correctamente", status=200)
+        return {'modified_service_id': n_service.id}, 200
