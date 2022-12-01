@@ -70,10 +70,11 @@ def test_schema():
         user_t.save_to_db()
         serviceT = Service(title="titleT", user=user_t, description="descriptionT",)
         serviceT.save_to_db()
-        request_data = json.loads('{"user":"emailT", "service":"1","state":"active"}')
+        request_data = json.loads('{"user":"emailT", "service":"1"}')
         contract_t = contracted_service_schema_all.load(request_data, session=db.session)
+        contract_t.save_to_db()
 
-        assert contract_t.state == "active"
+        assert contract_t.state == "on process"
 
 
 def test_delete_cascade():

@@ -136,7 +136,7 @@ def post_insufficient_funds(client):
 
     r = request_with_login(login=client.post, request=client.post, url="contracted_services", json_r=c_service1_dict,
                            email=email2, pwd=pwd2)
-    assert r.status_code == 555
+    assert r.status_code == 400
 
     # Check the client can't see the service
     r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/client/{email2}",
@@ -145,7 +145,6 @@ def post_insufficient_funds(client):
     assert r.status_code == 200
     contracts = r.get_json()
     assert len(contracts) == 1
-
 
 
 def test_service_post_missing_fields(client):
@@ -177,7 +176,7 @@ def test_service_post_missing_fields(client):
     assert len(r.get_json()) == 0
 
 
-def test_service_mark_done(client):
+def test_service_lifetime(client):
     # Credentials for contractor
     email1 = 'pepito@gmail.com'
     pwd1 = '12345678'
@@ -192,6 +191,7 @@ def test_service_mark_done(client):
     r = client.post("users", json=user2_dict)
     assert r.status_code == 201
 
+    # give user2 some money to buy service
     r = request_with_login(login=client.post, request=client.put, url=f"users/{email2}/wallet", json_r={'money': 5},
                            email="madmin@gmail.com", pwd="password")
 
@@ -227,15 +227,47 @@ def test_service_mark_done(client):
     cid = contracts[0]['id']
     assert cstate == 'on process'
 
-    # Check the contractor cant mark the contract as done
+    # Check the contracted can't mark the contract as done before accepting
+    r = request_with_login(login=client.post, request=client.put, url=f"contracted_services/{cid}/done",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 409
+
+    # Check the client cant mark it accepted
+    r = request_with_login(login=client.post, request=client.put, url=f"contracted_services/{cid}/accept",
+                           json_r={}, email=email2, pwd=pwd2)
+    assert r.status_code != 200
+
+    # Check the contracted can mark it accepted
+    r = request_with_login(login=client.post, request=client.put, url=f"contracted_services/{cid}/accept",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+
+    # Check the contractor can see the service
+    r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/contractor/{email1}",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+    contracts = r.get_json()
+    cstate = contracts[0]['state']
+    assert cstate == 'accepted'
+
+    # Check the client can see the service
+    r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/contractor/{email1}",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+    contracts = r.get_json()
+    cstate = contracts[0]['state']
+    assert cstate == 'accepted'
+
+    # Check the contracted can now mark the contract as done
+    r = request_with_login(login=client.post, request=client.put, url=f"contracted_services/{cid}/done",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+
+    # Check the client cant mark it done
     r = request_with_login(login=client.post, request=client.put, url=f"contracted_services/{cid}/done",
                            json_r={}, email=email2, pwd=pwd2)
     assert r.status_code != 200
 
-    # Check the contracted can mark the contract as done
-    r = request_with_login(login=client.post, request=client.put, url=f"contracted_services/{cid}/done",
-                           json_r={}, email=email1, pwd=pwd1)
-    assert r.status_code == 200
 
     # Check the contractor can see the service
     r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/contractor/{email1}",

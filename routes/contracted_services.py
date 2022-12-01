@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, Response
 from marshmallow import validates, ValidationError
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
-from werkzeug.exceptions import NotFound, BadRequest
+from werkzeug.exceptions import NotFound, BadRequest, Conflict
 from database import db
 from sqlalchemy.orm.util import has_identity
 from models.contracted_service import ContractedService
@@ -46,7 +46,7 @@ class ContractedServiceSchema(SQLAlchemyAutoSchema):
 
 
 # Para crear servicio
-contracted_service_schema_all = ContractedServiceSchema()
+contracted_service_schema_all = ContractedServiceSchema(dump_only=['state'])
 
 
 @contracted_services_bp.route("", methods=["GET"])
@@ -144,7 +144,7 @@ def contract_service():
     updated_w = w - p
 
     if updated_w < 0:
-        return {'reason': 'Not enough funds'}, 555
+        return {'reason': 'Not enough funds'}, 400
 
     g.user.wallet = updated_w
     g.user.save_to_db()
@@ -167,6 +167,9 @@ def mark_as_done(id):
     if not service:
         raise NotFound
 
+    if not contract.state == 'accepted':
+        raise Conflict('Must accept service before doing it!')
+
     if service.user_email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to modify other resources.")
 
@@ -178,8 +181,31 @@ def mark_as_done(id):
     contracted.wallet = str(float(contracted.wallet) + float(service.price))
     contract.save_to_db()
     contracted.save_to_db()
-    return ('State updated successfully', 200)
-    pass
+    return {'status': 'State updated successfully'}, 200
+
+
+@contracted_services_bp.route("/<int:id>/accept", methods=["PUT"])
+@auth.login_required(role=[access[1], access[8], access[9]])
+def mark_as_accepted(id):
+    contract = ContractedService.get_by_id(id)
+    service = Service.get_by_id(contract.service_id)
+
+    # En caso de no encontrar el servicio retornamos un mensaje de error.
+    if not contract:
+        raise NotFound
+
+    if not service:
+        raise NotFound
+
+    if not contract.state == 'on process':
+        raise Conflict("contract is not acceptable because it already was accepted or canceled!")
+
+    if service.user_email != g.user.email and g.user.access < 8:
+        raise PrivilegeException("Not enough privileges to modify other resources.")
+
+    contract.state = 'accepted'
+    contract.save_to_db()
+    return {'status': 'State updated successfully'}, 200
 
 
 @contracted_services_bp.route("/<int:contracted_service_id>", methods=["PUT", "DELETE"])
