@@ -11,7 +11,8 @@ class Service(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    user_email = db.Column(db.String(50), db.ForeignKey('users.email'), nullable=False)
+    masterID = db.Column(db.Integer, db.ForeignKey('services.id'),  nullable=True)
+    user_email = db.Column(db.String(50), db.ForeignKey('users.email'))
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String, nullable=False)
     price = db.Column(db.Integer, nullable=False, default=0)
@@ -19,18 +20,31 @@ class Service(db.Model):
     contracts = db.relationship(ContractedService, backref="service", cascade="all, delete-orphan")
 
     search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
-    #
     begin = db.Column(db.Time, nullable=True) # time at wich service can begin
     end = db.Column(db.Time, nullable=True) # time at wich service will stop being available for the day
     cooldown = db.Column(db.Time, nullable=True) # minimum time after service is given to rest
     requiresPlace = db.Column(db.Boolean, default=False)
+
+    state = db.Column(db.Integer, nullable=False, default=0) #0 active, 1 paused, 2 not-active
+
+
+    search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
 
     # TODO Añadir campos como foto, fecha, ubicación.
     def save_to_db(self):
         """
         This method saves the instance to the database
         """
+
+        if self.created_at is None:
+            self.created_at = db.func.current_date()
+
         db.session.add(self)
+        db.session.commit()
+
+        if self.masterID is None:
+            self.masterID = self.id
+
         db.session.commit()
         term_frequency.put_service(self)
 

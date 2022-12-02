@@ -1,9 +1,10 @@
-from flask import Blueprint, jsonify, request, Response
+from flask import Blueprint, jsonify, request
 from marshmallow import validates, ValidationError, validate
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound, Conflict
 from database import db
 from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege
+from utils.mail import send_email
 from models.user import User
 from models.user import auth
 from utils.privilegies import access
@@ -109,7 +110,7 @@ def delete_user(email):
     if email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to modify other resources.")
     usr.delete_from_db()
-    return Response("Se ha eliminado correctamente el usuario con identificador: " + str(email), status=200)
+    return {"deleted user": email}, 200
 
 
 @users_bp.route("", methods=["POST"])
@@ -127,7 +128,10 @@ def create_user():
 
     new_user.pwd = User.hash_password(new_user.pwd)
     new_user.save_to_db()
-    return jsonify(user_schema_profile.dump(new_user, many=False)), 201
+
+    send_email('REGISTER', new_user.generate_auth_token(), new_user.email)
+
+    return {'message': "Verifica el mail"}, 201
 
 @users_bp.route("/<string:email>", methods=["PUT"])
 @auth.login_required(role=[access[1], access[8], access[9]])
@@ -150,8 +154,8 @@ def edit_user(email):
         usr.birthday = d["birthday"]
     if "address" in d:
         usr.address = d["address"]
-    db.session.commit()
-    return Response("Se ha editado correctamente el usuario con identificador: " + str(email), status=200)
+    usr.save_to_db()
+    return {'edited user': str(email)}, 200
 
 @users_bp.route("/<string:email>/privileges/<int:privilege>", methods=["PUT"])
 @auth.login_required(role=[access[9]])
@@ -171,4 +175,80 @@ def changes_privileges(email, privilege):
     usr.access = privilege
     usr.save_to_db()
 
-    return jsonify("Privilegios modificados correctamente"), 200
+    return {'new privilege': privilege}, 200
+
+@users_bp.route("/<string:email>/wallet", methods=["PUT"])
+@auth.login_required(role=[access[8], access[9]])
+def edit_wallet(email):
+
+    usr = User.query.get(email)
+    d = request.json
+    if not usr:
+        raise NotFound
+
+    usr.wallet = str(float(usr.wallet) + float(d["money"]))
+
+    usr.save_to_db()
+
+    return jsonify("Dinero añadido correctamente"), 200
+
+
+@users_bp.route("/confirm_email/<token>", methods=["GET"])
+@auth.login_required(role=[access[0], access[1], access[8], access[9]])
+def confirm_email(token):
+    """
+    This method is used to verify a user email
+    :param token: Contains user information. Is sent to him in the email.
+    :return: Message.
+    """
+    user: User = User.verify_auth_token(token)
+    user.verified_email = True
+    user.save_to_db()
+    return jsonify("Gracias por verificar su mail!"), 200
+
+
+@users_bp.route("/back_reset/<token>", methods=["GET"])
+@auth.login_required(role=[access[0], access[1], access[8], access[9]])
+def back_reset_mail(token):
+    """
+    This method is used to obtain the token for testing with reset mail in back. It shouldn't be used in production
+    :param token: The token of the user
+    :return: Response with the token
+    """
+    return {'token': token}, 200
+
+
+@users_bp.route("/forget_pwd/<email>", methods=["POST"])
+@auth.login_required(role=[access[0], access[1], access[8], access[9]])
+def forget_pwd(email):
+    """
+    This method checks if the given email is correct and if so it sends a link to the users mail in which they would be
+    able to change the pwd
+    :param email: the email of the user.
+    :return: Response
+    """
+    usr = User.query.get(email)
+    if not usr:
+        raise NotFound("Usuario no encontrado")
+    send_email('RECOVER', usr.generate_auth_token(), email)
+    return {'sent_to': email}, 201
+
+
+@users_bp.route("/reset_pwd", methods=["POST"])
+@auth.login_required(role=[access[1], access[8], access[9]])
+def update_password():
+    """
+    This method updates the user pwd. Also validates user mail if it wasn't.
+    :return: Response
+    """
+    if 'pwd' not in request.json:
+        raise NotFound('Contraseña no encotrada')
+    pwd = request.json['pwd']
+
+    user_schema_create.validates_pwd(value=pwd)
+
+    g.user.verified_email = True
+    g.user.pwd = User.hash_password(pwd)
+    g.user.save_to_db()
+
+    return jsonify("Contraseña cambiada"), 200

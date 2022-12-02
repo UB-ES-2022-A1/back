@@ -21,13 +21,16 @@ class User(db.Model):
     access = db.Column(db.Integer, nullable=False, default=1)
     # https://docs.sqlalchemy.org/en/20/core/type_basics.html
     wallet = db.Column(db.Numeric(scale=2), default=0.0)
+
     # Campos opcionales
     phone = db.Column(db.Integer, nullable=True)
     birthday = db.Column(db.Date, nullable=True)
     address = db.Column(db.Text, nullable=True)
 
-    services = db.relationship(Service, backref="user", cascade="all, delete-orphan")
-    contracted_services = db.relationship(ContractedService, backref="user", cascade="all, delete-orphan")
+    state = db.Column(db.Integer, nullable=False, default=0)  # 0 active, 1 not active
+
+    services = db.relationship(Service, backref="user")
+    contracted_services = db.relationship(ContractedService, backref="user")
 
     # Todo falta foto, gender (enum)
     def save_to_db(self):
@@ -38,6 +41,13 @@ class User(db.Model):
         db.session.commit()
 
     def delete_from_db(self):
+        """
+        This method deactivates the instance from the database
+        """
+        self.state = 1
+        db.session.commit()
+
+    def definitive_delete_from_db(self):
         """
         This method deletes the instance from the database
         """

@@ -1,13 +1,15 @@
 from collections import defaultdict
 from math import log
 from sqlalchemy import desc
-from flask import Blueprint, jsonify, request, Response
-from marshmallow import validates, ValidationError
+from flask import Blueprint, jsonify, request
+from marshmallow import validates, ValidationError, pre_dump
 from werkzeug.exceptions import BadRequest
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound
 from database import db
 from sqlalchemy.orm.util import has_identity
+
+from models.review import Review
 from models.service import Service
 from models.search import term_frequency
 from models.user import auth
@@ -54,7 +56,7 @@ service_schema_all = ServiceSchema(exclude=['search_coincidences'])
 
 def filter_query(q, filters, coincidence=False):
     if coincidence:
-        q = q.join(Service, aliased=True)
+        q = q.join(Service, aliased=True).filter_by(state=0)
 
     for filter_name in filters:
 
@@ -65,10 +67,10 @@ def filter_query(q, filters, coincidence=False):
         else:
             raise BadRequest('filter ' + filter_name + ' not yet implemented')
 
-        if 'min' in filters[filter_name]:
+        if 'min' in filters[filter_name] and filters[filter_name]['min'] != -1:
             q = q.filter(filter_quantity >= filters[filter_name]['min'])
 
-        if 'max' in filters[filter_name]:
+        if 'max' in filters[filter_name] and filters[filter_name]['max'] != -1:
             q = q.filter(filter_quantity <= filters[filter_name]['max'])
 
     return q
@@ -112,6 +114,10 @@ def sort_services(list_to_sort, passed_arguments):
         def sort_criterion(s: Service):
             return s.price
 
+    elif passed_arguments['by'] == 'creation_date':
+        def sort_criterion(s: Service):
+            return s.created_at
+
     elif passed_arguments['by'] == 'rating':
         raise NotImplementedError('This sorting method is not supported!')
 
@@ -141,7 +147,7 @@ def get_matches_text(search_text, search_order, filters=(), threshold=0.9, user_
 
     for coincidences_query in coincidences_queries:
         if user_email is not None:
-            coincidences_query = coincidences_query.join(Service, aliased=True).filter_by(user_email=user_email)
+            coincidences_query = coincidences_query.join(Service, aliased=True).filter_by(user_email=user_email, state=0)
         coincidences_query = filter_query(coincidences_query, filters=filters, coincidence=True)
         coincidences_word = coincidences_query.all()
 
@@ -183,8 +189,14 @@ def get_many_services(user_email=None):
     :return: Response with all the services
     """
 
+    q = Service.query
+    if user_email:
+        q = q.filter(Service.user_email == user_email)
+
+    all_services = q.filter(Service.state == 0)
+
+
     if not request.headers.get('content-type') == 'application/json':
-        all_services = Service.get_all()
         return jsonify(service_schema_all.dump(all_services, many=True)), 200
 
     info = request.json
@@ -200,9 +212,9 @@ def get_many_services(user_email=None):
         if 'sort' in info:
             sort_services(all_services, info['sort'])
     else:
-        services_query = Service.query
+        services_query = Service.query.filter(Service.state == 0)
         if user_email is not None:
-            services_query = services_query.filter_by(user_email=user_email)
+            services_query = services_query.filter_by(user_email=user_email, state=0)
         services_query = filter_query(services_query, filters=filters, coincidence=False)
         if 'sort' in info:
             services_query = sort_query_services(services_query, info['sort'])
@@ -242,8 +254,9 @@ def get_service_user(service_id):
     return get_user(service.user.email)
 
 
-@services_bp.route("/<string:email>/service", methods=["GET"])
-@auth.login_required(role=[access[0], access[1], access[8], access[0]])
+
+@services_bp.route("/<string:email>/service", methods=["GET", "POST"])
+@auth.login_required(role=[access[0], access[1], access[8], access[9]])
 def get_user_services(email):
     """
     This method returns a user services. It doesn't require privileges
@@ -265,10 +278,10 @@ def create_service():
     new_service = service_schema_all.load(info, session=db.session)  # Crear el objeto mediante el schema
     new_service.save_to_db()  # Actualizamos la BD
 
-    return Response("Servicio añadido correctamente con el identificador: " + str(new_service.id), status=200)
+    return {'added_service_id': new_service.id}, 200
 
 
-@services_bp.route("/<int:service_id>", methods=["PUT", "DELETE"])
+@services_bp.route("/<int:service_id>", methods=["POST","PUT", "DELETE"])
 @auth.login_required(role=[access[1], access[8], access[9]])
 def interact_service(service_id):
     """
@@ -285,19 +298,32 @@ def interact_service(service_id):
     if service.user_email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to modify other resources.")
 
+    # Disables the service (only changes the state)
+    elif request.method == "POST":
+        service.state = 1
+        service.save_to_db()
+        return {'service_disabled_id': service_id}, 200
+
+    # Eliminates the service (only changes the state)
     elif request.method == "DELETE":
         service.delete_from_db()
-        return Response("Se ha eliminado correctamente el servicio con identificador: " + str(service_id), status=200)
+        return {'service_deleted_id': service_id}, 200
 
+    # Modifies the service by changing the state and creating a new one with the same parameters except the changed ones
     elif request.method == "PUT":
         # All this code is to be able to use all the checks of the marshmallow schema.
         info = request.json
         iterator = iter(service.__dict__.items())
         next(iterator)  # Metadata
         for attr, value in iterator:
-            if attr == "user_email": attr = "user"
-            if attr not in info.keys():
-                info[attr] = value
+            if attr in ['title', 'description', 'price', 'cooldown', 'begin', 'end', 'requiresPlace']:
+                if attr == "user_email": attr = "user"
+                if attr not in info.keys():
+                    info[attr] = value
+
+        service.state = 2
+        service.save_to_db()
         n_service = service_schema_all.load(info, session=db.session)  # De esta forma pasamos todos los constrains.
+        n_service.masterID = service.masterID
         n_service.save_to_db()
-        return Response("Servicio modificado correctamente", status=200)
+        return {'modified_service_id': n_service.id}, 200
