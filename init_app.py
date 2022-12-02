@@ -1,5 +1,6 @@
 from flask import Flask
 from populate_db import populate
+from routes.reviews import reviews_bp
 from routes.users import users_bp
 from routes.services import services_bp
 from routes.error import error_bp
@@ -9,6 +10,8 @@ from database import db
 from flask_migrate import Migrate
 from flask_cors import CORS
 from database import secret_key
+
+
 def init_app(database_location, develop=True):
 
     # creamos la app
@@ -17,7 +20,12 @@ def init_app(database_location, develop=True):
     app.config["SQLALCHEMY_DATABASE_URI"] = database_location
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = secret_key
-
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 465
+    app.config['MAIL_USERNAME'] = 'atyourservice.noreply@gmail.com'
+    app.config['MAIL_PASSWORD'] = 'huotojlsvpgnlfaz'
+    app.config['MAIL_USE_TLS'] = False
+    app.config['MAIL_USE_SSL'] = True
     if develop:
 
         Migrate(app, db)
@@ -39,6 +47,7 @@ def init_app(database_location, develop=True):
     app.register_blueprint(services_bp)
     app.register_blueprint(login_bp)
     app.register_blueprint(contracted_services_bp)
+    app.register_blueprint(reviews_bp)
 
     @app.route('/')
     def hello_world():  # put application's code here

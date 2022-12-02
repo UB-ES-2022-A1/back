@@ -27,6 +27,7 @@ def test_new_service():
         assert service_t.price == 0
         assert service_t.title == "titleT"
         assert service_t.description == "descriptionT"
+        assert service_t.masterID == service_t.id
 
 
 def test_existing_service():
@@ -97,7 +98,7 @@ def test_schema():
             assert True
 
 
-def test_delete_cascade():
+def test_delete_service():
     """
     This method checks if the cascade deletions work well.
     """
@@ -111,10 +112,5 @@ def test_delete_cascade():
         service_t.delete_from_db()
 
         # Comprovamos que al borrar el servicio el usuario sigue existiendo
-        assert User.query.all()[0].email == "emailT"
+        assert Service.query.all()[0].state == 2
 
-        service_t = Service(title="titleT", user=user_t, description="descriptionT", price=0)
-        user_t.delete_from_db()
-
-        # Comprovamos que al borrarse un usuario se borren sus servicios
-        assert len(User.query.all()) == 0
