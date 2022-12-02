@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, jsonify, request
 from marshmallow import Schema, fields
 from werkzeug.exceptions import NotFound
 from models.user import User

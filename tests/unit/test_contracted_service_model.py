@@ -129,15 +129,16 @@ def test_delete_cascade():
         contract_t.save_to_db()
         contract_t.delete_from_db()
 
-        # Comprovamos que al borrar el contrato el usuario y el servicio siguen existiendo
+        # Comprovamos que al borrar el contrato y el servicio siguen existiendo
         assert User.query.all()[0].email == "emailT"
+
         assert Service.query.all()[0].title == "titleT"
 
         contract_t = ContractedService(user=user_t, service=service_t, state="active", price=0)
         user_t.delete_from_db()
         service_t.delete_from_db()
 
-        # Comprovamos que al borrarse un usuario y un servicio no se borren sus servicios contratados
-        assert len(User.query.all()) == 1
-        assert len(Service.query.all()) == 1
-        assert len(ContractedService.query.all()) == 1
+        # Comprovamos que al borrarse un usuario y un servicio se borren sus servicios contratados
+        assert len(User.query.all()) == 0
+        assert len(Service.query.all()) == 0
+        assert len(ContractedService.query.all()) == 0

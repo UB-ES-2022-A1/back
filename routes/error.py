@@ -1,3 +1,4 @@
+from sqlite3 import IntegrityError
 from flask import Blueprint, jsonify
 from marshmallow import ValidationError
 from werkzeug.exceptions import NotFound, Conflict, BadRequest
@@ -32,7 +33,7 @@ def handle_notfound(err):
 @error_bp.app_errorhandler(IntegrityError)
 def handle_integrity_exception(err):
     atributes = err.args[0].split("failed:")[1]
-    return jsonify({"message": "Error en la base de datos, causado por los siguientes atributos: " + atributes}), 409
+    return jsonify({"message": "Duplicated instance found, change one of the following atributs: " + atributes}), 409
 
 
 # Error de privilegios

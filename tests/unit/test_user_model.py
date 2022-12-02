@@ -63,8 +63,7 @@ def test_delete_user():
         user_t.save_to_db()
         user_t.delete_from_db()
 
-        assert len(User.get_all()) == 1
-        assert User.get_all()[0].state == 1
+        assert len(User.get_all()) == 0
 
 
 def test_hashed_pwd():

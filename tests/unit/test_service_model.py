@@ -111,4 +111,10 @@ def test_delete_cascade():
         service_t.delete_from_db()
 
         # Comprovamos que al borrar el servicio el usuario sigue existiendo
-        assert Service.query.all()[0].state == 2
+        assert User.query.all()[0].email == "emailT"
+
+        service_t = Service(title="titleT", user=user_t, description="descriptionT", price=0)
+        user_t.delete_from_db()
+
+        # Comprovamos que al borrarse un usuario se borren sus servicios
+        assert len(User.query.all()) == 0

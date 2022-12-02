@@ -1,6 +1,5 @@
 from flask import Flask
 from populate_db import populate
-from routes.reviews import reviews_bp
 from routes.users import users_bp
 from routes.services import services_bp
 from routes.error import error_bp
@@ -40,7 +39,6 @@ def init_app(database_location, develop=True):
     app.register_blueprint(services_bp)
     app.register_blueprint(login_bp)
     app.register_blueprint(contracted_services_bp)
-    app.register_blueprint(reviews_bp)
 
     @app.route('/')
     def hello_world():  # put application's code here
