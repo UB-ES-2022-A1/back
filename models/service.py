@@ -1,3 +1,4 @@
+from sqlalchemy.orm import relationship
 from database import db
 from models.contracted_service import ContractedService
 from models.search import term_frequency
@@ -14,10 +15,9 @@ class Service(db.Model):
     user_email = db.Column(db.String(50), db.ForeignKey('users.email'))
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String, nullable=False)
-    price = db.Column(db.Numeric(scale=2), nullable=False, default=0)
+    price = db.Column(db.Integer, nullable=False, default=0)
 
     contracts = db.relationship(ContractedService, backref="service", cascade="all, delete-orphan")
-    created_at = db.Column(db.Date(), nullable=True)
 
     search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
     begin = db.Column(db.Time, nullable=True) # time at wich service can begin
@@ -52,7 +52,7 @@ class Service(db.Model):
         """
         This method deletes the instance from the database
         """
-        self.state = 2
+        db.session.delete(self)
         db.session.commit()
 
     @classmethod

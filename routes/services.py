@@ -183,13 +183,6 @@ def get_matches_text(search_text, search_order, filters=(), threshold=0.9, user_
 
 @services_bp.route("", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
-def get_all_services():
-    all_services = Service.get_all()
-    return jsonify(service_schema_all.dump(all_services, many=True)), 200
-
-
-@services_bp.route("/search", methods=["GET", "POST"])
-@auth.login_required(role=[access[0], access[1], access[8], access[9]])
 def get_many_services(user_email=None):
     """
     This method returns a list of services. It doesn't require privileges.
@@ -259,6 +252,7 @@ def get_service_user(service_id):
     if not service:
         raise NotFound
     return get_user(service.user.email)
+
 
 
 @services_bp.route("/<string:email>/service", methods=["GET", "POST"])
