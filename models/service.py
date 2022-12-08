@@ -31,7 +31,7 @@ class Service(db.Model):
     state = db.Column(db.Integer, nullable=False, default=0) #0 active, 1 paused, 2 not-active
 
     search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
-    child_services = db.relationship("Service", backref=backref("master_service", remote_side=[id]), cascade="all, delete-orphan")
+    child_services = db.relationship("Service", backref=backref("master_service", remote_side=[id]), post_update=True, cascade="all, delete-orphan")
 
 
     # TODO Añadir campos como foto, fecha, ubicación.

@@ -9,6 +9,7 @@ class ContractedService(db.Model):
     user_email = db.Column(db.String(50), db.ForeignKey('users.email'), nullable=False)
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
     state = db.Column(db.String, nullable=False, default='on process')
+
     def save_to_db(self):
         """
         This method saves the instance to the database

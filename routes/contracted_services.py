@@ -12,6 +12,7 @@ from routes.users import get_user
 from flask import g
 from utils.custom_exceptions import PrivilegeException
 from utils.privilegies import access
+from routes.services import service_schema_all
 
 # Todas las url de servicios contratados empiezan por esto
 contracted_services_bp = Blueprint("contracted_services", __name__, url_prefix="/contracted_services")
@@ -75,14 +76,18 @@ def get_contracted_service(contracted_service_id):
     if Cservice.user_email != g.user.email and Cservice.service.user_email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to access other users' contracts.")
 
-    return jsonify(contracted_service_schema_all.dump(Cservice, many=False)), 200
-
+    info = contracted_service_schema_all.dump(Cservice, many=False)
+    info2 = service_schema_all.dump(Service.get_by_id(info['service']))
+    info["title"] = info2["title"]
+    info["description"] = info2["description"]
+    info["price"] = info2["price"]
+    return jsonify(info) , 200
 
 @contracted_services_bp.route("/<int:contracted_service_id>/user", methods=["GET"])
 @auth.login_required(role=[access[1], access[8], access[9]])
 def get_contracted_service_user(contracted_service_id):
     """
-    This method returns the user of a service. It requires to be admin or be a part of the contract
+    This method returns the user of a contract. It requires to be admin or be a part of the contract
     :param contracted_service_id: id of the contract
     :return:
     """

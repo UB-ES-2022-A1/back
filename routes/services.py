@@ -332,9 +332,12 @@ def interact_service(service_id):
 
     # Modifies the service by changing the state and creating a new one with the same parameters except the changed ones
     elif request.method == "PUT":
+        print("0")
+
         if service.state == 2:
             raise NotFound
         # All this code is to be able to use all the checks of the marshmallow schema.
+        print("1")
         info = request.json
         iterator = iter(service.__dict__.items())
         next(iterator)  # Metadata

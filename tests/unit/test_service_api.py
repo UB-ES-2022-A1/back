@@ -156,8 +156,6 @@ def test_get_many_services(client):
     assert r.status_code == 200
     services = r.get_json()
     assert len(services) == 1
-
-
     r = request_with_login(login=client.post, request=client.put, url="services/" + id, json_r={'title': 'title 3'}, email=email1,
                            pwd=pwd1)
     assert r.status_code == 200
