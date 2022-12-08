@@ -1,5 +1,7 @@
 from collections import defaultdict
 from math import log
+from operator import or_
+
 from sqlalchemy import desc
 from flask import Blueprint, jsonify, request
 from marshmallow import validates, ValidationError, pre_dump
@@ -195,13 +197,17 @@ def get_many_services(user_email=None):
     This method returns a list of services. It doesn't require privileges.
     :return: Response with all the services
     """
-
     q = Service.query
+    # Si estamos buscando de un usuario devolvemos
     if user_email:
         q = q.filter(Service.user_email == user_email)
 
-    all_services = q.filter(Service.state == 0)
-
+        if g.user.email == user_email:
+            all_services = q.filter(or_(Service.state == 0, Service.state == 1))
+        else:
+            all_services = q.filter(Service.state == 0)
+    else:
+        all_services = q.filter(Service.state == 0)
 
     if not request.headers.get('content-type') == 'application/json':
         return jsonify(service_schema_all.dump(all_services, many=True)), 200
@@ -306,16 +312,21 @@ def interact_service(service_id):
 
     # Disables the service (only changes the state)
     elif request.method == "POST":
+        if service.state == 2:
+            raise NotFound
         if service.state == 1:
             service.state = 0
-        if service.state == 0:
+            service.save_to_db()
+            return {'service_enabled_id': service_id}, 200
+        elif service.state == 0:
             service.state = 1
-        service.save_to_db()
-        return {'service_disabled_id': service_id}, 200
+            service.save_to_db()
+            return {'service_disabled_id': service_id}, 200
 
     # Eliminates the service (only changes the state)
     elif request.method == "DELETE":
-        service.delete_from_db()
+        service.state = 2
+        service.save_to_db()
         return {'service_deleted_id': service_id}, 200
 
     # Modifies the service by changing the state and creating a new one with the same parameters except the changed ones

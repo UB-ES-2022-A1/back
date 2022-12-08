@@ -89,7 +89,7 @@ Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YX
 Content-Type: application/json
 
 {
-  "title": "PRUEBA1",
+  "title": "PRUEBA12",
   "description": "description",
   "price" : 0
 }
@@ -144,7 +144,7 @@ POST localhost:5000/users/forget_pwd/xxnazarxx@hotmail.es
 
 ### POST resetear contra
 POST localhost:5000/users/reset_pwd
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjY4NjU5Njc5fQ.bX4TedXWbP9Fj2CdjaitJHHkpY_brRN9g_4m9Wn5q9I loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTgyOTAxfQ.fHknz834p9iwr2726OpzoF1uMf8uaSCPdi9-daObTDk loquesea
 Content-Type: application/json
 
 {
@@ -157,3 +157,7 @@ GET localhost:5000/services/search
 ### Get servicios de un usuario
 GET localhost:5000/services/xxnazarxx@hotmail.es/service
 
+
+### Get servicios de un usuario
+POST localhost:5000/services/16
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTgyOTAxfQ.fHknz834p9iwr2726OpzoF1uMf8uaSCPdi9-daObTDk loquesea
