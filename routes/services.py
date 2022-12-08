@@ -145,24 +145,34 @@ def get_matches_text(search_text, search_order, filters=(), threshold=0.9, user_
 
     coincidences_queries = term_frequency.search_text(search_text)
 
-    for coincidences_query in coincidences_queries:
+    for word, coincidences_query in coincidences_queries:
+
         if user_email is not None:
+
             coincidences_query = coincidences_query.join(Service, aliased=True).filter_by(user_email=user_email, state=0)
+
         coincidences_query = filter_query(coincidences_query, filters=filters, coincidence=True)
         coincidences_word = coincidences_query.all()
 
         if len(coincidences_word) > 0:
 
             idf = log(1 + total_documents / len(coincidences_word))
+            partial_counts = defaultdict(float)
+
             for coincidence in coincidences_word:
+                count = int.from_bytes(coincidence.count, "little")
+                partial_counts[coincidence.service] += \
+                    count / (len(coincidence.service.description) + len(coincidence.service.title)) * \
+                    len(word) / len(coincidence.word)
+
+            for service, total_count in partial_counts.items():
 
                 if search_order:
-                    count = int.from_bytes(coincidence.count, "little")
-                    tf = log(1 + count / (len(coincidence.service.description) + len(coincidence.service.title)))
-                    scores[coincidence.service] += tf * idf
+                    tf = log(1 + total_count)
+                    scores[service] += tf * idf
 
                 else:
-                    scores[coincidence.service] += idf
+                    scores[service] += idf
 
     all_scored = sorted(scores.items(), key=lambda x: x[1], reverse=True)
 
