@@ -287,7 +287,7 @@ def create_service():
     return {'added_service_id': new_service.id}, 200
 
 
-@services_bp.route("/<int:service_id>", methods=["POST","PUT", "DELETE"])
+@services_bp.route("/<int:service_id>", methods=["POST", "PUT", "DELETE"])
 @auth.login_required(role=[access[1], access[8], access[9]])
 def interact_service(service_id):
     """
@@ -317,6 +317,8 @@ def interact_service(service_id):
 
     # Modifies the service by changing the state and creating a new one with the same parameters except the changed ones
     elif request.method == "PUT":
+        if service.state == 2:
+            raise NotFound
         # All this code is to be able to use all the checks of the marshmallow schema.
         info = request.json
         iterator = iter(service.__dict__.items())

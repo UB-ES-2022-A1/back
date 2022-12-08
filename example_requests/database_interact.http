@@ -89,18 +89,18 @@ Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YX
 Content-Type: application/json
 
 {
-  "title": "PRUEBA",
+  "title": "PRUEBA1",
   "description": "description",
   "price" : 0
 }
 
 ### PUT a service
-PUT localhost:5000/services/10
+PUT localhost:5000/services/14
 Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTc5NDMwfQ.UzrpBsBCvweBauejsSiFDBkLqpnxgAYLba6T0jcYI58 loquesea
 Content-Type: application/json
 
 {
-  "price": 800
+  "price": 10000
 }
 
 ### GET all reviews
