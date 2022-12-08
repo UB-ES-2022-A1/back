@@ -224,7 +224,7 @@ def test_service_lifetime(client):
     assert len(contracts) == 1
     cstate = contracts[0]['state']
     cid = contracts[0]['id']
-    assert cstate == 'on process'
+    assert cstate == 0
 
     # Check the contracted can't mark the contract as done before accepting
     r = request_with_login(login=client.post, request=client.put, url=f"contracted_services/{cid}/done",
@@ -247,7 +247,7 @@ def test_service_lifetime(client):
     assert r.status_code == 200
     contracts = r.get_json()
     cstate = contracts[0]['state']
-    assert cstate == 'accepted'
+    assert cstate == 1
 
     # Check the client can see the service
     r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/contractor/{email1}",
@@ -255,7 +255,7 @@ def test_service_lifetime(client):
     assert r.status_code == 200
     contracts = r.get_json()
     cstate = contracts[0]['state']
-    assert cstate == 'accepted'
+    assert cstate == 1
 
     # Check the contracted can now mark the contract as done
     r = request_with_login(login=client.post, request=client.put, url=f"contracted_services/{cid}/done",
@@ -274,4 +274,4 @@ def test_service_lifetime(client):
     assert r.status_code == 200
     contracts = r.get_json()
     cstate = contracts[0]['state']
-    assert cstate == 'done'
+    assert cstate == 3

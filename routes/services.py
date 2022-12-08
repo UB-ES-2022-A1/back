@@ -149,7 +149,8 @@ def get_matches_text(search_text, search_order, filters=(), threshold=0.9, user_
 
     for coincidences_query in coincidences_queries:
         if user_email is not None:
-            coincidences_query = coincidences_query.join(Service, aliased=True).filter_by(user_email=user_email, state=0)
+            coincidences_query = coincidences_query.join(Service, aliased=True).filter_by(user_email=user_email,
+                                                                                          state=0)
         coincidences_query = filter_query(coincidences_query, filters=filters, coincidence=True)
         coincidences_word = coincidences_query.all()
 
@@ -198,6 +199,7 @@ def get_many_services(user_email=None):
     :return: Response with all the services
     """
     q = Service.query
+
     all_services = q
 
     if user_email:
@@ -209,6 +211,7 @@ def get_many_services(user_email=None):
     else:
         if not g.user.access >= 8:
             all_services = q.filter(Service.state == 0)
+
 
     if not request.headers.get('content-type') == 'application/json':
         return jsonify(service_schema_all.dump(all_services, many=True)), 200
@@ -323,6 +326,7 @@ def interact_service(service_id):
             service.state = 1
             service.save_to_db()
             return {'service_disabled_id': service_id}, 200
+
 
     # Eliminates the service (only changes the state)
     elif request.method == "DELETE":
