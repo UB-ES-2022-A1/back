@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 from math import log
 from operator import or_
@@ -14,7 +15,7 @@ from sqlalchemy.orm.util import has_identity
 from models.review import Review
 from models.service import Service
 from models.search import term_frequency
-from models.user import auth
+from models.user import auth, User
 from routes.users import get_user
 from flask import g
 from utils.custom_exceptions import PrivilegeException
@@ -214,7 +215,10 @@ def get_many_services(user_email=None):
 
 
     if not request.headers.get('content-type') == 'application/json':
-        return jsonify(service_schema_all.dump(all_services, many=True)), 200
+        services = service_schema_all.dump(all_services, many=True)
+        for id_c, service in enumerate(services):
+            services[id_c] = json.loads(get_service(service["id"])[0].get_data().decode("utf-8"))
+        return jsonify(services), 200
 
     info = request.json
 
@@ -237,8 +241,10 @@ def get_many_services(user_email=None):
             services_query = sort_query_services(services_query, info['sort'])
         all_services = services_query.all()
 
-    return jsonify(service_schema_all.dump(all_services, many=True)), 200
-
+    services = service_schema_all.dump(all_services, many=True)
+    for id_c, service in enumerate(services):
+        services[id_c] = json.loads(get_service(service["id"])[0].get_data().decode("utf-8"))
+    return jsonify(services), 200
 
 @services_bp.route("/<int:service_id>", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
@@ -252,8 +258,13 @@ def get_service(service_id):
     # En caso de no encontrar el servicio retornamos un mensaje de error.
     if not service:
         raise NotFound
-    if request.method == "GET":
-        return jsonify(service_schema_all.dump(service, many=False)), 200
+    info = service_schema_all.dump(service, many=False)
+    user = User.get_by_id(info["user"])
+    info["user_name"] = user.name
+    info["user_email"] = info["user"]
+    info["user_grade"] = user.user_grade
+    info.pop("user")
+    return jsonify(info), 200
 
 
 @services_bp.route("/<int:service_id>/user", methods=["GET"])
