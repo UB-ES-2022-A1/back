@@ -1,3 +1,5 @@
+from sqlalchemy.orm import backref
+
 from database import db
 from models.contracted_service import ContractedService
 from models.search import term_frequency
@@ -19,6 +21,7 @@ class Service(db.Model):
     contracts = db.relationship(ContractedService, backref="service", cascade="all, delete-orphan")
     created_at = db.Column(db.Date(), nullable=True)
 
+
     search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
     begin = db.Column(db.Time, nullable=True) # time at wich service can begin
     end = db.Column(db.Time, nullable=True) # time at wich service will stop being available for the day
@@ -27,8 +30,9 @@ class Service(db.Model):
 
     state = db.Column(db.Integer, nullable=False, default=0) #0 active, 1 paused, 2 not-active
 
-
     search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
+    child_services = db.relationship("Service", backref=backref("master_service", remote_side=[id]), cascade="all, delete-orphan")
+
 
     # TODO Añadir campos como foto, fecha, ubicación.
     def save_to_db(self):

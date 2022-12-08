@@ -95,7 +95,7 @@ Content-Type: application/json
 }
 
 ### PUT a service
-PUT localhost:5000/services/14
+PUT localhost:5000/services/10
 Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTc5NDMwfQ.UzrpBsBCvweBauejsSiFDBkLqpnxgAYLba6T0jcYI58 loquesea
 Content-Type: application/json
 
