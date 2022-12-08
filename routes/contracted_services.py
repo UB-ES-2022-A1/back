@@ -1,6 +1,8 @@
+import json
+
 from flask import Blueprint, jsonify, request
 from marshmallow import validates, ValidationError
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, fields
 from werkzeug.exceptions import NotFound, BadRequest, Conflict
 from database import db
 from sqlalchemy.orm.util import has_identity
@@ -10,8 +12,9 @@ from models.user import User
 from models.user import auth
 from routes.users import get_user
 from flask import g
-from utils.custom_exceptions import PrivilegeException
+from utils.custom_exceptions import PrivilegeException, SelfBuyException
 from utils.privilegies import access
+from routes.services import service_schema_all
 
 # Todas las url de servicios contratados empiezan por esto
 contracted_services_bp = Blueprint("contracted_services", __name__, url_prefix="/contracted_services")
@@ -34,15 +37,7 @@ class ContractedServiceSchema(SQLAlchemyAutoSchema):
         if not has_identity(value):
             raise NotFound("Usuario con id " + str(value.email) + " no encontrado!")
 
-    @validates("service")
-    def validates_service(self, value):
-        """
-        Validates that the service exists
-        :param value: service id
-        :return: None. Raises an Exception
-        """
-        if not has_identity(value):
-            raise NotFound("Servicio con id " + str(value.email) + " no encontrado!")
+
 
 
 # Para crear servicio
@@ -75,14 +70,29 @@ def get_contracted_service(contracted_service_id):
     if Cservice.user_email != g.user.email and Cservice.service.user_email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to access other users' contracts.")
 
-    return jsonify(contracted_service_schema_all.dump(Cservice, many=False)), 200
+    info = contracted_service_schema_all.dump(Cservice, many=False)
+    info2 = service_schema_all.dump(Service.get_by_id(info['service']))
 
+    info["title"] = info2["title"]
+    info["description"] = info2["description"]
+    info["price"] = info2["price"]
+    info["user_buyer_email"] = info["user"]
+    info["user_seller_email"] = info2["user"]
+    info["user_buyer_name"] = User.get_by_id(info["user_buyer_email"]).name
+    info["user_seller_name"] = User.get_by_id(info["user_seller_email"]).name
+    info["contract_id"] = info["id"]
+    info["service_id"] = info["service"]
+    info.pop("service")
+    info.pop("id")
+    info.pop("user")
+
+    return jsonify(info), 200
 
 @contracted_services_bp.route("/<int:contracted_service_id>/user", methods=["GET"])
 @auth.login_required(role=[access[1], access[8], access[9]])
 def get_contracted_service_user(contracted_service_id):
     """
-    This method returns the user of a service. It requires to be admin or be a part of the contract
+    This method returns the user of a contract. It requires to be admin or be a part of the contract
     :param contracted_service_id: id of the contract
     :return:
     """
@@ -101,6 +111,7 @@ def get_contracted_service_user(contracted_service_id):
 @auth.login_required(role=[access[1], access[8], access[9]])
 def get_user_contracted_services(email):
     """
+    Return all the services that a user has contracted
     :param email: the email of the client
     :return: all the contracts the client has ordered
     """
@@ -108,8 +119,11 @@ def get_user_contracted_services(email):
     if email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to access other users' contracts.")
 
-    contracts = ContractedService.query.filter_by(user_email=email).all()
-    return jsonify(contracted_service_schema_all.dump(contracts, many=True)), 200
+    contracts = contracted_service_schema_all.dump(ContractedService.query.filter_by(user_email=email).all(), many=True)
+    for id_c, contract in enumerate(contracts):
+        contracts[id_c] = json.loads(get_contracted_service(contract["id"])[0].get_data().decode("utf-8"))
+
+    return jsonify(contracts), 200
 
 
 @contracted_services_bp.route("/contractor/<string:email>", methods=["GET"])
@@ -122,8 +136,11 @@ def get_contractor_offered_contracts(email):
     if email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to access other users' contracts.")
 
-    contracts = ContractedService.query.filter(ContractedService.service.has(user_email=email)).all()
-    return jsonify(contracted_service_schema_all.dump(contracts, many=True)), 200
+    contracts = contracted_service_schema_all.dump(ContractedService.query.filter(ContractedService.service.has(user_email=email)).all(), many=True)
+    for id_c, contract in enumerate(contracts):
+        contracts[id_c] = json.loads(get_contracted_service(contract["id"])[0].get_data().decode("utf-8"))
+
+    return jsonify(contracts), 200
 
 
 @contracted_services_bp.route("", methods=["POST"])
@@ -134,22 +151,23 @@ def contract_service():
     :return: Response
     """
     info = request.json  # Leer la info del json
+    info["user"] = g.user.email
     if 'service' not in info:
         raise ValidationError({'service': ['Missing data for required field.']})
 
-    info["user"] = g.user.email
+    if Service.get_by_id(info['service']).user_email == g.user.email:
+        raise SelfBuyException("Cannot buy your own product.")
+
     new_contracted_service = contracted_service_schema_all.load(info, session=db.session)
     p = new_contracted_service.service.price
     w = g.user.wallet
     updated_w = w - p
-
     if updated_w < 0:
         return {'reason': 'Not enough funds'}, 400
-
-    g.user.wallet = updated_w
-    g.user.save_to_db()
+    usr = User.query.get(g.user.email)
+    usr.wallet = updated_w
+    usr.save_to_db()
     new_contracted_service.save_to_db()
-
     return {'request_id': new_contracted_service.id}, 201
 
 

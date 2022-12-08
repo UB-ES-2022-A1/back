@@ -60,7 +60,7 @@ def test_post_review(client):
     assert r.status_code == 200
     assert review_id in [rev['id'] for rev in r.get_json()]
 
-    service1_dict = {}
+    service1_dict = {"title" : "new_service"}
     r = request_with_login(login=client.post, request=client.put, url=f"services/{service_id}", json_r=service1_dict, email=email1,
                            pwd=pwd1)
     assert r.status_code == 200

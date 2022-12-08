@@ -156,8 +156,6 @@ def test_get_many_services(client):
     assert r.status_code == 200
     services = r.get_json()
     assert len(services) == 1
-
-
     r = request_with_login(login=client.post, request=client.put, url="services/" + id, json_r={'title': 'title 3'}, email=email1,
                            pwd=pwd1)
     assert r.status_code == 200
@@ -277,9 +275,8 @@ def test_masterID(client):
 
     r = client.get("services")
     services = r.get_json()
-
-    assert services[0]['masterID'] == 1
-    assert services[1]['masterID'] == 1
+    assert services[0]['master_service'] == 1
+    assert services[1]['master_service'] == 1
 
 def test_get_user_services(client):
 

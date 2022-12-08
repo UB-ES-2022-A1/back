@@ -223,7 +223,7 @@ def test_service_lifetime(client):
     contracts = r.get_json()
     assert len(contracts) == 1
     cstate = contracts[0]['state']
-    cid = contracts[0]['id']
+    cid = contracts[0]['contract_id']
     assert cstate == 0
 
     # Check the contracted can't mark the contract as done before accepting
