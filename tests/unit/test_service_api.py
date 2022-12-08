@@ -275,9 +275,8 @@ def test_masterID(client):
 
     r = client.get("services")
     services = r.get_json()
-
-    assert services[0]['masterID'] == 1
-    assert services[1]['masterID'] == 1
+    assert services[0]['master_service'] == 1
+    assert services[1]['master_service'] == 1
 
 def test_get_user_services(client):
 

@@ -60,7 +60,7 @@ GET localhost:5000/services/10
 GET localhost:5000/services/5/user
 
 ### GET user's services
-GET localhost:5000/services/email2/service
+GET localhost:5000/services/xxnazarxx@hotmail.es/service
 
 ### GET concrete user
 GET localhost:5000/users/xxnazarxx@hotmail.es
@@ -90,7 +90,7 @@ Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YX
 Content-Type: application/json
 
 {
-  "title": "PRUEBA",
+  "title": "PRUEBA21",
   "description": "description",
   "price" : 0
 }
@@ -101,7 +101,7 @@ Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YX
 Content-Type: application/json
 
 {
-  "price": 10
+  "price": 101
 }
 
 ### GET all reviews
@@ -158,10 +158,10 @@ Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbk
 
 ### Get servicios de un usuario
 GET localhost:5000/services/xxnazarxx@hotmail.es/service
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTg4NTc5fQ.WaXohmypofzIMGnZbMkBtINJzPampQD-B4tIOAdgeQI loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2NzA1ODQ0ODZ9.NJloTso3uQb1ulCpraB90wGFLGPwoksrxTdk_t_5bb4 loquesea
 
 ### Change the status of the service
-POST localhost:5000/services/15
+POST localhost:5000/services/13
 Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2NzA1ODQ0ODZ9.NJloTso3uQb1ulCpraB90wGFLGPwoksrxTdk_t_5bb4 loquesea
 
 ### Add money
