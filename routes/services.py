@@ -51,7 +51,7 @@ class ServiceSchema(SQLAlchemyAutoSchema):
 
 
 # Para crear servicio
-service_schema_all = ServiceSchema(exclude=['search_coincidences'])
+service_schema_all = ServiceSchema(exclude=['search_coincidences', 'contracts'])
 
 
 def filter_query(q, filters, coincidence=False):

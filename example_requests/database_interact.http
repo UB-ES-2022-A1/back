@@ -5,11 +5,11 @@ GET localhost:5000/users
 GET localhost:5000/services
 
 ### Search services
-GET localhost:5000/services
+GET localhost:5000/services/search
 Content-Type: application/json
 
 {
-  "search_text": "cheese",
+  "search_text": "desc",
   "sort": {
       "by": "price",
       "reverse": true
