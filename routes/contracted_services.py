@@ -1,6 +1,8 @@
+import json
+
 from flask import Blueprint, jsonify, request
 from marshmallow import validates, ValidationError
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, fields
 from werkzeug.exceptions import NotFound, BadRequest, Conflict
 from database import db
 from sqlalchemy.orm.util import has_identity
@@ -43,7 +45,7 @@ class ContractedServiceSchema(SQLAlchemyAutoSchema):
         :return: None. Raises an Exception
         """
         if not has_identity(value):
-            raise NotFound("Servicio con id " + str(value.email) + " no encontrado!")
+            raise NotFound("Servicio con id " + str(value.id) + " no encontrado!")
 
 
 # Para crear servicio
@@ -78,10 +80,21 @@ def get_contracted_service(contracted_service_id):
 
     info = contracted_service_schema_all.dump(Cservice, many=False)
     info2 = service_schema_all.dump(Service.get_by_id(info['service']))
+
     info["title"] = info2["title"]
     info["description"] = info2["description"]
     info["price"] = info2["price"]
-    return jsonify(info) , 200
+    info["user_buyer_email"] = info["user"]
+    info["user_seller_email"] = info2["user"]
+    info["user_buyer_name"] = User.get_by_id(info["user_buyer_email"]).name
+    info["user_seller_name"] = User.get_by_id(info["user_seller_email"]).name
+    info["contract_id"] = info["id"]
+    info["service_id"] = info["service"]
+    info.pop("service")
+    info.pop("id")
+    info.pop("user")
+
+    return jsonify(info), 200
 
 @contracted_services_bp.route("/<int:contracted_service_id>/user", methods=["GET"])
 @auth.login_required(role=[access[1], access[8], access[9]])
@@ -106,6 +119,7 @@ def get_contracted_service_user(contracted_service_id):
 @auth.login_required(role=[access[1], access[8], access[9]])
 def get_user_contracted_services(email):
     """
+    Return all the services that a user has contracted
     :param email: the email of the client
     :return: all the contracts the client has ordered
     """
@@ -113,8 +127,11 @@ def get_user_contracted_services(email):
     if email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to access other users' contracts.")
 
-    contracts = ContractedService.query.filter_by(user_email=email).all()
-    return jsonify(contracted_service_schema_all.dump(contracts, many=True)), 200
+    contracts = contracted_service_schema_all.dump(ContractedService.query.filter_by(user_email=email).all(), many=True)
+    for id_c, contract in enumerate(contracts):
+        contracts[id_c] = json.loads(get_contracted_service(contract["id"])[0].get_data().decode("utf-8"))
+
+    return jsonify(contracts), 200
 
 
 @contracted_services_bp.route("/contractor/<string:email>", methods=["GET"])
@@ -127,8 +144,11 @@ def get_contractor_offered_contracts(email):
     if email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to access other users' contracts.")
 
-    contracts = ContractedService.query.filter(ContractedService.service.has(user_email=email)).all()
-    return jsonify(contracted_service_schema_all.dump(contracts, many=True)), 200
+    contracts = contracted_service_schema_all.dump(ContractedService.query.filter(ContractedService.service.has(user_email=email)).all(), many=True)
+    for id_c, contract in enumerate(contracts):
+        contracts[id_c] = json.loads(get_contracted_service(contract["id"])[0].get_data().decode("utf-8"))
+
+    return jsonify(contracts), 200
 
 
 @contracted_services_bp.route("", methods=["POST"])
@@ -141,8 +161,9 @@ def contract_service():
     info = request.json  # Leer la info del json
     if 'service' not in info:
         raise ValidationError({'service': ['Missing data for required field.']})
+    if Service.get_by_id(info['service']).user_email == g.user.email:
+        print("SU")
 
-    info["user"] = g.user.email
     new_contracted_service = contracted_service_schema_all.load(info, session=db.session)
     p = new_contracted_service.service.price
     w = g.user.wallet
@@ -154,7 +175,6 @@ def contract_service():
     g.user.wallet = updated_w
     g.user.save_to_db()
     new_contracted_service.save_to_db()
-
     return {'request_id': new_contracted_service.id}, 201
 
 

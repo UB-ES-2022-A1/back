@@ -175,13 +175,21 @@ Content-Type: application/json
 
 ### Contract a service
 POST localhost:5000/contracted_services
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTkyOTY3fQ.lYnbk70nMAkNDm2vyONWwf5gHfkyjwwSypXRWB6Raso loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTk0OTEwfQ.unMFm1hJqPoAoah41zA192Y1hbg3G2dVbYmnqqJSrP0 loquesea
 Content-Type: application/json
 
 {
-  "service": "12"
+  "service": 10
 }
 
-### Contract a service
+### Get contracted seervice
 GET localhost:5000/contracted_services/1
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTkyOTY3fQ.lYnbk70nMAkNDm2vyONWwf5gHfkyjwwSypXRWB6Raso loquesea
+
+### Get all user contracted services
+GET localhost:5000/contracted_services/client/xxnazarxx@hotmail.es
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTkyOTY3fQ.lYnbk70nMAkNDm2vyONWwf5gHfkyjwwSypXRWB6Raso loquesea
+
+### Get all user gived contracts
+GET localhost:5000/contracted_services/contractor/xxnazarxx@hotmail.es
 Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTkyOTY3fQ.lYnbk70nMAkNDm2vyONWwf5gHfkyjwwSypXRWB6Raso loquesea
