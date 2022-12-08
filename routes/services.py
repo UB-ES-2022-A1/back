@@ -147,7 +147,8 @@ def get_matches_text(search_text, search_order, filters=(), threshold=0.9, user_
 
     for coincidences_query in coincidences_queries:
         if user_email is not None:
-            coincidences_query = coincidences_query.join(Service, aliased=True).filter_by(user_email=user_email, state=0)
+            coincidences_query = coincidences_query.join(Service, aliased=True).filter_by(user_email=user_email,
+                                                                                          state=0)
         coincidences_query = filter_query(coincidences_query, filters=filters, coincidence=True)
         coincidences_word = coincidences_query.all()
 
@@ -197,11 +198,12 @@ def get_many_services(user_email=None):
     """
 
     q = Service.query
+
     if user_email:
         q = q.filter(Service.user_email == user_email)
-
-    all_services = q.filter(Service.state == 0)
-
+        all_services = q.filter(Service.state != 2)
+    else:
+        all_services = q.filter(Service.state == 0)
 
     if not request.headers.get('content-type') == 'application/json':
         return jsonify(service_schema_all.dump(all_services, many=True)), 200
@@ -287,7 +289,7 @@ def create_service():
     return {'added_service_id': new_service.id}, 200
 
 
-@services_bp.route("/<int:service_id>", methods=["POST","PUT", "DELETE"])
+@services_bp.route("/<int:service_id>", methods=["POST", "PUT", "DELETE"])
 @auth.login_required(role=[access[1], access[8], access[9]])
 def interact_service(service_id):
     """
@@ -306,7 +308,11 @@ def interact_service(service_id):
 
     # Disables the service (only changes the state)
     elif request.method == "POST":
-        service.state = 1
+        if service.state == 0:
+            service.state = 1
+        else:
+            service.state = 0
+
         service.save_to_db()
         return {'service_disabled_id': service_id}, 200
 

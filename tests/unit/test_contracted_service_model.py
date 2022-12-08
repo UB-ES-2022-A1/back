@@ -74,7 +74,7 @@ def test_schema():
         contract_t = contracted_service_schema_all.load(request_data, session=db.session)
         contract_t.save_to_db()
 
-        assert contract_t.state == "on process"
+        assert contract_t.state == 0
 
 
 def test_delete_cascade():
