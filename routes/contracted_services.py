@@ -166,7 +166,7 @@ def mark_as_done(id):
     if not service:
         raise NotFound
 
-    if not contract.state == 'accepted':
+    if contract.state == 0:
         raise Conflict('Must accept service before doing it!')
 
     if service.user_email != g.user.email and g.user.access < 8:
@@ -176,7 +176,7 @@ def mark_as_done(id):
     if not contracted:
         raise NotFound
 
-    contract.state = 'done'
+    contract.state = 3
     contracted.wallet = str(float(contracted.wallet) + float(service.price))
     contract.save_to_db()
     contracted.save_to_db()
@@ -196,13 +196,13 @@ def mark_as_accepted(id):
     if not service:
         raise NotFound
 
-    if not contract.state == 'on process':
+    if not contract.state == 0:
         raise Conflict("contract is not acceptable because it already was accepted or canceled!")
 
     if service.user_email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to modify other resources.")
 
-    contract.state = 'accepted'
+    contract.state = 1
     contract.save_to_db()
     return {'status': 'State updated successfully'}, 200
 
@@ -213,7 +213,7 @@ def delete_contracted_service(contracted_service_id):
     """
     Method used to delete or modify services. Requires a token. The token
     user musts coincide with the service user or be an admin
-    :param service_id: The service that is going to be treated
+    :param contracted_service_id: The service that is going to be treated
     :return: Response
     """
     service = ContractedService.get_by_id(contracted_service_id)
@@ -224,7 +224,7 @@ def delete_contracted_service(contracted_service_id):
     if service.user_email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to modify other resources.")
 
-    if service.state == 'on process':
+    if service.state == 0:
         g.user.wallet += service.price
     else:
         raise BadRequest("Can't cancel or edit an ordered which has been accepted or delivered!")
@@ -239,10 +239,11 @@ def delete_contracted_service(contracted_service_id):
         iterator = iter(service.__dict__.items())
         next(iterator)  # Metadata
         for attr, value in iterator:
-            if attr == "user_email": attr = "user"
+            if attr == "user_email":
+                attr = "user"
             if attr not in info.keys():
                 info[attr] = value
 
-        n_contracted_service = contracted_service_schema_all.load(info, session=db.session)  # De esta forma pasamos todos los constrains.
+        n_contracted_service = contracted_service_schema_all.load(info, session=db.session)
         n_contracted_service.save_to_db()
         return {'modified_contract': n_contracted_service.id}, 200
