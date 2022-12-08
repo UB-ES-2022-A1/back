@@ -322,7 +322,7 @@ def interact_service(service_id):
         iterator = iter(service.__dict__.items())
         next(iterator)  # Metadata
         for attr, value in iterator:
-            if attr in ['title', 'description', 'price', 'cooldown', 'begin', 'end', 'requiresPlace']:
+            if attr in ['title', 'description', 'user_email', 'price', 'cooldown', 'begin', 'end', 'requiresPlace']:
                 if attr == "user_email": attr = "user"
                 if attr not in info.keys():
                     info[attr] = value

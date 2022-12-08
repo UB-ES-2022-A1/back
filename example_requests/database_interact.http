@@ -85,23 +85,22 @@ Content-Type: application/json
 
 ### POST a service
 POST http://localhost:5000/services
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2Njk5OTMwMDh9.0YS6kTIH0CyabqP2zskha2PUAb4JPgtsk9rincIydh8 loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTc5NDkzfQ.t8J8LmJDwrgdbVBbEVg2sqeRRKeDylWOtcCVNYXF8_c loquesea
 Content-Type: application/json
 
 {
-  "title": "titleTasdfasdf2",
+  "title": "PRUEBA",
   "description": "description",
   "price" : 0
 }
 
 ### PUT a service
-PUT localhost:5000/services/10
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzNUBlbWFpbC5jb20iLCJleHAiOjE2NjY5NjU4NDR9.BZWScf1fn4pV3ztRuR6aXy3yQzEr4OvGtWqy-jh8LUM loquesea
+PUT localhost:5000/services/14
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTc5NDMwfQ.UzrpBsBCvweBauejsSiFDBkLqpnxgAYLba6T0jcYI58 loquesea
 Content-Type: application/json
 
 {
-  "title": "titulo7",
-  "price": 600
+  "price": 800
 }
 
 ### GET all reviews
@@ -151,3 +150,10 @@ Content-Type: application/json
 {
   "pwd": "12345678"
 }
+
+### GET all services pero teniendo en cuenta el estado
+GET localhost:5000/services/search
+
+### Get servicios de un usuario
+GET localhost:5000/services/xxnazarxx@hotmail.es/service
+
