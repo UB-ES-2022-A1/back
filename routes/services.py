@@ -306,7 +306,10 @@ def interact_service(service_id):
 
     # Disables the service (only changes the state)
     elif request.method == "POST":
-        service.state = 1
+        if service.state == 1:
+            service.state = 0
+        if service.state == 0:
+            service.state = 1
         service.save_to_db()
         return {'service_disabled_id': service_id}, 200
 
