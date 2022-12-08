@@ -153,11 +153,11 @@ Content-Type: application/json
 
 ### GET all services pero teniendo en cuenta el estado
 GET localhost:5000/services/search
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTg0Njc3fQ.jYdZb4W1eI7eiM_ybqkPc-5qKCJpeY790qalubCs_Lo loquesea
 
 ### Get servicios de un usuario
 GET localhost:5000/services/xxnazarxx@hotmail.es/service
 
-
 ### Get servicios de un usuario
 POST localhost:5000/services/16
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTgyOTAxfQ.fHknz834p9iwr2726OpzoF1uMf8uaSCPdi9-daObTDk loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2NzA1ODQ0ODZ9.NJloTso3uQb1ulCpraB90wGFLGPwoksrxTdk_t_5bb4 loquesea

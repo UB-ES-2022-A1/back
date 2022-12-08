@@ -198,16 +198,17 @@ def get_many_services(user_email=None):
     :return: Response with all the services
     """
     q = Service.query
-    # Si estamos buscando de un usuario devolvemos
+    all_services = q
+
     if user_email:
         q = q.filter(Service.user_email == user_email)
-
-        if g.user.email == user_email:
+        if g.user.email == user_email and not g.user.access >= 8:
             all_services = q.filter(or_(Service.state == 0, Service.state == 1))
-        else:
+        elif not g.user.access >= 8:
             all_services = q.filter(Service.state == 0)
     else:
-        all_services = q.filter(Service.state == 0)
+        if not g.user.access >= 8:
+            all_services = q.filter(Service.state == 0)
 
     if not request.headers.get('content-type') == 'application/json':
         return jsonify(service_schema_all.dump(all_services, many=True)), 200
