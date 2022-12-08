@@ -12,7 +12,7 @@ from models.user import User
 from models.user import auth
 from routes.users import get_user
 from flask import g
-from utils.custom_exceptions import PrivilegeException
+from utils.custom_exceptions import PrivilegeException, SelfBuyException
 from utils.privilegies import access
 from routes.services import service_schema_all
 
@@ -37,15 +37,7 @@ class ContractedServiceSchema(SQLAlchemyAutoSchema):
         if not has_identity(value):
             raise NotFound("Usuario con id " + str(value.email) + " no encontrado!")
 
-    @validates("service")
-    def validates_service(self, value):
-        """
-        Validates that the service exists
-        :param value: service id
-        :return: None. Raises an Exception
-        """
-        if not has_identity(value):
-            raise NotFound("Servicio con id " + str(value.id) + " no encontrado!")
+
 
 
 # Para crear servicio
@@ -159,21 +151,22 @@ def contract_service():
     :return: Response
     """
     info = request.json  # Leer la info del json
+    info["user"] = g.user.email
     if 'service' not in info:
         raise ValidationError({'service': ['Missing data for required field.']})
+
     if Service.get_by_id(info['service']).user_email == g.user.email:
-        print("SU")
+        raise SelfBuyException("Cannot buy your own product.")
 
     new_contracted_service = contracted_service_schema_all.load(info, session=db.session)
     p = new_contracted_service.service.price
     w = g.user.wallet
     updated_w = w - p
-
     if updated_w < 0:
         return {'reason': 'Not enough funds'}, 400
-
-    g.user.wallet = updated_w
-    g.user.save_to_db()
+    usr = User.query.get(g.user.email)
+    usr.wallet = updated_w
+    usr.save_to_db()
     new_contracted_service.save_to_db()
     return {'request_id': new_contracted_service.id}, 201
 

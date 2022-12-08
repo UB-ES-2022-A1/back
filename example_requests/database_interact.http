@@ -175,7 +175,7 @@ Content-Type: application/json
 
 ### Contract a service
 POST localhost:5000/contracted_services
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTk0OTEwfQ.unMFm1hJqPoAoah41zA192Y1hbg3G2dVbYmnqqJSrP0 loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTk4MDUwfQ.ZyybqNP2GVCqzZYoJuQFW6L9Jcr67yEJ5LYAgau0fGY loquesea
 Content-Type: application/json
 
 {

@@ -13,3 +13,6 @@ class NotAcceptedPrivilege(Exception):
 
 class EmailNotVerified(Exception):
     """Raised when the email is not verified"""
+
+class SelfBuyException(Exception):
+    """Raised when a user tries to buy his own product"""
