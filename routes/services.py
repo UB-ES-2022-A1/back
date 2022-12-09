@@ -173,7 +173,8 @@ def get_matches_text(q, ser_table, search_text, search_order, threshold=0.9):
 
     for word, coincidences_query in coincidences_queries:
 
-        coincidences_word = coincidences_query.subquery().join(q.subquery()).all()
+        merged_query = coincidences_query.join(q.subquery())
+        coincidences_word = merged_query.all()
 
         if len(coincidences_word) > 0:
 
