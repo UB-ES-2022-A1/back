@@ -1,15 +1,15 @@
 from collections import defaultdict
 from math import log
-from sqlalchemy import desc
+from sqlalchemy import desc, func, asc
 from flask import Blueprint, jsonify, request
 from marshmallow import validates, ValidationError, pre_dump
 from werkzeug.exceptions import BadRequest
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound
 from database import db
-from sqlalchemy.orm.util import has_identity
+from sqlalchemy.orm.util import has_identity, aliased
 
-from models.review import Review
+from models.contracted_service import ContractedService
 from models.service import Service
 from models.search import term_frequency
 from models.user import auth
@@ -54,14 +54,25 @@ class ServiceSchema(SQLAlchemyAutoSchema):
 service_schema_all = ServiceSchema(exclude=['search_coincidences', 'contracts'])
 
 
-def filter_query(q, filters, coincidence=False):
-    if coincidence:
-        q = q.join(Service, aliased=True).filter_by(state=0)
-
+def filter_query(ser_table, q, filters):
     for filter_name in filters:
 
         if filter_name == 'price':
-            filter_quantity = Service.price
+            filter_quantity = ser_table.price
+        elif filter_name == 'creation_date':
+            filter_quantity = ser_table.created_at
+        elif filter_name == 'popularity':
+
+            cs = aliased(ContractedService)
+            s2 = aliased(Service)
+            """
+            filter_quantity = func.count(cs.id)
+            q = q.add_column(filter_quantity)
+            """
+
+            q = q.join(s2, ser_table.masterID == s2.masterID).join(cs, cs.service_id == s2.id).group_by(s2.id)
+            filter_quantity = ser_table.price
+
         elif filter_name == 'rating':
             raise BadRequest('filter by rating not implemented yet')
         else:
@@ -76,18 +87,25 @@ def filter_query(q, filters, coincidence=False):
     return q
 
 
-def sort_query_services(q, passed_arguments):
+def sort_query_services(ser_table, q, passed_arguments):
     if 'by' not in passed_arguments:
         raise BadRequest('Specify what to sort by!')
 
     if passed_arguments['by'] == 'price':
         sort_criterion = Service.price
 
+    elif passed_arguments['by'] == 'creation_date':
+        sort_criterion = Service.created_at
+
     elif passed_arguments['by'] == 'rating':
         raise NotImplementedError('This sorting method is not supported!')
 
     elif passed_arguments['by'] == 'popularity':
         raise NotImplementedError('This sorting method is not supported!')
+
+        # q = q.join(ContractedService).group_by(Service.masterID)
+        # sort_criterion = func.count(ContractedService.id)
+
     else:
         raise NotImplementedError('This sorting method is not supported!')
 
@@ -103,7 +121,7 @@ def sort_query_services(q, passed_arguments):
     if reverse:
         return q.order_by(desc(sort_criterion))
     else:
-        return q.order_by(sort_criterion)
+        return q.order_by(asc(sort_criterion))
 
 
 def sort_services(list_to_sort, passed_arguments):
@@ -123,6 +141,8 @@ def sort_services(list_to_sort, passed_arguments):
 
     elif passed_arguments['by'] == 'popularity':
         raise NotImplementedError('This sorting method is not supported!')
+
+
     else:
         raise NotImplementedError('This sorting method is not supported!')
 
@@ -148,10 +168,11 @@ def get_matches_text(search_text, search_order, filters=(), threshold=0.9, user_
     for word, coincidences_query in coincidences_queries:
 
         if user_email is not None:
+            coincidences_query = coincidences_query.join(Service).filter_by(user_email=user_email, state=0)
 
-            coincidences_query = coincidences_query.join(Service, aliased=True).filter_by(user_email=user_email, state=0)
-
-        coincidences_query = filter_query(coincidences_query, filters=filters, coincidence=True)
+        s1 = aliased(Service)
+        coincidences_query = coincidences_query.join(s1)
+        coincidences_query = filter_query(s1, coincidences_query, filters=filters)
         coincidences_word = coincidences_query.all()
 
         if len(coincidences_word) > 0:
@@ -212,7 +233,6 @@ def get_many_services(user_email=None):
 
     all_services = q.filter(Service.state == 0)
 
-
     if not request.headers.get('content-type') == 'application/json':
         return jsonify(service_schema_all.dump(all_services, many=True)), 200
 
@@ -229,12 +249,13 @@ def get_many_services(user_email=None):
         if 'sort' in info:
             sort_services(all_services, info['sort'])
     else:
-        services_query = Service.query.filter(Service.state == 0)
+        s1 = aliased(Service)
+        services_query = s1.query.filter(s1.state == 0)
         if user_email is not None:
-            services_query = services_query.filter_by(user_email=user_email, state=0)
-        services_query = filter_query(services_query, filters=filters, coincidence=False)
+            services_query = services_query.filter(s1.user_email == user_email)
+        services_query = filter_query(s1, services_query, filters=filters)
         if 'sort' in info:
-            services_query = sort_query_services(services_query, info['sort'])
+            services_query = sort_query_services(s1, services_query, info['sort'])
         all_services = services_query.all()
 
     return jsonify(service_schema_all.dump(all_services, many=True)), 200
@@ -297,7 +318,7 @@ def create_service():
     return {'added_service_id': new_service.id}, 200
 
 
-@services_bp.route("/<int:service_id>", methods=["POST","PUT", "DELETE"])
+@services_bp.route("/<int:service_id>", methods=["POST", "PUT", "DELETE"])
 @auth.login_required(role=[access[1], access[8], access[9]])
 def interact_service(service_id):
     """
