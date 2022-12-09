@@ -80,11 +80,11 @@ Values used in POST methods (PUT may contain only a subset of them). Other param
 User states: 0 -> active, 1 -> not active
 Service states: 0 -> active, 1 -> paused (not implemented), 2 -> not active
 
-| CLASS    | REQUEST PARAMETERS                                                                             | OTHER PARAMETERS               |
-|----------|------------------------------------------------------------------------------------------------|--------------------------------|
-| USER     | email, pwd, name, phone, birthday, address, state                                              | access, verified_email, wallet |
-| SERVICE  | user_email, title, description, price, begin, end, cooldown, requires-place, created_at, state | id                             | 
-| CONTRACT | user_email, service_id, state, price                                                           | None                           |
+| CLASS    | REQUEST PARAMETERS                                                                             | OTHER PARAMETERS                      |
+|----------|------------------------------------------------------------------------------------------------|---------------------------------------|
+| USER     | email, pwd, name, phone, birthday, address, state                                              | access, verified_email, wallet, image |
+| SERVICE  | user_email, title, description, price, begin, end, cooldown, requires-place, created_at, state | id                                    | 
+| CONTRACT | user_email, service_id, state, price                                                           | None                                  |
 
 
 MaxAdmin: "madmin@gmail.com" ; with password "password"
