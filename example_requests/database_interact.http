@@ -11,12 +11,12 @@ Content-Type: application/json
 {
   "sort": {
       "by": "price",
-      "reverse": true
+      "reverse": false
   },
   "filters": {
-    "popularity":{
-      "min": -100,
-      "max": 100
+    "price":{
+      "min": 10,
+      "max": 20
     }
   }
 }

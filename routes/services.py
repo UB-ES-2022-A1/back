@@ -58,7 +58,7 @@ class ServiceSchema(SQLAlchemyAutoSchema):
 service_schema_all = ServiceSchema(exclude=['search_coincidences', 'contracts'])
 
 
-def filter_query(ser_table, q, filters):
+def filter_query(q, ser_table, filters):
     for filter_name in filters:
 
         if filter_name == 'price':
@@ -67,15 +67,19 @@ def filter_query(ser_table, q, filters):
             filter_quantity = ser_table.created_at
         elif filter_name == 'popularity':
 
+            """
+
             cs = aliased(ContractedService)
             s2 = aliased(Service)
-            """
+    
             filter_quantity = func.count(cs.id)
             q = q.add_column(filter_quantity)
-            """
 
             q = q.join(s2, ser_table.masterID == s2.masterID).join(cs, cs.service_id == s2.id).group_by(s2.id)
             filter_quantity = ser_table.price
+            """
+            raise NotImplementedError
+
 
         elif filter_name == 'rating':
             raise BadRequest('filter by rating not implemented yet')
@@ -91,15 +95,15 @@ def filter_query(ser_table, q, filters):
     return q
 
 
-def sort_query_services(ser_table, q, passed_arguments):
+def sort_query_services(q, ser_table, passed_arguments):
     if 'by' not in passed_arguments:
         raise BadRequest('Specify what to sort by!')
 
     if passed_arguments['by'] == 'price':
-        sort_criterion = Service.price
+        sort_criterion = ser_table.price
 
     elif passed_arguments['by'] == 'creation_date':
-        sort_criterion = Service.created_at
+        sort_criterion = ser_table.created_at
 
     elif passed_arguments['by'] == 'rating':
         raise NotImplementedError('This sorting method is not supported!')
@@ -160,7 +164,7 @@ def sort_services(list_to_sort, passed_arguments):
     list_to_sort.sort(key=sort_criterion, reverse=reverse)
 
 
-def get_matches_text(search_text, search_order, filters=(), threshold=0.9, user_email=None):
+def get_matches_text(q, ser_table, search_text, search_order, threshold=0.9):
     scores = defaultdict(float)
 
     total_documents = Service.get_count()
@@ -169,13 +173,7 @@ def get_matches_text(search_text, search_order, filters=(), threshold=0.9, user_
 
     for word, coincidences_query in coincidences_queries:
 
-        if user_email is not None:
-            coincidences_query = coincidences_query.join(Service).filter_by(user_email=user_email, state=0)
-
-        s1 = aliased(Service)
-        coincidences_query = coincidences_query.join(s1)
-        coincidences_query = filter_query(s1, coincidences_query, filters=filters)
-        coincidences_word = coincidences_query.all()
+        coincidences_word = coincidences_query.subquery().join(q.subquery()).all()
 
         if len(coincidences_word) > 0:
 
@@ -214,6 +212,28 @@ def get_matches_text(search_text, search_order, filters=(), threshold=0.9, user_
         return [scored[0] for scored in all_scored]
 
 
+def filter_email_state(q, ser_table, user_email=None):
+    q_final = q
+
+    if user_email:
+
+        user = User.get_by_id(user_email)
+        if not user:
+            raise NotFound('User not found')
+
+        q_final = q_final.filter(ser_table.user == user)
+
+        if g.user.email == user_email and not g.user.access >= 8:
+            q_final = q_final.filter(or_(Service.state == 0, Service.state == 1))
+        elif not g.user.access >= 8:
+            q_final = q_final.filter(Service.state == 0)
+    else:
+        if not g.user.access >= 8:
+            q_final = q_final.filter(Service.state == 0)
+
+    return q_final
+
+
 @services_bp.route("", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
 def get_all_services():
@@ -229,22 +249,13 @@ def get_many_services(user_email=None):
     :return: Response with all the services
     """
 
-    q = Service.query
+    s1 = Service
+    q = s1.query
 
-    all_services = q
-
-    if user_email:
-        q = q.filter(Service.user_email == user_email)
-        if g.user.email == user_email and not g.user.access >= 8:
-            all_services = q.filter(or_(Service.state == 0, Service.state == 1))
-        elif not g.user.access >= 8:
-            all_services = q.filter(Service.state == 0)
-    else:
-        if not g.user.access >= 8:
-            all_services = q.filter(Service.state == 0)
+    q = filter_email_state(q, s1, user_email=user_email)
 
     if not request.headers.get('content-type') == 'application/json':
-        services = service_schema_all.dump(all_services, many=True)
+        services = service_schema_all.dump(q, many=True)
         for id_c, service in enumerate(services):
             services[id_c] = json.loads(get_service(service["id"])[0].get_data().decode("utf-8"))
         return jsonify(services), 200
@@ -256,25 +267,23 @@ def get_many_services(user_email=None):
     else:
         filters = ()
 
+    q = filter_query(q, s1, filters=filters)
+
     if 'search_text' in info:
-        all_services = get_matches_text(info['search_text'], search_order='sort' not in info, filters=filters,
-                                        threshold=0.9, user_email=user_email)
+        all_services = get_matches_text(q, s1, info['search_text'], search_order='sort' not in info, threshold=0.9)
         if 'sort' in info:
             sort_services(all_services, info['sort'])
     else:
-        s1 = aliased(Service)
-        services_query = s1.query.filter(s1.state == 0)
-        if user_email is not None:
-            services_query = services_query.filter(s1.user_email == user_email)
-        services_query = filter_query(s1, services_query, filters=filters)
+
         if 'sort' in info:
-            services_query = sort_query_services(s1, services_query, info['sort'])
-        all_services = services_query.all()
+            q = sort_query_services(q, s1, info['sort'])
+        all_services = q.all()
 
     services = service_schema_all.dump(all_services, many=True)
     for id_c, service in enumerate(services):
         services[id_c] = json.loads(get_service(service["id"])[0].get_data().decode("utf-8"))
     return jsonify(services), 200
+
 
 @services_bp.route("/<int:service_id>", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
