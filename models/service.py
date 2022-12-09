@@ -78,4 +78,4 @@ class Service(db.Model):
 
     @classmethod
     def get_count(cls):
-        return cls.query.count()
+        return cls.query.filter_by(state=0).count()
