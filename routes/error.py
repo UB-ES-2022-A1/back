@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify
 from marshmallow import ValidationError
 from werkzeug.exceptions import NotFound, Conflict, BadRequest
 from sqlalchemy.exc import IntegrityError
-from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege, EmailNotVerified
+from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege, EmailNotVerified, SelfBuyException
 
 error_bp = Blueprint("errors", __name__)
 
@@ -49,6 +49,11 @@ def handle_not_accepted_privilege_exception(err):
 
 # Error al acceder sin tener el mail verificado.
 @error_bp.app_errorhandler(EmailNotVerified)
+def handle_email_not_verified(err):
+    return jsonify({"message": str(err)}), 400
+
+# Error al acceder sin tener el mail verificado.
+@error_bp.app_errorhandler(SelfBuyException)
 def handle_email_not_verified(err):
     return jsonify({"message": str(err)}), 400
 

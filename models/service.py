@@ -1,3 +1,5 @@
+from sqlalchemy.orm import backref
+
 from database import db
 from models.contracted_service import ContractedService
 from models.search import term_frequency
@@ -10,7 +12,7 @@ class Service(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    masterID = db.Column(db.Integer, db.ForeignKey('services.id'),  nullable=True)
+    masterID = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=True)
     user_email = db.Column(db.String(50), db.ForeignKey('users.email'))
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String, nullable=False)
@@ -19,16 +21,18 @@ class Service(db.Model):
     contracts = db.relationship(ContractedService, backref="service", cascade="all, delete-orphan")
     created_at = db.Column(db.Date(), nullable=True)
 
+
     search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
-    begin = db.Column(db.Time, nullable=True) # time at wich service can begin
-    end = db.Column(db.Time, nullable=True) # time at wich service will stop being available for the day
-    cooldown = db.Column(db.Time, nullable=True) # minimum time after service is given to rest
+    begin = db.Column(db.Time, nullable=True)  # time at wich service can begin
+    end = db.Column(db.Time, nullable=True)  # time at wich service will stop being available for the day
+    cooldown = db.Column(db.Time, nullable=True)  # minimum time after service is given to rest
     requiresPlace = db.Column(db.Boolean, default=False)
 
-    state = db.Column(db.Integer, nullable=False, default=0) #0 active, 1 paused, 2 not-active
-
+    state = db.Column(db.Integer, nullable=False, default=0)  # 0 active, 1 paused, 2 not-active
 
     search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
+    child_services = db.relationship("Service", backref=backref("master_service", remote_side=[id]), post_update=True, cascade="all, delete-orphan")
+
 
     # TODO Añadir campos como foto, fecha, ubicación.
     def save_to_db(self):

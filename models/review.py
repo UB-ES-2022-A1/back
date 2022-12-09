@@ -17,7 +17,7 @@ class Review(db.Model):
     stars = db.Column(db.Integer, nullable=False)
 
     reviewer = db.relationship(User, backref='reviews', cascade="all, delete")
-    service = db.relationship(Service, backref='reviews', cascade="all, delete", foreign_keys=[service_id])
+    service = db.relationship("Service", backref='reviews', cascade="all, delete", foreign_keys=[service_id])
 
 
     # TODO Añadir campos como foto, fecha, ubicación.

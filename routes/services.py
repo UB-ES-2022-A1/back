@@ -1,6 +1,10 @@
+import json
 from collections import defaultdict
 from math import log
 from sqlalchemy import desc, func, asc
+from operator import or_
+
+from sqlalchemy import desc
 from flask import Blueprint, jsonify, request
 from marshmallow import validates, ValidationError, pre_dump
 from werkzeug.exceptions import BadRequest
@@ -12,7 +16,7 @@ from sqlalchemy.orm.util import has_identity, aliased
 from models.contracted_service import ContractedService
 from models.service import Service
 from models.search import term_frequency
-from models.user import auth
+from models.user import auth, User
 from routes.users import get_user
 from flask import g
 from utils.custom_exceptions import PrivilegeException
@@ -141,8 +145,6 @@ def sort_services(list_to_sort, passed_arguments):
 
     elif passed_arguments['by'] == 'popularity':
         raise NotImplementedError('This sorting method is not supported!')
-
-
     else:
         raise NotImplementedError('This sorting method is not supported!')
 
@@ -228,13 +230,24 @@ def get_many_services(user_email=None):
     """
 
     q = Service.query
+
+    all_services = q
+
     if user_email:
         q = q.filter(Service.user_email == user_email)
-
-    all_services = q.filter(Service.state == 0)
+        if g.user.email == user_email and not g.user.access >= 8:
+            all_services = q.filter(or_(Service.state == 0, Service.state == 1))
+        elif not g.user.access >= 8:
+            all_services = q.filter(Service.state == 0)
+    else:
+        if not g.user.access >= 8:
+            all_services = q.filter(Service.state == 0)
 
     if not request.headers.get('content-type') == 'application/json':
-        return jsonify(service_schema_all.dump(all_services, many=True)), 200
+        services = service_schema_all.dump(all_services, many=True)
+        for id_c, service in enumerate(services):
+            services[id_c] = json.loads(get_service(service["id"])[0].get_data().decode("utf-8"))
+        return jsonify(services), 200
 
     info = request.json
 
@@ -258,8 +271,10 @@ def get_many_services(user_email=None):
             services_query = sort_query_services(s1, services_query, info['sort'])
         all_services = services_query.all()
 
-    return jsonify(service_schema_all.dump(all_services, many=True)), 200
-
+    services = service_schema_all.dump(all_services, many=True)
+    for id_c, service in enumerate(services):
+        services[id_c] = json.loads(get_service(service["id"])[0].get_data().decode("utf-8"))
+    return jsonify(services), 200
 
 @services_bp.route("/<int:service_id>", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
@@ -273,8 +288,13 @@ def get_service(service_id):
     # En caso de no encontrar el servicio retornamos un mensaje de error.
     if not service:
         raise NotFound
-    if request.method == "GET":
-        return jsonify(service_schema_all.dump(service, many=False)), 200
+    info = service_schema_all.dump(service, many=False)
+    user = User.get_by_id(info["user"])
+    info["user_name"] = user.name
+    info["user_email"] = info["user"]
+    info["user_grade"] = user.user_grade
+    info.pop("user")
+    return jsonify(info), 200
 
 
 @services_bp.route("/<int:service_id>/user", methods=["GET"])
@@ -337,23 +357,35 @@ def interact_service(service_id):
 
     # Disables the service (only changes the state)
     elif request.method == "POST":
-        service.state = 1
-        service.save_to_db()
-        return {'service_disabled_id': service_id}, 200
+        if service.state == 2:
+            raise NotFound
+        if service.state == 1:
+            service.state = 0
+            service.save_to_db()
+            return {'service_enabled_id': service_id}, 200
+        elif service.state == 0:
+            service.state = 1
+            service.save_to_db()
+            return {'service_disabled_id': service_id}, 200
+
 
     # Eliminates the service (only changes the state)
     elif request.method == "DELETE":
-        service.delete_from_db()
+        service.state = 2
+        service.save_to_db()
         return {'service_deleted_id': service_id}, 200
 
     # Modifies the service by changing the state and creating a new one with the same parameters except the changed ones
     elif request.method == "PUT":
+
+        if service.state == 2:
+            raise NotFound
         # All this code is to be able to use all the checks of the marshmallow schema.
         info = request.json
         iterator = iter(service.__dict__.items())
         next(iterator)  # Metadata
         for attr, value in iterator:
-            if attr in ['title', 'description', 'price', 'cooldown', 'begin', 'end', 'requiresPlace']:
+            if attr in ['title', 'description', 'user_email', 'price', 'cooldown', 'begin', 'end', 'requiresPlace']:
                 if attr == "user_email": attr = "user"
                 if attr not in info.keys():
                     info[attr] = value
