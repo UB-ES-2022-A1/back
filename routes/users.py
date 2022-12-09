@@ -290,5 +290,20 @@ def update_password():
 
     return jsonify("Contraseña cambiada"), 200
 
+@users_bp.route("/<string:email>/image", methods=["POST"])
+@auth.login_required(role=[access[1], access[8], access[9]])
+def update_image(email):
+    usr = User.query.get(email)
+    d = request.json
+    if not usr:
+        raise NotFound("Usuario no encontrado")
+
+    
+    usr.image = d['image']
+
+    usr.save_to_db()
+
+    return jsonify("Imagen actualizada correctamente"), 200
+
 
 
