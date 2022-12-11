@@ -156,8 +156,6 @@ def test_get_many_services(client):
     assert r.status_code == 200
     services = r.get_json()
     assert len(services) == 1
-
-
     r = request_with_login(login=client.post, request=client.put, url="services/" + id, json_r={'title': 'title 3'}, email=email1,
                            pwd=pwd1)
     assert r.status_code == 200
@@ -249,3 +247,64 @@ def test_disable_services(client):
     assert r.status_code == 200
     services = r.get_json()
     assert len(services) == 0
+
+def test_masterID(client):
+
+    # Credentials for user
+    email1 = 'pepito@gmail.com'
+    pwd1 = '12345678'
+
+    user1_dict = {'email': email1, 'pwd': pwd1, 'name': 'Pepito', 'access': 1}
+    r = client.post("users", json=user1_dict)
+    assert r.status_code == 201
+
+    service1_dict = {'title': 'title 1', 'description': 'description', 'price': 1}
+    r = request_with_login(login=client.post, request=client.post, url="services", json_r=service1_dict, email=email1,
+                           pwd=pwd1)
+    assert r.status_code == 200
+
+    r = client.get("services")
+    services = r.get_json()
+    response = services[0]
+    id = str(response['id'])
+
+    r = request_with_login(login=client.post, request=client.put, url="services/" + id, json_r={'title': 'title 3'},
+                           email=email1,
+                           pwd=pwd1)
+    assert r.status_code == 200
+
+    r = client.get("services")
+    services = r.get_json()
+    assert services[0]['master_service'] == 1
+    assert services[1]['master_service'] == 1
+
+def test_get_user_services(client):
+
+    # Credentials for user
+    email1 = 'pepito@gmail.com'
+    pwd1 = '12345678'
+
+    user1_dict = {'email': email1, 'pwd': pwd1, 'name': 'Pepito', 'access': 1}
+    r = client.post("users", json=user1_dict)
+    assert r.status_code == 201
+
+    service1_dict = {'title': 'title 1', 'description': 'description', 'price': 1}
+    r = request_with_login(login=client.post, request=client.post, url="services", json_r=service1_dict, email=email1,
+                           pwd=pwd1)
+    assert r.status_code == 200
+
+    r = client.get("services")
+    services = r.get_json()
+    response = services[0]
+    id = str(response['id'])
+
+    r = request_with_login(login=client.post, request=client.post, url="services/" + id, json_r={},
+                           email=email1,
+                           pwd=pwd1)
+    assert r.status_code == 200
+
+    r = client.get("services")
+    services = r.get_json()
+
+    assert len (services) == 1
+    assert services[0]['state'] == 1

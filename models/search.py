@@ -6,7 +6,7 @@ class term_frequency(db.Model):
     __table_name__ = 'term_frequency'
 
     # id = db.Column(db.Integer, primary_key='True')
-    word = db.Column(db.Text, nullable=False, primary_key=True)
+    word = db.Column(db.String, nullable=False, primary_key=True)
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False, primary_key=True)
     count = db.Column(db.Integer, nullable=False)
 
@@ -30,7 +30,8 @@ class term_frequency(db.Model):
 
     @classmethod
     def get_coincidences(cls, word):
-        return cls.query.filter_by(word=word)
+        search_term_regex = f'%{word}%'
+        return cls.query.filter(term_frequency.word.like(search_term_regex))
 
     @classmethod
     def search_text(cls, s: str):
@@ -40,7 +41,7 @@ class term_frequency(db.Model):
         except ValueError:
             return []
         words = cv.get_feature_names()
-        return [cls.get_coincidences(word) for word in words]
+        return [(word, cls.get_coincidences(word)) for word in words]
 
 
 

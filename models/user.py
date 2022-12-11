@@ -24,6 +24,8 @@ class User(db.Model):
     verified_email = db.Column(db.Boolean, nullable=False, default=False)
     # https://docs.sqlalchemy.org/en/20/core/type_basics.html
     wallet = db.Column(db.Numeric(scale=2), default=0.0)
+    user_grade = db.Column(db.Float, default=0.0)
+    number_of_reviews = db.Column(db.Integer, default = 0)
 
     # Campos opcionales
     phone = db.Column(db.Integer, nullable=True)

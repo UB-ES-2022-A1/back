@@ -1,6 +1,5 @@
 from sqlalchemy.orm import relationship
 from database import db
-from models.chat_room import ChatRoom
 
 
 class ContractedService(db.Model):
@@ -9,9 +8,7 @@ class ContractedService(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_email = db.Column(db.String(50), db.ForeignKey('users.email'), nullable=False)
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
-    state = db.Column(db.String, nullable=False, default='on process')
-
-    chat_room = db.relationship(ChatRoom, backref="contracted_service")
+    state = db.Column(db.Integer, nullable=False, default=0) # 0 not accepted, 1 active/accepted, 2 paused, 3 done/finished, 4 declined
 
     def save_to_db(self):
         """
@@ -24,7 +21,7 @@ class ContractedService(db.Model):
         """
         This method deletes the instance from the database
         """
-        db.session.delete(self)
+        self.state = 3
         db.session.commit()
 
     @classmethod
