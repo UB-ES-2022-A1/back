@@ -6,7 +6,7 @@ from models.chat_message import ChatMessage
 class ChatRoom(db.Model):
     __tablename__ = "chat_room"
 
-    contract_id = db.Column(db.Integer, db.ForeignKey('contracted_services.id'), nullable=False, primary_key=True)
+    id = db.Column(db.Integer, db.ForeignKey('contracted_services.id'), nullable=False, primary_key=True)
     seller_email = db.Column(db.String(50), db.ForeignKey('users.email'), nullable=False)
     client_email = db.Column(db.String(50), db.ForeignKey('users.email'), nullable=False)
     update = db.Column(db.DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)

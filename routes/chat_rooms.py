@@ -4,7 +4,7 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound, BadRequest, Conflict
 from database import db
 from sqlalchemy.orm.util import has_identity
-from sqlalchemy import and_, or_, not_
+from sqlalchemy import and_, or_, not_, desc
 from models.contracted_service import ContractedService
 from models.service import Service
 from models.user import User
@@ -32,13 +32,13 @@ def post_new_chat():
     """
     """
     info = request.json
-    seller_email = Service.get_by_id(ContractedService.get_by_id(info['contract_id']).service_id).user_email
-    client_email = ContractedService.get_by_id(info['contract_id']).user_email
-    info = {'contracted_service':info['contract_id']}
+    seller_email = Service.get_by_id(ContractedService.get_by_id(info['contracted_service']).service_id).user_email
+    client_email = ContractedService.get_by_id(info['contracted_service']).user_email
+    #info = {'contracted_service':info['contract_id']}
     info['seller'] = seller_email
     info['client'] = client_email
 
-    same_chat = ChatRoom.get_by_id(info['contract_id'])
+    same_chat = ChatRoom.get_by_id(info['contracted_service'])
 
     if same_chat:
         return jsonify({'message': 'error: chat already exists'}), 409
@@ -46,8 +46,7 @@ def post_new_chat():
     new_room = chat_room_schema_all.load(info, session=db.session)
     new_room.save_to_db()
 
-    return jsonify({'message': 'ChatRoom created correctly',
-            'request_id': new_room.id}), 201
+    return jsonify({'request_id': new_room.id}), 201
 
 @chat_rooms_bp.route("/rooms", methods=["GET"])
 @auth.login_required(role=[access[1], access[8], access[9]])
@@ -56,10 +55,8 @@ def get_user_chats():
     """
     info = request.json
 
-    resultado = (
-        ChatRoom.query.filter(
+    resultado = ChatRoom.query.filter(
             or_(ChatRoom.seller_email == g.user.email, ChatRoom.client_email == g.user.email)
-        )
-    ).all()
+        ).order_by(desc(ChatRoom.update)).all()
 
-    return jsonify(resultado), 200
+    return jsonify(chat_room_schema_all.dump(resultado, many=True)), 200

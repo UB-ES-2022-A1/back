@@ -65,15 +65,21 @@ def test_post_chat_room(client):
                            json_r={}, email=email2, pwd=pwd2)
     assert r.status_code == 200
 
+    # post the new chatroom
     r = request_with_login(login=client.post, request=client.post, url="/chats/new",
-                           json_r={'contract_id':contracts[0]['id']}, email=email2, pwd=pwd2)
+                           json_r={'contracted_service':contracts[0]['id']}, email=email2, pwd=pwd2)
 
-    assert r.get_json() == 201
+    assert r.status_code == 201
+    assert r.get_json()['request_id'] == contracts[0]['id']
 
-    """
-    # Check the contractor can see the service
-    r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/contractor/{email1}",
+    # check if client can see the room
+    r = request_with_login(login=client.post, request=client.get, url="/chats/rooms",
+                           json_r={}, email=email2, pwd=pwd2)
+
+    assert len(r.get_json()) == 1
+
+    # check if seller can see the room
+    r = request_with_login(login=client.post, request=client.get, url="/chats/rooms",
                            json_r={}, email=email1, pwd=pwd1)
-    assert r.status_code == 200
-    contracts = r.get_json()
-    assert len(contracts) == 1"""
+
+    assert len(r.get_json()) == 1

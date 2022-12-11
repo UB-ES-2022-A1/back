@@ -7,7 +7,7 @@ class ChatMessage(db.Model):
     __tablename__ = "chat_message"
 
     id = db.Column(db.Integer, primary_key=True)
-    room_id = db.Column(db.Integer, db.ForeignKey('chat_room.contract_id'), nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('chat_room.id'), nullable=False)
     user_email = db.Column(db.String(50), db.ForeignKey('users.email'), nullable=False)
     text = db.Column(db.Text, nullable=False, default='Failed to store text message')
     time = db.Column(db.DateTime(timezone=True), default=func.now(), nullable=False)
