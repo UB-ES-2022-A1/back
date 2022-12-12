@@ -3,6 +3,7 @@ from marshmallow import validates, ValidationError, validate
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from werkzeug.exceptions import NotFound, Conflict
 from database import db
+from models.transactions import Transaction
 from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege
 from utils.mail import send_email
 from models.user import User
@@ -226,7 +227,11 @@ def edit_wallet(email):
     usr.wallet = str(float(usr.wallet) + float(d["money"]))
 
     usr.save_to_db()
-
+    transaction = Transaction(user_email=usr.email, description="Admin addition",
+                            number=usr.number_transactions, quantity=float(d["money"]), wallet=usr.wallet)
+    transaction.save_to_db()
+    usr.number_transactions += 1
+    usr.save_to_db()
     return jsonify("Dinero añadido correctamente"), 200
 
 
@@ -291,4 +296,19 @@ def update_password():
     return jsonify("Contraseña cambiada"), 200
 
 
-
+@users_bp.route("/<string:email>/transactions", methods=["GET"])
+@auth.login_required(role=[access[1], access[8], access[9]])
+def get_transactions(email):
+    """
+    This method gets user transactions and returns them in list style.
+    """
+    # Check privileges
+    if email != g.user.email and g.user.access < 8:
+        return PrivilegeException("Don't have privileges to see user transactions!")
+    transactions_dict = g.user.transactions
+    transactions_list = []
+    for i in range(len(transactions_dict)):
+        n_dict = {'description': transactions_dict[i].description, 'quantity': transactions_dict[i].quantity,
+                  'wallet': transactions_dict[i].wallet}
+        transactions_list.append(n_dict)
+    return {'transactions': transactions_list, 'number_transactions': g.user.number_transactions}, 200
