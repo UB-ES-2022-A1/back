@@ -15,7 +15,7 @@ from flask import g
 from utils.custom_exceptions import PrivilegeException, SelfBuyException
 from utils.privilegies import access
 from routes.services import service_schema_all
-
+from models.transactions import Transaction
 # Todas las url de servicios contratados empiezan por esto
 contracted_services_bp = Blueprint("contracted_services", __name__, url_prefix="/contracted_services")
 
@@ -154,10 +154,8 @@ def contract_service():
     info["user"] = g.user.email
     if 'service' not in info:
         raise ValidationError({'service': ['Missing data for required field.']})
-
     if Service.get_by_id(info['service']).user_email == g.user.email:
         raise SelfBuyException("Cannot buy your own product.")
-
     new_contracted_service = contracted_service_schema_all.load(info, session=db.session)
     p = new_contracted_service.service.price
     w = g.user.wallet
@@ -168,6 +166,11 @@ def contract_service():
     usr.wallet = updated_w
     usr.save_to_db()
     new_contracted_service.save_to_db()
+    transaction = Transaction(user_email=g.user.email, description="Service bought: " + new_contracted_service.service.title,
+                              number=g.user.number_transactions, quantity=-p, wallet=g.user.wallet)
+    transaction.save_to_db()
+    g.user.number_transactions += 1
+    g.user.save_to_db()
     return {'request_id': new_contracted_service.id}, 201
 
 
@@ -216,6 +219,12 @@ def validate_contract(contract_id):
         contract.state = 2
         user_seller.wallet += service.price
         user_seller.save_to_db()
+        transaction = Transaction(user_email=user_seller.email,
+                                  description="Service sold: " + contract.service.title,
+                                  number=user_seller.number_transactions, quantity=service.price, wallet=user_seller.wallet)
+        transaction.save_to_db()
+        user_seller.number_transactions += 1
+        user_seller.save_to_db()
     contract.save_to_db()
     return {'status': 'State updated successfully'}, 200
 
@@ -224,7 +233,7 @@ def validate_contract(contract_id):
 @auth.login_required(role=[access[1], access[8], access[9]])
 def delete_contracted_service(contract_id):
     """
-    This method is used to cancel a contract.
+    This method is used to cancel a contract
     :param contract_id: The service that is going to be treated
     :return: Response
     """
@@ -234,12 +243,11 @@ def delete_contracted_service(contract_id):
         raise PrivilegeException("Not enough privileges to modify other resources.")
     if contract.state == 2:
         raise Conflict('The contract cannot be cancelled as it was already completed')
-
     contract.state = 3
     contract.save_to_db()
     user_client.wallet += service.price
     user_client.save_to_db()
-
+    return_cancelled_service(contract.service.title, contract.service.price, user_seller)
     return {'cancelled_contract': contract_id}, 200
 
 
@@ -276,6 +284,7 @@ def check(contract_id):
         user_client.save_to_db()
         contract.state = 3
         contract.save_to_db()
+        return_cancelled_service(contract.service.title, contract.service.price, user_client)
         raise NotFound("Seller has been deleted. Contract cancelled.")
 
     if not user_client:
@@ -283,6 +292,15 @@ def check(contract_id):
         user_seller.save_to_db()
         contract.state = 3
         contract.save_to_db()
+        return_cancelled_service(contract.service.title, contract.service.price, user_seller)
         raise NotFound("Client has been deleted. Contract cancelled.")
 
     return contract, service, user_client, user_seller
+
+
+def return_cancelled_service(name, price, user_client):
+    transaction = Transaction(user_email=user_client.email, description="Service cancelled: " + name,
+                              number=user_client.number_transactions, quantity=price, wallet=user_client.wallet)
+    transaction.save_to_db()
+    user_client.number_transactions += 1
+    user_client.save_to_db()
