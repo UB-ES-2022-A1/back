@@ -154,10 +154,8 @@ def contract_service():
     info["user"] = g.user.email
     if 'service' not in info:
         raise ValidationError({'service': ['Missing data for required field.']})
-
     if Service.get_by_id(info['service']).user_email == g.user.email:
         raise SelfBuyException("Cannot buy your own product.")
-
     new_contracted_service = contracted_service_schema_all.load(info, session=db.session)
     p = new_contracted_service.service.price
     w = g.user.wallet
@@ -235,7 +233,7 @@ def validate_contract(contract_id):
 @auth.login_required(role=[access[1], access[8], access[9]])
 def delete_contracted_service(contract_id):
     """
-    This method is used to cancel a contract.
+    This method is used to cancel a contract
     :param contract_id: The service that is going to be treated
     :return: Response
     """
@@ -245,13 +243,11 @@ def delete_contracted_service(contract_id):
         raise PrivilegeException("Not enough privileges to modify other resources.")
     if contract.state == 2:
         raise Conflict('The contract cannot be cancelled as it was already completed')
-
     contract.state = 3
     contract.save_to_db()
     user_client.wallet += service.price
     user_client.save_to_db()
     return_cancelled_service(contract.service.title, contract.service.price, user_seller)
-
     return {'cancelled_contract': contract_id}, 200
 
 
@@ -303,8 +299,8 @@ def check(contract_id):
 
 
 def return_cancelled_service(name, price, user_client):
-    transaction = Transaction(user_email=user_client.email, description="Service cancelled: " + service.title,
-                              number=user_client.number_transactions, quantity=service.price, wallet=user_client.wallet)
+    transaction = Transaction(user_email=user_client.email, description="Service cancelled: " + name,
+                              number=user_client.number_transactions, quantity=price, wallet=user_client.wallet)
     transaction.save_to_db()
     user_client.number_transactions += 1
     user_client.save_to_db()

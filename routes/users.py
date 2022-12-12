@@ -307,7 +307,7 @@ def get_transactions(email):
         return PrivilegeException("Don't have privileges to see user transactions!")
     transactions_dict = g.user.transactions
     transactions_list = []
-    for i in range(len(transactions_dict)):
+    for i in range(len(transactions_dict)-1,-1,-1):
         n_dict = {'description': transactions_dict[i].description, 'quantity': transactions_dict[i].quantity,
                   'wallet': transactions_dict[i].wallet}
         transactions_list.append(n_dict)
