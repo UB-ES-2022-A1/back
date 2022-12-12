@@ -8,7 +8,8 @@ class ContractedService(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_email = db.Column(db.String(50), db.ForeignKey('users.email'), nullable=False)
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
-    state = db.Column(db.Integer, nullable=False, default=0) # 0 not accepted, 1 active/accepted, 2 paused, 3 done/finished, 4 declined
+    state = db.Column(db.Integer, nullable=False, default=0) # 0 not accepted, 1 active/accepted, 2 done/finished, 3 declined
+                                                            # Usuario acepta, vendedor acepta
 
     def save_to_db(self):
         """

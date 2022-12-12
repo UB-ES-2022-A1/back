@@ -125,6 +125,15 @@ def post_review(service_id):
     new_review.service_id = mid
     new_review.save_to_db()  # Actualizamos la BD
 
+    service_review = Service.get_by_id(service_id)
+    service_review.service_grade = (service_review.number_of_reviews * service_review.service_grade + info["stars"]) / (service_review.number_of_reviews + 1)
+    service_review.number_of_reviews += 1
+
+    user_review = User.get_by_id(service_review.user_email)
+    user_review.user_grade = (user_review.number_of_reviews * user_review.user_grade + info["stars"]) / (user_review.number_of_reviews + 1)
+    user_review.number_of_reviews += 1
+    user_review.save_to_db()
+
     return {'saved_review_id': new_review.id}, 200
 
 
