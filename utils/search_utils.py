@@ -120,11 +120,11 @@ def get_matches_text(q, ser_table, search_text, search_order, threshold=0.9):
 
     total_documents = Service.get_count()
 
-    coincidences_queries = term_frequency.search_text(search_text)
+    coincidences_queries, hashtag_query = term_frequency.search_text(search_text)
 
     for word, coincidences_query in coincidences_queries:
 
-        merged_query = coincidences_query.join(q.subquery())
+        merged_query = coincidences_query.join(q.join(hashtag_query.subquery()).subquery())
         coincidences_word = merged_query.all()
 
         if len(coincidences_word) > 0:
