@@ -86,7 +86,7 @@ def test_post_chat_message(client):
 
     first_chat = r.get_json()[0]['update']
 
-    room = contracts[0]['id']
+    room = contracts[0]['contract_id']
 
     messageJson = {
         'chat_room': room,
