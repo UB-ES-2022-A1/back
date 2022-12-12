@@ -17,10 +17,11 @@ class Service(db.Model):
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String, nullable=False)
     price = db.Column(db.Numeric(scale=2), nullable=False, default=0)
+    service_grade = db.Column(db.Float, default='NaN')
+    number_of_reviews = db.Column(db.Integer, default = 0)
 
     contracts = db.relationship(ContractedService, backref="service", cascade="all, delete-orphan")
     created_at = db.Column(db.Date(), nullable=True)
-
 
     search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
     begin = db.Column(db.Time, nullable=True)  # time at wich service can begin
@@ -48,6 +49,7 @@ class Service(db.Model):
 
         if self.masterID is None:
             self.masterID = self.id
+            self.service_grade = 0.0
 
         db.session.commit()
         term_frequency.put_service(self)
