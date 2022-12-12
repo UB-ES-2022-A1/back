@@ -102,7 +102,7 @@ def test_average_ratings(client):
 
     service_id = r.get_json()['added_service_id']
 
-    review1_dict = {'title': 'Mi pimera review', 'text': 'ni bien ni mal bro', 'stars': 3}
+    review1_dict = {'title': 'Mi primera review', 'text': 'ni bien ni mal bro', 'stars': 3}
     r = request_with_login(login=client.post, request=client.post, url=f'reviews/{service_id}', json_r=review1_dict,
                            email=email2, pwd=pwd2)
 
@@ -111,9 +111,9 @@ def test_average_ratings(client):
     r = client.get("users")
     assert r.status_code == 200
 
-    r = client.get(f'services/{service_id}')
+    r = client.get(f'reviews/{service_id}/rating')
     service = r.get_json()
-    assert service["service_grade"] == 3
+    assert service["service_rating"] == 3
     assert service["number_of_reviews"] == 1
 
     r = request_with_login(login=client.post, request=client.get, url="users/"+email1, json_r={}, email=email1, pwd=pwd1)
@@ -126,9 +126,9 @@ def test_average_ratings(client):
                            email=email1, pwd=pwd1)
     assert r.status_code == 200
 
-    r = client.get(f'services/{service_id}')
+    r = client.get(f'reviews/{service_id}/rating')
     service = r.get_json()
-    assert service["service_grade"] == 4
+    assert service["service_rating"] == 4
     assert service["number_of_reviews"] == 2
 
     r = request_with_login(login=client.post, request=client.get, url="users/" + email1, json_r={}, email=email1,
@@ -136,6 +136,21 @@ def test_average_ratings(client):
     user1 = r.get_json()
     assert user1["user_grade"] == 4
     assert user1["number_of_reviews"] == 2
+
+    r = request_with_login(login=client.post, request=client.put, url=f'services/{service_id}', json_r={'title': 'title changed '},
+                           email=email1,
+                           pwd=pwd1)
+    assert r.status_code == 200
+
+    service_id = r.get_json()['modified_service_id']
+    r = client.get(f'reviews/{service_id}/rating')
+    service = r.get_json()
+    assert service["service_rating"] == 4
+    assert service["number_of_reviews"] == 2
+
+    r = client.get(f'services/{service_id}')
+    service = r.get_json()
+    assert service["service_grade"] == None
 
 
 
