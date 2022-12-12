@@ -1,19 +1,18 @@
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from database import db
-from models.chat_room import ChatRoom
 
 
-class ContractedService(db.Model):
-    __tablename__ = "contracted_services"
+class ChatMessage(db.Model):
+    __tablename__ = "chat_message"
 
     id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('chat_room.id'), nullable=False)
     user_email = db.Column(db.String(50), db.ForeignKey('users.email'), nullable=False)
-    service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
-    state = db.Column(db.Integer, nullable=False, default=0) # 0 creates, 1 accepted, 2 completed, 3 canceled.
-    validate_c = db.Column(db.Integer, nullable=False, default=False)
-    validate_s = db.Column(db.Integer, nullable=False, default=False)
-
-    chat_room = db.relationship(ChatRoom, backref="contracted_service")
+    text = db.Column(db.Text, nullable=False, default='Failed to store text message')
+    time = db.Column(db.DateTime(timezone=True), default=func.now(), nullable=False)
+    #https://stackoverflow.com/questions/28278328/how-to-use-values-like-default-and-onupdate-in-flask-sqlalchemy
+    state = db.Column(db.Integer, nullable=False, default=0) # 0 = active, 1 = deactivated
 
     def save_to_db(self):
         """
@@ -26,7 +25,7 @@ class ContractedService(db.Model):
         """
         This method deletes the instance from the database
         """
-        self.state = 3
+        self.state = 1
         db.session.commit()
 
     @classmethod
