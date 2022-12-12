@@ -171,9 +171,14 @@ def contract_service():
     return {'request_id': new_contracted_service.id}, 201
 
 
-@contracted_services_bp.route("/<int:contract_id>/accept", methods=["PUT"])
+@contracted_services_bp.route("/<int:contract_id>/accept", methods=["POST"])
 @auth.login_required(role=[access[1], access[8], access[9]])
-def mark_as_accepted(contract_id):
+def accept(contract_id):
+    """
+    This method is used to accept a contract. Must be used by the seller
+    :param contract_id:
+    :return:
+    """
     contract, service, user_client, user_seller= check(contract_id)
     if not contract.state == 0:
         raise Conflict("contract is not acceptable because it already was accepted or canceled!")
@@ -188,11 +193,15 @@ def mark_as_accepted(contract_id):
 @contracted_services_bp.route("/<int:contract_id>/validate", methods=["POST"])
 @auth.login_required(role=[access[1], access[8], access[9]])
 def validate_contract(contract_id):
+    """
+    THis method validates the contract. If the contract has been validated by both client and seller it updates the state.
+    Can be used by the seller or the client
+    :param contract_id: Contract id
+    :return: Response
+    """
     contract, service, user_client, user_seller = check(contract_id)
-
     if not contract.state == 1:
-        raise Conflict('The contract cannot be validated!')
-
+        raise Conflict('The contract cannot be validated as it was not accepted or was cancelled')
     email = g.user.email
     if email == service.user_email:
         contract.validate_s = True
@@ -203,14 +212,11 @@ def validate_contract(contract_id):
         contract.validate_c = True
     else:
         raise PrivilegeException("Not enough privileges to modify other resources.")
-
     if contract.validate_s and contract.validate_c:
         contract.state = 2
         user_seller.wallet += service.price
         user_seller.save_to_db()
-
     contract.save_to_db()
-
     return {'status': 'State updated successfully'}, 200
 
 
