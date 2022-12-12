@@ -220,46 +220,27 @@ def validate_contract(contract_id):
     return {'status': 'State updated successfully'}, 200
 
 
-@contracted_services_bp.route("/<int:contracted_service_id>", methods=["PUT", "DELETE"])
+@contracted_services_bp.route("/<int:contract_id>", methods=["DELETE"])
 @auth.login_required(role=[access[1], access[8], access[9]])
-def delete_contracted_service(contracted_service_id):
+def delete_contracted_service(contract_id):
     """
-    Method used to delete or modify services. Requires a token. The token
-    user musts coincide with the service user or be an admin
-    :param contracted_service_id: The service that is going to be treated
+    This method is used to cancel a contract.
+    :param contract_id: The service that is going to be treated
     :return: Response
     """
-    service = ContractedService.get_by_id(contracted_service_id)
-    # En caso de no encontrar el servicio retornamos un mensaje de error.
-    if not service:
-        raise NotFound
+    contract, service, user_client, user_seller = check(contract_id)
 
-    if service.user_email != g.user.email and g.user.access < 8:
+    # No privileges
+    if service.user_email != g.user.email and g.user.access < 8 and contract.user_email != g.user.email:
         raise PrivilegeException("Not enough privileges to modify other resources.")
 
-    if service.state == 0:
-        g.user.wallet += service.price
-    else:
-        raise BadRequest("Can't cancel or edit an ordered which has been accepted or delivered!")
+    if service.status == 2:
+        raise Conflict('The contract cannot be cancelled as it was already completed')
 
-    if request.method == "DELETE":
-        service.delete_from_db()
-        return {'deleted_request': contracted_service_id}, 200
+    g.user.wallet += service.price
+    g.user.save_to_db()
 
-    elif request.method == "PUT":
-        # All this code is to be able to use all the checks of the marshmallow schema.
-        info = request.json
-        iterator = iter(service.__dict__.items())
-        next(iterator)  # Metadata
-        for attr, value in iterator:
-            if attr == "user_email":
-                attr = "user"
-            if attr not in info.keys():
-                info[attr] = value
-
-        n_contracted_service = contracted_service_schema_all.load(info, session=db.session)
-        n_contracted_service.save_to_db()
-        return {'modified_contract': n_contracted_service.id}, 200
+    return {'cancelled_contract': contract_id}, 200
 
 
 def check(contract_id):
@@ -272,10 +253,11 @@ def check(contract_id):
     contract = ContractedService.get_by_id(contract_id)
     service = Service.get_by_id(contract.service_id)
 
-    # En caso de no encontrar el servicio retornamos un mensaje de error.
+    # No contract
     if not contract:
         raise NotFound("Contract not found.")
 
+    # No service
     if not service:
         contract.state = 3
         contract.save_to_db()
