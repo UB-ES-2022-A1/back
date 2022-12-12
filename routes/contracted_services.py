@@ -171,49 +171,15 @@ def contract_service():
     return {'request_id': new_contracted_service.id}, 201
 
 
-@contracted_services_bp.route("/<int:id>/done", methods=["PUT"])
+@contracted_services_bp.route("/<int:contract_id>/accept", methods=["POST"])
 @auth.login_required(role=[access[1], access[8], access[9]])
-def mark_as_done(id):
-    contract = ContractedService.get_by_id(id)
-    service = Service.get_by_id(contract.service_id)
-
-    # En caso de no encontrar el servicio retornamos un mensaje de error.
-    if not contract:
-        raise NotFound
-
-    if not service:
-        raise NotFound
-
-    if contract.state == 0:
-        raise Conflict('Must accept service before doing it!')
-
-    if service.user_email != g.user.email and g.user.access < 8:
-        raise PrivilegeException("Not enough privileges to modify other resources.")
-
-    contracted = User.get_by_id(service.user_email)
-    if not contracted:
-        raise NotFound
-
-    contract.state = 3
-    contracted.wallet = str(float(contracted.wallet) + float(service.price))
-    contract.save_to_db()
-    contracted.save_to_db()
-    return {'status': 'State updated successfully'}, 200
-
-
-@contracted_services_bp.route("/<int:id>/accept", methods=["PUT"])
-@auth.login_required(role=[access[1], access[8], access[9]])
-def mark_as_accepted(id):
-    contract = ContractedService.get_by_id(id)
-    service = Service.get_by_id(contract.service_id)
-
-    # En caso de no encontrar el servicio retornamos un mensaje de error.
-    if not contract:
-        raise NotFound
-
-    if not service:
-        raise NotFound
-
+def accept(contract_id):
+    """
+    This method is used to accept a contract. Must be used by the seller
+    :param contract_id:
+    :return:
+    """
+    contract, service, user_client, user_seller= check(contract_id)
     if not contract.state == 0:
         raise Conflict("contract is not acceptable because it already was accepted or canceled!")
 
@@ -221,6 +187,35 @@ def mark_as_accepted(id):
         raise PrivilegeException("Not enough privileges to modify other resources.")
 
     contract.state = 1
+    contract.save_to_db()
+    return {'status': 'State updated successfully'}, 200
+
+@contracted_services_bp.route("/<int:contract_id>/validate", methods=["POST"])
+@auth.login_required(role=[access[1], access[8], access[9]])
+def validate_contract(contract_id):
+    """
+    THis method validates the contract. If the contract has been validated by both client and seller it updates the state.
+    Can be used by the seller or the client
+    :param contract_id: Contract id
+    :return: Response
+    """
+    contract, service, user_client, user_seller = check(contract_id)
+    if not contract.state == 1:
+        raise Conflict('The contract cannot be validated as it was not accepted or was cancelled')
+    email = g.user.email
+    if email == service.user_email:
+        contract.validate_s = True
+    elif email == contract.user_email:
+        contract.validate_c = True
+    elif g.user.acces >= 8:
+        contract.validate_s = True
+        contract.validate_c = True
+    else:
+        raise PrivilegeException("Not enough privileges to modify other resources.")
+    if contract.validate_s and contract.validate_c:
+        contract.state = 2
+        user_seller.wallet += service.price
+        user_seller.save_to_db()
     contract.save_to_db()
     return {'status': 'State updated successfully'}, 200
 
@@ -265,3 +260,47 @@ def delete_contracted_service(contracted_service_id):
         n_contracted_service = contracted_service_schema_all.load(info, session=db.session)
         n_contracted_service.save_to_db()
         return {'modified_contract': n_contracted_service.id}, 200
+
+
+def check(contract_id):
+    """
+    Support method used to check the database and the security
+    :param contract_id: the id of the contract that is going to be accessed.
+    :return: the contract and the service if all is correct.
+    """
+
+    contract = ContractedService.get_by_id(contract_id)
+    service = Service.get_by_id(contract.service_id)
+
+    # En caso de no encontrar el servicio retornamos un mensaje de error.
+    if not contract:
+        raise NotFound("Contract not found.")
+
+    if not service:
+        contract.state = 3
+        contract.save_to_db()
+        raise NotFound("Service not found. Contract cancelled.")
+
+    user_seller = User.get_by_id(service.user_email)
+    user_client = User.get_by_id(contract.user_email)
+
+    if not user_client and not user_seller:
+        contract.state = 3
+        contract.save_to_db()
+        raise NotFound("Both users of the contract have been deleted. Contract cancelled.")
+
+    if not user_seller:
+        user_client.wallet += service.price
+        user_client.save_to_db()
+        contract.state = 3
+        contract.save_to_db()
+        raise NotFound("Seller has been deleted. Contract cancelled.")
+
+    if not user_client:
+        user_seller.wallet += service.price
+        user_seller.save_to_db()
+        contract.state = 3
+        contract.save_to_db()
+        raise NotFound("Client has been deleted. Contract cancelled.")
+
+    return contract, service, user_client, user_seller
