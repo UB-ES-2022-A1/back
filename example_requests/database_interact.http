@@ -75,6 +75,23 @@ Content-Type: application/json
   "pwd": "12345678"
 }
 
+### POST an LOGIN ---> After this all the following requests needs login(token)
+POST localhost:5000/login
+Content-Type: application/json
+
+{
+  "email": "email9@gmail.com",
+  "pwd": "password"
+}
+
+### POST an LOGIN ---> After this all the following requests needs login(token)
+POST localhost:5000/login
+Content-Type: application/json
+
+{
+  "email": "email8@gmail.com",
+  "pwd": "password"
+}
 ### POST an admin LOGIN ---> After this all the following requests needs login(token)
 POST localhost:5000/login
 Content-Type: application/json
@@ -86,7 +103,7 @@ Content-Type: application/json
 
 ### POST a service
 POST http://localhost:5000/services
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTc5NDkzfQ.t8J8LmJDwrgdbVBbEVg2sqeRRKeDylWOtcCVNYXF8_c loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsOEBnbWFpbC5jb20iLCJleHAiOjE2NzA5MDI4MTV9.Pr9S0Fl_yqWur8h-8mZVK3k2bTo56Uz72o5nIWv3T60 loquesea
 Content-Type: application/json
 
 {
@@ -132,14 +149,13 @@ Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzNUBlbW
 
 ### POST a contract
 POST http://localhost:5000/contracted_services
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2Njk4MjUzODN9.d8j23UC2cHRtbQj60_f3Qh_7Xl1iXPZuqDQhYgaogOA loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsOUBnbWFpbC5jb20iLCJleHAiOjE2NzA5MDI4NjB9.GV20GwkmUsHtYYpj9GchqkiapKFhirLqY-B-ImOrfds loquesea
 Content-Type: application/json
 
 {
-  "service": 1,
-  "state": "active",
-  "price" : 0
+  "service": 10
 }
+
 
 ### POST petición reseteo de contra
 POST localhost:5000/users/forget_pwd/xxnazarxx@hotmail.es
@@ -185,12 +201,12 @@ Content-Type: application/json
 
 ### Get contracted seervice
 GET localhost:5000/contracted_services/1
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTkyOTY3fQ.lYnbk70nMAkNDm2vyONWwf5gHfkyjwwSypXRWB6Raso loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsOUBnbWFpbC5jb20iLCJleHAiOjE2NzA5MDI4NjB9.GV20GwkmUsHtYYpj9GchqkiapKFhirLqY-B-ImOrfds loquesea
 
 ### Get all user contracted services
-GET localhost:5000/contracted_services/client/xxnazarxx@hotmail.es
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTkyOTY3fQ.lYnbk70nMAkNDm2vyONWwf5gHfkyjwwSypXRWB6Raso loquesea
+GET localhost:5000/contracted_services/client/email9@gmail.com
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsOUBnbWFpbC5jb20iLCJleHAiOjE2NzA5MDI4NjB9.GV20GwkmUsHtYYpj9GchqkiapKFhirLqY-B-ImOrfds loquesea
 
 ### Get all user gived contracts
-GET localhost:5000/contracted_services/contractor/xxnazarxx@hotmail.es
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTkyOTY3fQ.lYnbk70nMAkNDm2vyONWwf5gHfkyjwwSypXRWB6Raso loquesea
+GET localhost:5000/contracted_services/contractor/email8@gmail.com
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsOEBnbWFpbC5jb20iLCJleHAiOjE2NzA5MDMwMTh9.bhDiR1lhXlq2bFkUxHx_ieKr3bM5Fdq0rxJHfNyr9_0 loquesea
