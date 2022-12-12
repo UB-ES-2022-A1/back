@@ -229,16 +229,16 @@ def delete_contracted_service(contract_id):
     :return: Response
     """
     contract, service, user_client, user_seller = check(contract_id)
-
     # No privileges
     if service.user_email != g.user.email and g.user.access < 8 and contract.user_email != g.user.email:
         raise PrivilegeException("Not enough privileges to modify other resources.")
-
-    if service.status == 2:
+    if contract.state == 2:
         raise Conflict('The contract cannot be cancelled as it was already completed')
 
-    g.user.wallet += service.price
-    g.user.save_to_db()
+    contract.state = 3
+    contract.save_to_db()
+    user_client.wallet += service.price
+    user_client.save_to_db()
 
     return {'cancelled_contract': contract_id}, 200
 

@@ -58,7 +58,7 @@ def test_post_chat_room(client):
     assert r.status_code == 200
     contracts = r.get_json()
     assert len(contracts) == 1
-    assert contracts[0]['id'] == 1
+    assert contracts[0]['contract_id'] == 1
 
     # Check the client can see the service
     r = request_with_login(login=client.post, request=client.get, url="/chats/rooms",
@@ -67,10 +67,10 @@ def test_post_chat_room(client):
 
     # post the new chatroom
     r = request_with_login(login=client.post, request=client.post, url="/chats/new",
-                           json_r={'contracted_service':contracts[0]['id']}, email=email2, pwd=pwd2)
+                           json_r={'contracted_service':contracts[0]['contract_id']}, email=email2, pwd=pwd2)
 
     assert r.status_code == 201
-    assert r.get_json()['request_id'] == contracts[0]['id']
+    assert r.get_json()['request_id'] == contracts[0]['contract_id']
 
     # check if client can see the room
     r = request_with_login(login=client.post, request=client.get, url="/chats/rooms",

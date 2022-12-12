@@ -31,21 +31,30 @@ chat_room_schema_all = ChatRoomSchema()
 def post_new_chat():
     """
     """
+    print("1")
     info = request.json
+    print("2")
     seller_email = Service.get_by_id(ContractedService.get_by_id(info['contracted_service']).service_id).user_email
+    print("3")
     client_email = ContractedService.get_by_id(info['contracted_service']).user_email
     #info = {'contracted_service':info['contract_id']}
+    print("4")
     info['seller'] = seller_email
     info['client'] = client_email
-
+    print("5")
     same_chat = ChatRoom.get_by_id(info['contracted_service'])
 
     if same_chat:
         return jsonify({'message': 'error: chat already exists'}), 409
-
-    new_room = chat_room_schema_all.load(info, session=db.session)
-    new_room.save_to_db()
-
+    info['id'] = info['contracted_service']
+    info.pop('contracted_service')
+    print("HJ")
+    try:
+        new_room = chat_room_schema_all.load(info, session=db.session)
+        print("XA")
+        new_room.save_to_db()
+        print("XS")
+    except Exception as e: print(e)
     return jsonify({'request_id': new_room.id}), 201
 
 @chat_rooms_bp.route("/rooms", methods=["GET"])
