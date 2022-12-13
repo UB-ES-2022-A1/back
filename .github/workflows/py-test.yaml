@@ -31,12 +31,12 @@ jobs:
         run: |
           pip install pytest
           pip install pytest-cov
-          pytest tests/unit/test_api_login.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
-          pytest tests/unit/test_api_user.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
-          pytest tests/unit/test_service_api.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
-          pytest tests/unit/test_service_model.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
-          pytest tests/unit/test_user_model.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
-          pytest tests/unit/test_contracted_service_api.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
-          pytest tests/unit/test_contracted_service_model.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
-          pytest tests/unit/test_reviews_api.py  --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+          pytest tests/unit/test_api_login.py  --doctest-modules --junitxml=junit/test-results.xml --cov=routes/ --cov-report=xml --cov-report=html
+          pytest tests/unit/test_api_user.py  --doctest-modules --junitxml=junit/test-results.xml --cov=routes/ --cov-report=xml --cov-report=html
+          pytest tests/unit/test_service_api.py  --doctest-modules --junitxml=junit/test-results.xml --cov=routes/ --cov-report=xml --cov-report=html
+          pytest tests/unit/test_service_model.py  --doctest-modules --junitxml=junit/test-results.xml --cov=routes/ --cov-report=xml --cov-report=html
+          pytest tests/unit/test_user_model.py  --doctest-modules --junitxml=junit/test-results.xml --cov=routes/ --cov-report=xml --cov-report=html
+          pytest tests/unit/test_contracted_service_api.py  --doctest-modules --junitxml=junit/test-results.xml --cov=routes/ --cov-report=xml --cov-report=html
+          pytest tests/unit/test_contracted_service_model.py  --doctest-modules --junitxml=junit/test-results.xml --cov=routes/ --cov-report=xml --cov-report=html
+          pytest tests/unit/test_reviews_api.py  --doctest-modules --junitxml=junit/test-results.xml --cov=routes/ --cov-report=xml --cov-report=html
 
