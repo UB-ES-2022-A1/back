@@ -81,8 +81,6 @@ def sort_query_services(q, ser_table, passed_arguments):
             outerjoin(q_contracted, q_contracted.c.service_id == brothers.c.id).group_by(ser_table.id)
 
         sort_criterion = func.count(q_contracted.c.id)
-        q = q.add_column(sort_criterion)
-        print(q.all())
 
 
     else:

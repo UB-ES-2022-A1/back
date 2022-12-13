@@ -9,22 +9,35 @@ GET localhost:5000/services/search
 Content-Type: application/json
 
 {
- "sort": {
-      "by": "popularity",
-      "reverse": true
+  "search_text": "cheese",
+  "sort": {
+      "by": "price",
+      "reverse": false
+  },
+  "filters": {
+    "price":{
+      "min": 1,
+      "max": 200
+    }
   }
 }
 
 
 ### search services by a user
-GET localhost:5000/services/search
+GET localhost:5000/services/email9@gmail.com/service
 Content-Type: application/json
 
 {
-  "search_text": "",
+  "search_text": "cheese",
   "sort": {
       "by": "price",
-      "reverse": false
+      "reverse": true
+  },
+  "filters": {
+    "price":{
+      "min": 0,
+      "max": 54
+    }
   }
 }
 
@@ -54,12 +67,12 @@ GET localhost:5000/users/xxnazarxx@hotmail.es
 Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTkyOTY3fQ.lYnbk70nMAkNDm2vyONWwf5gHfkyjwwSypXRWB6Raso loquesea
 
 ### POST an LOGIN ---> After this all the following requests needs login(token)
-POST localhost:5000/
+POST localhost:5000/login
 Content-Type: application/json
 
 {
-  "email": "email9@gmail.com",
-  "pwd": "password"
+  "email": "xxnazarxx@hotmail.es",
+  "pwd": "12345678"
 }
 
 ### POST an LOGIN ---> After this all the following requests needs login(token)
@@ -100,8 +113,8 @@ Content-Type: application/json
 }
 
 ### PUT a service
-PUT localhost:5000/services/9
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsOUBnbWFpbC5jb20iLCJleHAiOjE2NzEwMDI0MzB9.W1iHtWYUh0j5MP6wZCoBkhkNmxDaCeh2s05QRTWVLJc loquesea
+PUT localhost:5000/services/10
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwNTc5NDMwfQ.UzrpBsBCvweBauejsSiFDBkLqpnxgAYLba6T0jcYI58 loquesea
 Content-Type: application/json
 
 {
@@ -158,7 +171,7 @@ Content-Type: application/json
 
 ### GET all services pero teniendo en cuenta el estado
 GET localhost:5000/services/search
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsOUBnbWFpbC5jb20iLCJleHAiOjE2NzEwMDI0MzB9.W1iHtWYUh0j5MP6wZCoBkhkNmxDaCeh2s05QRTWVLJc loquesea
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1hZG1pbkBnbWFpbC5jb20iLCJleHAiOjE2NzA1ODQ0ODZ9.NJloTso3uQb1ulCpraB90wGFLGPwoksrxTdk_t_5bb4 loquesea
 
 ### Get servicios de un usuario
 GET localhost:5000/services/xxnazarxx@hotmail.es/service
@@ -209,5 +222,3 @@ Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YX
 ### Get user transactions
 GET localhost:5000/users/xxnazarxx@hotmail.es/transactions
 Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwOTM0OTc5fQ.lf1R-Iq29WZ0szUW_KtCRZWTAUKSpNCWgkqC7zXGgYs loquesea
-
-S

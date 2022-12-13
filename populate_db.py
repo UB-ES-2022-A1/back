@@ -11,7 +11,7 @@ def populate(db):
 
         try:
 
-            user = User(email=user_email, pwd=User.hash_password("password"), name="Name" + str(i), verified_email=True)
+            user = User(email=user_email, pwd=User.hash_password("password"), name="Name" + str(i), verified_email=True, wallet=10000)
             user.save_to_db()
 
             for j in range(2, i // 2):
