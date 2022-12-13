@@ -2,7 +2,6 @@ import time
 from database import db
 from models.service import Service
 from models.contracted_service import ContractedService
-from models.chat_room import ChatRoom
 from models.chat_message import ChatMessage
 from flask import g, current_app
 from flask_httpauth import HTTPBasicAuth
@@ -38,8 +37,6 @@ class User(db.Model):
     contracted_services = db.relationship(ContractedService, backref="user")
 
     #chat relations
-    seller = db.relationship(ChatRoom, backref = 'seller', lazy = 'dynamic', foreign_keys = 'ChatRoom.seller_email')
-    client = db.relationship(ChatRoom, backref = 'client', lazy = 'dynamic', foreign_keys = 'ChatRoom.client_email')
     message = db.relationship(ChatMessage, backref="user")
 
     # Todo falta foto, gender (enum)

@@ -1,6 +1,4 @@
-from sqlalchemy.orm import relationship
 from database import db
-from models.chat_room import ChatRoom
 
 class ContractedService(db.Model):
     __tablename__ = "contracted_services"
@@ -10,11 +8,8 @@ class ContractedService(db.Model):
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
     state = db.Column(db.Integer, nullable=False, default=0)  # 0 not accepted, 1 active/accepted, 2 paused, 3 done/finished, 4 declined
 
-    chat_room = db.relationship(ChatRoom, backref="contracted_service")
     validate_c = db.Column(db.Integer, nullable=False, default=False)
     validate_s = db.Column(db.Integer, nullable=False, default=False)
-
-    chat_room = db.relationship(ChatRoom, backref="contracted_service")
 
     def save_to_db(self):
         """
