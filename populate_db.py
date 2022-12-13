@@ -19,7 +19,7 @@ def populate(db):
 
             if i == 7:
                 serviceT = Service(title="I'm a programmer that makes programs",
-                                   user=user, description="i can program your computer. I like cheEse!!!",
+                                   user=user, description="i can program your computer. I like #cheEse!!!",
                                    price=10)
                 serviceT.save_to_db()
 

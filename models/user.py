@@ -2,6 +2,8 @@ import time
 from database import db
 from models.service import Service
 from models.contracted_service import ContractedService
+from models.chat_room import ChatRoom
+from models.chat_message import ChatMessage
 from flask import g, current_app
 from flask_httpauth import HTTPBasicAuth
 from jwt import encode, decode, ExpiredSignatureError, InvalidSignatureError
@@ -24,7 +26,7 @@ class User(db.Model):
     wallet = db.Column(db.Numeric(scale=2), default=0.0)
     user_grade = db.Column(db.Float, default=0.0)
     number_of_reviews = db.Column(db.Integer, default = 0)
-    
+    number_transactions = db.Column(db.Integer, default= 0)
 
     # Campos opcionales
     phone = db.Column(db.Integer, nullable=True)
@@ -36,6 +38,11 @@ class User(db.Model):
 
     services = db.relationship(Service, backref="user")
     contracted_services = db.relationship(ContractedService, backref="user")
+
+    #chat relations
+    seller = db.relationship(ChatRoom, backref = 'seller', lazy = 'dynamic', foreign_keys = 'ChatRoom.seller_email')
+    client = db.relationship(ChatRoom, backref = 'client', lazy = 'dynamic', foreign_keys = 'ChatRoom.client_email')
+    message = db.relationship(ChatMessage, backref="user")
 
     # Todo falta foto, gender (enum)
     def save_to_db(self):
