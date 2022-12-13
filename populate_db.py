@@ -13,6 +13,7 @@ def populate(db):
             user = User(email=user_email, pwd=User.hash_password("password"), name="Name" + str(i), verified_email=True)
             user.save_to_db()
         except:
+            db.session.rollback()
             user = User.get_by_id(user_email)
 
         for j in range(2, i // 2):
@@ -21,8 +22,8 @@ def populate(db):
                                price=i + j)
             try:
                 serviceT.save_to_db()
-            finally:
-                pass
+            except:
+                db.session.rollback()
 
         if i == 7:
             serviceT = Service(title="I'm a programmer that makes programs",
@@ -30,8 +31,8 @@ def populate(db):
                                price=10)
             try:
                 serviceT.save_to_db()
-            finally:
-                pass
+            except:
+                db.session.rollback()
 
         if i == 8:
             serviceT = Service(title="I'm a programmer that makes programs",
@@ -39,23 +40,22 @@ def populate(db):
                                price=100)
             try:
                 serviceT.save_to_db()
-            finally:
-                pass
+            except:
+                db.session.rollback()
+
         if i == 9:
             serviceT = Service(title="I'm a cheese maker that makes cheese",
                                user=user, description="i can also eat your cheese. I like cheese.",
                                price=50)
             try:
                 serviceT.save_to_db()
-            finally:
-                pass
-
-    db.session.commit()
+            except:
+                db.session.rollback()
 
     user_a = User(email="madmin@gmail.com", pwd=User.hash_password("password"), name="MaxAdm", access=9,
                   verified_email=True)
 
     try:
         user_a.save_to_db()
-    finally:
-        pass
+    except:
+        db.session.rollback()
