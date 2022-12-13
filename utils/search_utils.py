@@ -18,11 +18,11 @@ def filter_query(q: Query, ser_table: Service, filters):
 
         if filter_name == 'price':
             filter_quantity = ser_table.price
-            query_filtering = q.filter
+            query_filtering = lambda qu: qu.filter
 
         elif filter_name == 'creation_date':
             filter_quantity = ser_table.created_at
-            query_filtering = q.filter
+            query_filtering = lambda qu: qu.filter
 
         elif filter_name == 'popularity':
 
@@ -34,23 +34,23 @@ def filter_query(q: Query, ser_table: Service, filters):
                 outerjoin(q_contracted, q_contracted.c.service_id == brothers.c.id).group_by(ser_table.id)
 
             filter_quantity = func.count(q_contracted.c.id)
-            query_filtering = q.having
+            query_filtering = lambda qu: qu.having
 
         elif filter_name == 'rating':
 
             master = alias(Service)
             q = q.join(master, ser_table.masterID == master.c.id)
             filter_quantity = master.c.service_grade
-            query_filtering = q.filter
+            query_filtering = lambda qu: qu.filter
 
         else:
             raise BadRequest('filter ' + filter_name + ' not yet implemented')
 
         if 'min' in filters[filter_name] and filters[filter_name]['min'] != -1:
-            q = query_filtering(filter_quantity >= filters[filter_name]['min'])
+            q = query_filtering(q)(filter_quantity >= filters[filter_name]['min'])
 
         if 'max' in filters[filter_name] and filters[filter_name]['max'] != -1:
-            q = query_filtering(filter_quantity <= filters[filter_name]['max'])
+            q = query_filtering(q)(filter_quantity <= filters[filter_name]['max'])
 
     return q
 
