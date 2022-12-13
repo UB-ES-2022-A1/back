@@ -2,38 +2,39 @@ from collections import defaultdict
 from math import log
 
 from flask import g
-from sqlalchemy import or_, asc, desc
+from sqlalchemy import or_, asc, desc, alias, func
+from sqlalchemy.orm import Query
 from werkzeug.exceptions import NotFound, BadRequest
 
+from models.contracted_service import ContractedService
 from models.search import term_frequency
 from models.service import Service
 from models.user import User
 
 
-def filter_query(q, ser_table, filters):
+def filter_query(q: Query, ser_table: Service, filters):
     for filter_name in filters:
 
         if filter_name == 'price':
             filter_quantity = ser_table.price
+
         elif filter_name == 'creation_date':
             filter_quantity = ser_table.created_at
+
         elif filter_name == 'popularity':
 
-            """
-
-            cs = aliased(ContractedService)
-            s2 = aliased(Service)
-
-            filter_quantity = func.count(cs.id)
-            q = q.add_column(filter_quantity)
-
-            q = q.join(s2, ser_table.masterID == s2.masterID).join(cs, cs.service_id == s2.id).group_by(s2.id)
-            filter_quantity = ser_table.price
-            """
-            raise NotImplementedError
+            cs = alias(ContractedService)
+            brothers = alias(Service)
+            q = q.join(brothers, ser_table.masterID == brothers.c.masterID).join(cs, brothers.c.id == cs.service_id)
+            filter_quantity = func.count(ser_table.id)
+            q = q.group_by(ser_table.id).add_column(filter_quantity).distinct()
 
         elif filter_name == 'rating':
-            raise BadRequest('filter by rating not implemented yet')
+
+            master = alias(Service)
+            q = q.join(master, ser_table.masterID == master.c.id)
+            filter_quantity = master.c.id
+
         else:
             raise BadRequest('filter ' + filter_name + ' not yet implemented')
 
@@ -57,13 +58,18 @@ def sort_query_services(q, ser_table, passed_arguments):
         sort_criterion = ser_table.created_at
 
     elif passed_arguments['by'] == 'rating':
-        raise NotImplementedError('This sorting method is not supported!')
+
+        master = alias(Service)
+        q = q.join(master, ser_table.masterID == master.c.id)
+        sort_criterion = master.c.service_grade
 
     elif passed_arguments['by'] == 'popularity':
-        raise NotImplementedError('This sorting method is not supported!')
 
-        # q = q.join(ContractedService).group_by(Service.masterID)
-        # sort_criterion = func.count(ContractedService.id)
+        cs = alias(ContractedService)
+        brothers = alias(Service)
+        q = q.join(brothers, ser_table.masterID == brothers.c.masterID).join(cs, brothers.c.id == cs.service_id)
+        sort_criterion = func.count(ser_table.id)
+        q = q.group_by(ser_table.id).add_column(sort_criterion).distinct()
 
     else:
         raise NotImplementedError('This sorting method is not supported!')
@@ -96,7 +102,8 @@ def sort_services(list_to_sort, passed_arguments):
             return s.created_at
 
     elif passed_arguments['by'] == 'rating':
-        raise NotImplementedError('This sorting method is not supported!')
+        def sort_criterion(s: Service):
+            return s.master_service.service_grade
 
     elif passed_arguments['by'] == 'popularity':
         raise NotImplementedError('This sorting method is not supported!')
