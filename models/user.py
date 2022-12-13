@@ -27,10 +27,12 @@ class User(db.Model):
     user_grade = db.Column(db.Float, default=0.0)
     number_of_reviews = db.Column(db.Integer, default = 0)
     number_transactions = db.Column(db.Integer, default= 0)
+
     # Campos opcionales
     phone = db.Column(db.Integer, nullable=True)
     birthday = db.Column(db.Date, nullable=True)
     address = db.Column(db.Text, nullable=True)
+    image = db.Column(db.Text, nullable=True)
 
     state = db.Column(db.Integer, nullable=False, default=0)  # 0 active, 1 not active
 
