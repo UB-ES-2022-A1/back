@@ -1,5 +1,9 @@
+from sqlalchemy import and_
+
+from sqlalchemy.sql import alias
 from database import db
 from sklearn.feature_extraction.text import CountVectorizer
+token_pattern = r'(?u)[\#]?\b\w\w+\b'
 
 
 class term_frequency(db.Model):
@@ -12,7 +16,7 @@ class term_frequency(db.Model):
 
     @classmethod
     def tokenize(cls, s: str):
-        cv = CountVectorizer(stop_words='english')
+        cv = CountVectorizer(token_pattern=token_pattern)
         cv_matrix = cv.fit_transform([s.lower()])
         return zip(cv.get_feature_names(), cv_matrix.toarray()[0])
 
@@ -34,14 +38,29 @@ class term_frequency(db.Model):
         return cls.query.filter(term_frequency.word.like(search_term_regex))
 
     @classmethod
+    def get_matches_all_words(cls, words):
+
+        q = cls.query
+
+        for word in words:
+            b = alias(cls)
+            q = q.join(b, and_(b.c.service_id == cls.service_id, cls.word == word))
+
+        return q
+
+
+    @classmethod
     def search_text(cls, s: str):
-        cv = CountVectorizer(stop_words='english')
+        cv = CountVectorizer(token_pattern=token_pattern)
         try:
             cv.fit_transform([s.lower()])
+            tokens = cv.get_feature_names()
+            words = [t for t in tokens if t[0] != '#']
+            hashtags = [t for t in tokens if t[0] == '#']
         except ValueError:
-            return []
-        words = cv.get_feature_names()
-        return [(word, cls.get_coincidences(word)) for word in words]
+            words = hashtags = []
+
+        return [(word, cls.get_coincidences(word)) for word in words], cls.get_matches_all_words(hashtags)
 
 
 

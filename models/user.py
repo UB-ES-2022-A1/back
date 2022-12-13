@@ -26,7 +26,7 @@ class User(db.Model):
     wallet = db.Column(db.Numeric(scale=2), default=0.0)
     user_grade = db.Column(db.Float, default=0.0)
     number_of_reviews = db.Column(db.Integer, default = 0)
-
+    number_transactions = db.Column(db.Integer, default= 0)
     # Campos opcionales
     phone = db.Column(db.Integer, nullable=True)
     birthday = db.Column(db.Date, nullable=True)

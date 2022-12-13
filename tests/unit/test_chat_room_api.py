@@ -58,6 +58,7 @@ def test_post_chat_room(client):
     assert r.status_code == 200
     contracts = r.get_json()
     assert len(contracts) == 1
+    assert contracts[0]['contract_id'] == 1
 
     # Check the client can see the service
     r = request_with_login(login=client.post, request=client.get, url="/chats/rooms",

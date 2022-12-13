@@ -60,7 +60,6 @@ def post_new_chat():
     # info = {'contracted_service':info['contract_id']}
     info['seller'] = seller_email
     info['client'] = client_email
-
     same_chat = ChatRoom.get_by_id(info['contracted_service'])
 
     if same_chat:
@@ -68,7 +67,6 @@ def post_new_chat():
 
     new_room = chat_room_schema_all.load(info, session=db.session)
     new_room.save_to_db()
-
     return jsonify({'request_id': new_room.id}), 201
 
 

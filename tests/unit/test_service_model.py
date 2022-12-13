@@ -29,28 +29,6 @@ def test_new_service():
         assert service_t.description == "descriptionT"
         assert service_t.masterID == service_t.id
 
-
-def test_existing_service():
-    """
-    This method tests if there can be services with same values
-    """
-    with app.app_context():
-        db.create_all()
-        User.query.delete()
-        Service.query.delete()
-
-        user_t = User(email="emailT", pwd="password", name="name")
-        service_t = Service(title="titleT", user=user_t, description="descriptionT", price=0)
-        service_t2 = Service(title="titleT", user=user_t, description="descriptionT", price=0)
-        try:
-            user_t.save_to_db()
-            service_t.save_to_db()
-            service_t2.save_to_db()
-            assert False
-        except IntegrityError:
-            assert True
-
-
 def test_non_existing_user():
     """
     This method check if a service can be added to non existing user

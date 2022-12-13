@@ -102,3 +102,4 @@ def test_wallet_user():
             user_t.wallet=0
         user_t.wallet += 2.13
         user_t.save_to_db()
+
