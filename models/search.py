@@ -54,12 +54,11 @@ class term_frequency(db.Model):
         cv = CountVectorizer(token_pattern=token_pattern)
         try:
             cv.fit_transform([s.lower()])
+            tokens = cv.get_feature_names()
+            words = [t for t in tokens if t[0] != '#']
+            hashtags = [t for t in tokens if t[0] == '#']
         except ValueError:
-            return []
-
-        tokens = cv.get_feature_names()
-        words = [t for t in tokens if t[0] != '#']
-        hashtags = [t for t in tokens if t[0] == '#']
+            words = hashtags = []
 
         return [(word, cls.get_coincidences(word)) for word in words], cls.get_matches_all_words(hashtags)
 

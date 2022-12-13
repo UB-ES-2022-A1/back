@@ -7,9 +7,6 @@ from models.search import term_frequency
 
 class Service(db.Model):
     __tablename__ = "services"
-    __table_args__ = (
-        db.UniqueConstraint('user_email', 'title', 'description', 'price', name='unq_cons1'),
-    )
 
     id = db.Column(db.Integer, primary_key=True)
     masterID = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=True)
