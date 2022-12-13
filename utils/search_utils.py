@@ -25,7 +25,8 @@ def filter_query(q: Query, ser_table: Service, filters):
 
             cs = alias(ContractedService)
             brothers = alias(Service)
-            q = q.join(brothers, ser_table.masterID == brothers.c.masterID).join(cs, brothers.c.id == cs.service_id)
+            q = q.join(brothers, ser_table.masterID == brothers.c.masterID).join(cs, brothers.c.id == cs.service_id,
+                                                                                 cs.c.state == 2)
             filter_quantity = func.count(ser_table.id)
             q = q.group_by(ser_table.id).add_column(filter_quantity).distinct()
 
@@ -67,7 +68,8 @@ def sort_query_services(q, ser_table, passed_arguments):
 
         cs = alias(ContractedService)
         brothers = alias(Service)
-        q = q.join(brothers, ser_table.masterID == brothers.c.masterID).join(cs, brothers.c.id == cs.service_id)
+        q = q.join(brothers, ser_table.masterID == brothers.c.masterID).join(cs, brothers.c.id == cs.service_id,
+                                                                             cs.c.state == 2)
         sort_criterion = func.count(ser_table.id)
         q = q.group_by(ser_table.id).add_column(sort_criterion).distinct()
 
@@ -106,7 +108,12 @@ def sort_services(list_to_sort, passed_arguments):
             return s.master_service.service_grade
 
     elif passed_arguments['by'] == 'popularity':
-        raise NotImplementedError('This sorting method is not supported!')
+
+        def sort_criterion(s: Service):
+            return sum(
+                (len([c for c in b.contracts if c.state == 2]) for b in s.master_service.child_services)
+            )
+
     else:
         raise NotImplementedError('This sorting method is not supported!')
 
