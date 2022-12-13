@@ -12,7 +12,6 @@ def client():
     with app.test_request_context():
         db.drop_all()
         db.create_all()
-        populate_db.populate(db)
         db.session.commit()
         yield app.test_client()
 
