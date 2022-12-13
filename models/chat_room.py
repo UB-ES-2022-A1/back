@@ -1,7 +1,7 @@
-from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import db
 from models.chat_message import ChatMessage
+
 
 class ChatRoom(db.Model):
     __tablename__ = "chat_room"
