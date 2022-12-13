@@ -26,14 +26,14 @@ def filter_query(q: Query, ser_table: Service, filters):
 
         elif filter_name == 'popularity':
 
-            cs = alias(ContractedService)
             brothers = alias(Service)
-            q = q.join(brothers, ser_table.masterID == brothers.c.masterID). \
-                outerjoin(cs, brothers.c.id == cs.c.service_id). \
-                filter(cs.c.state == 2)
 
-            filter_quantity = func.count(cs.c.id)
-            q = q.group_by(ser_table.id)
+            q_contracted = ContractedService.query.filter(ContractedService.state == 2).subquery()
+
+            q = q.outerjoin(brothers, ser_table.masterID == brothers.c.masterID). \
+                outerjoin(q_contracted, q_contracted.c.service_id == brothers.c.id).group_by(ser_table.id)
+
+            filter_quantity = func.count(q_contracted.c.id)
             query_filtering = q.having
 
         elif filter_name == 'rating':
@@ -73,13 +73,17 @@ def sort_query_services(q, ser_table, passed_arguments):
 
     elif passed_arguments['by'] == 'popularity':
 
-        cs = alias(ContractedService)
         brothers = alias(Service)
 
+        q_contracted = ContractedService.query.filter(ContractedService.state == 2).subquery()
+
         q = q.outerjoin(brothers, ser_table.masterID == brothers.c.masterID).\
-            outerjoin(cs, brothers.c.id == cs.c.service_id)
-        sort_criterion = func.count(cs.c.id)
-        q = q.group_by(ser_table.id)
+            outerjoin(q_contracted, q_contracted.c.service_id == brothers.c.id).group_by(ser_table.id)
+
+        sort_criterion = func.count(q_contracted.c.id)
+        q = q.add_column(sort_criterion)
+        print(q.all())
+
 
     else:
         raise NotImplementedError('This sorting method is not supported!')
@@ -138,7 +142,6 @@ def sort_services(list_to_sort, passed_arguments):
 
 
 def get_matches_text(q, ser_table, search_text, search_order, threshold=0.9):
-
     coincidences_queries, hashtag_query = term_frequency.search_text(search_text)
 
     if len(coincidences_queries) == 0:
