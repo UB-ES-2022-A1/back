@@ -67,7 +67,7 @@ def test_post_chat_message(client):
 
     # post the new chatroom
     r = request_with_login(login=client.post, request=client.post, url="/chats/new",
-                           json_r={'contracted_service':contracts[0]['contract_id']}, email=email2, pwd=pwd2)
+                           json_r={'contracted_service': contracts[0]['contract_id']}, email=email2, pwd=pwd2)
 
     assert r.status_code == 201
     assert r.get_json()['request_id'] == contracts[0]['contract_id']
@@ -90,7 +90,7 @@ def test_post_chat_message(client):
 
     messageJson = {
         'chat_room': room,
-        'text':'testmesssage'
+        'text': 'testmesssage'
     }
 
     # check if client can post message
@@ -105,11 +105,11 @@ def test_post_chat_message(client):
 
     assert r.status_code == 201
 
-    #room_id:int, page:int, pagesize:int
+    # room_id:int, page:int, pagesize:int
     pageJson = {
         'room_id': room,
-        'page' : 0,
-        'pagesize' : 10
+        'page': 0,
+        'pagesize': 10
     }
 
     # check if seller can post message
@@ -144,8 +144,8 @@ def test_post_chat_message(client):
 
     pageJson = {
         'room_id': room,
-        'page' : 1,
-        'pagesize' : 10
+        'page': 1,
+        'pagesize': 10
     }
 
     r = request_with_login(login=client.post, request=client.get, url="/messages/get",
