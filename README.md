@@ -42,6 +42,7 @@ Notemos que este proyecto está preparado para ejecutarse en local. Para prepara
 | /services                                  | GET         | 0,1,8,9      | Returns all services                                                                                                                                 |
 | /services/@id                              | GET         | 0,1,8,9      | Returns a concrete service                                                                                                                           |
 | /services/@id/user                         | GET         | 0,1,8,9      | Returns the creator of a service                                                                                                                     |
+| /services/@id/image                         | POST         | 0,1,8,9      | Update the url of the images of a service                                                                                                                     |
 | /services/@email/service                   | GET         | 0,1,8,9      | Returns the services of a user                                                                                                                       |
 | /service/@id                               | PUT, DELETE | 1,8,9        | Deletes or upgrades concrete service if the correct token                                                                                            |
 | /contracted_services                       | POST        | 1,8,9        | Creates a contracted service with the data provided in the json                                                                                      | 
@@ -82,11 +83,11 @@ Values used in POST methods (PUT may contain only a subset of them). Other param
 User states: 0 -> active, 1 -> not active
 Service states: 0 -> active, 1 -> paused (not implemented), 2 -> not active
 
-| CLASS    | REQUEST PARAMETERS                                                                             | OTHER PARAMETERS               |
-|----------|------------------------------------------------------------------------------------------------|--------------------------------|
-| USER     | email, pwd, name, phone, birthday, address, state                                              | access, verified_email, wallet |
-| SERVICE  | user_email, title, description, price, begin, end, cooldown, requires-place, created_at, state | id                             | 
-| CONTRACT | user_email, service_id, state, price                                                           | None                           |
+| CLASS    | REQUEST PARAMETERS                                                                             | OTHER PARAMETERS                      |
+|----------|------------------------------------------------------------------------------------------------|---------------------------------------|
+| USER     | email, pwd, name, phone, birthday, address, state                                              | access, verified_email, wallet, image |
+| SERVICE  | user_email, title, description, price, begin, end, cooldown, requires-place, created_at, state | id, image1, image2, image3, image4, image5                                   | 
+| CONTRACT | user_email, service_id, state, price                                                           | None                                  |
 
 
 MaxAdmin: "madmin@gmail.com" ; with password "password"

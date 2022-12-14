@@ -9,15 +9,15 @@ GET localhost:5000/services/search
 Content-Type: application/json
 
 {
-  "search_text": "cheese",
+
   "sort": {
       "by": "price",
-      "reverse": false
+      "reverse": true
   },
   "filters": {
     "price":{
       "min": 1,
-      "max": 200
+      "max": 2000
     }
   }
 }
@@ -204,9 +204,8 @@ GET localhost:5000/contracted_services/1
 Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsOUBnbWFpbC5jb20iLCJleHAiOjE2NzA5MDI4NjB9.GV20GwkmUsHtYYpj9GchqkiapKFhirLqY-B-ImOrfds loquesea
 
 ### Get all user contracted services
-GET localhost:5000/contracted_services/client/email9@gmail.com
-Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsOUBnbWFpbC5jb20iLCJleHAiOjE2NzA5MDI4NjB9.GV20GwkmUsHtYYpj9GchqkiapKFhirLqY-B-ImOrfds loquesea
-
+GET localhost:5000/contracted_services/client/email8@gmail.com
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsOEBnbWFpbC5jb20iLCJleHAiOjE2NzEwMjMzMTF9.MR38W9KRNBJtDZLqFBIK2vI2s7mWPWp4Lm61m_p3HiQ loquesea
 ### Get all user gived contracts
 GET localhost:5000/contracted_services/contractor/email8@gmail.com
 Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwOTM1NTc1fQ.WiHIh4gW42L_PN8TdnujDCIUrIxRr38LBxEcuZqJHq8 loquesea
@@ -223,4 +222,15 @@ Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YX
 GET localhost:5000/users/xxnazarxx@hotmail.es/transactions
 Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inh4bmF6YXJ4eEBob3RtYWlsLmVzIiwiZXhwIjoxNjcwOTM0OTc5fQ.lf1R-Iq29WZ0szUW_KtCRZWTAUKSpNCWgkqC7zXGgYs loquesea
 
-S
+###
+GET localhost:5000/chats/rooms
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsOEBnbWFpbC5jb20iLCJleHAiOjE2NzEwMjY3MjF9.aSOt1m5VAdrzPvQeY-BOt54mn3rrcwKVmH5oGeGdBA4 loquesea
+
+###
+POST localhost:5000/chats/new
+Authorization: Basic eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsOEBnbWFpbC5jb20iLCJleHAiOjE2NzEwMjY3MjF9.aSOt1m5VAdrzPvQeY-BOt54mn3rrcwKVmH5oGeGdBA4 loquesea
+Content-Type: application/json
+
+{
+  "contracted_service": 1
+}

@@ -5,11 +5,13 @@ from models.service import Service
 def populate(db):
     db.create_all()
 
-    user_emails = [u.email for u in User.get_all()]
-
     for i in range(1, 10):
-        user = User(email="email" + str(i) + "@gmail.com", pwd=User.hash_password("password"), name="Name" + str(i), verified_email=True)
-        if not user.email in user_emails:
+
+        user_email = "email" + str(i) + "@gmail.com"
+
+        try:
+
+            user = User(email=user_email, pwd=User.hash_password("password"), name="Name" + str(i), verified_email=True, wallet=10000)
             user.save_to_db()
 
             for j in range(2, i // 2):
@@ -35,9 +37,13 @@ def populate(db):
                                    price=50)
                 serviceT.save_to_db()
 
-    db.session.commit()
+        except:
+            db.session.rollback()
+
+    user_a = User(email="madmin@gmail.com", pwd=User.hash_password("password"), name="MaxAdm", access=9,
+                  verified_email=True)
+
     try:
-        user_a = User(email="madmin@gmail.com", pwd=User.hash_password("password"), name="MaxAdm", access=9, verified_email=True)
         user_a.save_to_db()
-    except Exception as e:
-        return
+    except:
+        db.session.rollback()

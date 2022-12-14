@@ -7,9 +7,6 @@ from models.search import term_frequency
 
 class Service(db.Model):
     __tablename__ = "services"
-    __table_args__ = (
-        db.UniqueConstraint('user_email', 'title', 'description', 'price', name='unq_cons1'),
-    )
 
     id = db.Column(db.Integer, primary_key=True)
     masterID = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=True)
@@ -28,6 +25,12 @@ class Service(db.Model):
     end = db.Column(db.Time, nullable=True)  # time at wich service will stop being available for the day
     cooldown = db.Column(db.Time, nullable=True)  # minimum time after service is given to rest
     requiresPlace = db.Column(db.Boolean, default=False)
+
+    image1 = db.Column(db.String, nullable=True)
+    image2 = db.Column(db.String, nullable=True)
+    image3 = db.Column(db.String, nullable=True)
+    image4 = db.Column(db.String, nullable=True)
+    image5 = db.Column(db.String, nullable=True)
 
     state = db.Column(db.Integer, nullable=False, default=0)  # 0 active, 1 paused, 2 not-active
 
