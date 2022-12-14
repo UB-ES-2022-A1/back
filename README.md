@@ -85,7 +85,7 @@ Service states: 0 -> active, 1 -> paused (not implemented), 2 -> not active
 | CLASS    | REQUEST PARAMETERS                                                                             | OTHER PARAMETERS                      |
 |----------|------------------------------------------------------------------------------------------------|---------------------------------------|
 | USER     | email, pwd, name, phone, birthday, address, state                                              | access, verified_email, wallet, image |
-| SERVICE  | user_email, title, description, price, begin, end, cooldown, requires-place, created_at, state | id                                    | 
+| SERVICE  | user_email, title, description, price, begin, end, cooldown, requires-place, created_at, state | id, image1, image2, image3, image4, image5                                   | 
 | CONTRACT | user_email, service_id, state, price                                                           | None                                  |
 
 
