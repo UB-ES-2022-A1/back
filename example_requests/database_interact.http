@@ -15,7 +15,7 @@ Content-Type: application/json
       "reverse": true
   },
   "filters": {
-    "popularity":{
+    "price":{
       "min": 1,
       "max": 2000
     }
