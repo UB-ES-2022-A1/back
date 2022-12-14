@@ -65,13 +65,6 @@ def test_post_chat_message(client):
                            json_r={}, email=email2, pwd=pwd2)
     assert r.status_code == 200
 
-    # post the new chatroom
-    r = request_with_login(login=client.post, request=client.post, url="/chats/new",
-                           json_r={'contracted_service': contracts[0]['contract_id']}, email=email2, pwd=pwd2)
-
-    assert r.status_code == 201
-    assert r.get_json()['request_id'] == contracts[0]['contract_id']
-
     # check if client can see the room
     r = request_with_login(login=client.post, request=client.get, url="/chats/rooms",
                            json_r={}, email=email2, pwd=pwd2)
