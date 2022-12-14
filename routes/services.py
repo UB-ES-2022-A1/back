@@ -120,6 +120,36 @@ def get_service(service_id):
     info.pop("user")
     return jsonify(info), 200
 
+@services_bp.route("/<int:service_id>/image", methods=["POST"])
+@auth.login_required(role=[access[0], access[1], access[8], access[9]])
+def update_service_images(service_id):
+    """
+    This method returns a concrete service. It doesn't require privileges
+    :param service_id:
+    :return: Response including the service
+    """
+    service = Service.get_by_id(service_id)
+    # En caso de no encontrar el servicio retornamos un mensaje de error.
+    if not service:
+        raise NotFound
+    
+    d = request.json
+
+    if 'image1' in d:
+        service.image1 = image1
+    if 'image2' in d:
+        service.image2 = image2
+    if 'image3' in d:
+        service.image3 = image3
+    if 'image4' in d:
+        service.image4 = image4
+    if 'image5' in d:
+        service.image5 = image5
+    
+    service.save_to_db()
+
+    return jsonify("Imagenes del servicio actualizadas correctamente"), 200
+
 
 @services_bp.route("/<int:service_id>/user", methods=["GET"])
 @auth.login_required(role=[access[0], access[1], access[8], access[9]])
