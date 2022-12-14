@@ -10,6 +10,7 @@ from models.contracted_service import ContractedService
 from models.service import Service
 from models.user import User
 from models.user import auth
+from routes.chat_rooms import chat_room_schema_load
 from routes.users import get_user
 from flask import g
 from utils.custom_exceptions import PrivilegeException, SelfBuyException
@@ -171,6 +172,10 @@ def contract_service():
     transaction.save_to_db()
     g.user.number_transactions += 1
     g.user.save_to_db()
+
+    new_room = chat_room_schema_load.load({'contracted_service':new_contracted_service.id}, session=db.session)
+    new_room.save_to_db()
+
     return {'request_id': new_contracted_service.id}, 201
 
 
