@@ -136,15 +136,15 @@ def update_service_images(service_id):
     d = request.json
 
     if 'image1' in d:
-        service.image1 = image1
+        service.image1 = d['image1']
     if 'image2' in d:
-        service.image2 = image2
+        service.image2 = d['image2']
     if 'image3' in d:
-        service.image3 = image3
+        service.image3 = d['image3']
     if 'image4' in d:
-        service.image4 = image4
+        service.image4 = d['image4']
     if 'image5' in d:
-        service.image5 = image5
+        service.image5 = d['image5']
     
     service.save_to_db()
 
