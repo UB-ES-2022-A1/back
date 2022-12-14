@@ -26,6 +26,12 @@ class Service(db.Model):
     cooldown = db.Column(db.Time, nullable=True)  # minimum time after service is given to rest
     requiresPlace = db.Column(db.Boolean, default=False)
 
+    image1 = db.Column(db.String, nullable=True)
+    image2 = db.Column(db.String, nullable=True)
+    image3 = db.Column(db.String, nullable=True)
+    image4 = db.Column(db.String, nullable=True)
+    image5 = db.Column(db.String, nullable=True)
+
     state = db.Column(db.Integer, nullable=False, default=0)  # 0 active, 1 paused, 2 not-active
 
     search_coincidences = db.relationship(term_frequency, backref="service", cascade="all, delete-orphan")
