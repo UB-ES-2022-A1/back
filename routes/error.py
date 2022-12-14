@@ -58,3 +58,7 @@ def handle_email_not_verified(err):
     return jsonify({"message": str(err)}), 400
 
 
+# Error genérico. Poner excepciones más concretas por encima de esta.
+@error_bp.app_errorhandler(Exception)
+def handle_generic_exception(err):
+    return jsonify({"message": "error: " + str(err)}), 500
