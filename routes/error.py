@@ -9,7 +9,7 @@ error_bp = Blueprint("errors", __name__)
 
 @error_bp.app_errorhandler(Conflict)
 def handle_conflict(err):
-    return jsonify({"message": err.description + str(err)}), 409
+    return jsonify({"message": err.description}), 409
 
 
 @error_bp.app_errorhandler(ValidationError)

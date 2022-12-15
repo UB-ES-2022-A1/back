@@ -165,8 +165,8 @@ def test_service_post_missing_fields(client):
                            pwd=pwd1)
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert j['campos']['service'] == ['Missing data for required field.']
+    assert j['message'] == 'Incorrect data'
+    assert j['fields']['service'] == ['Missing data for required field.']
 
     # check no contracted services have been created
     r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/client/{email1}",
