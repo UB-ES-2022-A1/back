@@ -36,7 +36,7 @@ class ContractedServiceSchema(SQLAlchemyAutoSchema):
         :return: None. Raises an Exception
         """
         if not has_identity(value):
-            raise NotFound("Usuario con id " + str(value.email) + " no encontrado!")
+            raise NotFound("User with id " + str(value.email) + " not found!")
 
 
 

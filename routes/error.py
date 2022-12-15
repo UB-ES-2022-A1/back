@@ -9,12 +9,12 @@ error_bp = Blueprint("errors", __name__)
 
 @error_bp.app_errorhandler(Conflict)
 def handle_conflict(err):
-    return jsonify({"message": "El recurso ya existe" + str(err)}), 409
+    return jsonify({"message": err.description}), 409
 
 
 @error_bp.app_errorhandler(ValidationError)
 def handle_validation(err):
-    return jsonify({"message": "Datos incorrectos", "campos": err.messages}), 400
+    return jsonify({"message": "Incorrect data", "fields": err.messages}), 400
 
 
 # 404 not found
@@ -32,7 +32,7 @@ def handle_notfound(err):
 @error_bp.app_errorhandler(IntegrityError)
 def handle_integrity_exception(err):
     atributes = err.args[0].split("failed:")[1]
-    return jsonify({"message": "Error en la base de datos, causado por los siguientes atributos: " + atributes}), 409
+    return jsonify({"message": "Error in the database caused by the following attributes: " + atributes}), 409
 
 
 # Error de privilegios

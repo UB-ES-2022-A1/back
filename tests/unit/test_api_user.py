@@ -90,49 +90,49 @@ def test_user_post_missing_fields(client):
     r = client.post("users", json={})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert j['campos']['pwd'] == ['Missing data for required field.']
-    assert j['campos']['email'] == ['Missing data for required field.']
-    assert j['campos']['name'] == ['Missing data for required field.']
-    assert 'phone' not in j['campos']
-    assert 'birthday' not in j['campos']
-    assert 'address' not in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert j['fields']['pwd'] == ['Missing data for required field.']
+    assert j['fields']['email'] == ['Missing data for required field.']
+    assert j['fields']['name'] == ['Missing data for required field.']
+    assert 'phone' not in j['fields']
+    assert 'birthday' not in j['fields']
+    assert 'address' not in j['fields']
 
     # missing name
     r = client.post("users", json={'email': 'pepito@gmail.com', 'pwd': '12345678'})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert 'pwd' not in j['campos']
-    assert 'email' not in j['campos']
-    assert j['campos']['name'] == ['Missing data for required field.']
-    assert 'phone' not in j['campos']
-    assert 'birthday' not in j['campos']
-    assert 'address' not in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert 'pwd' not in j['fields']
+    assert 'email' not in j['fields']
+    assert j['fields']['name'] == ['Missing data for required field.']
+    assert 'phone' not in j['fields']
+    assert 'birthday' not in j['fields']
+    assert 'address' not in j['fields']
 
     # missing email
     r = client.post("users", json={'pwd': '12345678', 'name': 'pepito'})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert 'pwd' not in j['campos']
-    assert j['campos']['email'] == ['Missing data for required field.']
-    assert 'name' not in j['campos']
-    assert 'phone' not in j['campos']
-    assert 'birthday' not in j['campos']
-    assert 'address' not in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert 'pwd' not in j['fields']
+    assert j['fields']['email'] == ['Missing data for required field.']
+    assert 'name' not in j['fields']
+    assert 'phone' not in j['fields']
+    assert 'birthday' not in j['fields']
+    assert 'address' not in j['fields']
 
     # missing pwd
     r = client.post("users", json={'email': 'pepito@gmail.com', 'name': 'pepito'})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert j['campos']['pwd'] == ['Missing data for required field.']
-    assert 'email' not in j['campos']
-    assert 'name' not in j['campos']
-    assert 'phone' not in j['campos']
-    assert 'birthday' not in j['campos']
-    assert 'address' not in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert j['fields']['pwd'] == ['Missing data for required field.']
+    assert 'email' not in j['fields']
+    assert 'name' not in j['fields']
+    assert 'phone' not in j['fields']
+    assert 'birthday' not in j['fields']
+    assert 'address' not in j['fields']
 
     # check no users have been created
     r = client.get("users")
@@ -145,7 +145,7 @@ def test_user_missing_fields(client):
     r = client.post("users", json={})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
+    assert j['message'] == 'Incorrect data'
 
     # missing name
     r = client.post("users", json={'email': 'pepito@gmail.com', 'pwd': '12345678'})
@@ -170,38 +170,38 @@ def test_user_post_wrong_fields(client):
     r = client.post("users", json={'email': 'abduzcan', 'pwd': '1', 'phone': 'aaa', 'name': 'Pepito'})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert 'pwd' in j['campos']
-    assert 'email' in j['campos']
-    assert 'phone' in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert 'pwd' in j['fields']
+    assert 'email' in j['fields']
+    assert 'phone' in j['fields']
 
     # wrong email
     r = client.post("users", json={'email': 'abduzcan', 'pwd': '12345678', 'phone': '600600600', 'name': 'Pepito'})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert 'pwd' not in j['campos']
-    assert 'email' in j['campos']
-    assert 'phone' not in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert 'pwd' not in j['fields']
+    assert 'email' in j['fields']
+    assert 'phone' not in j['fields']
 
     # wrong pwd
     r = client.post("users", json={'email': 'pepito@gmail.com', 'pwd': 'aa', 'phone': '600600600', 'name': 'Pepito'})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert 'pwd' in j['campos']
-    assert 'email' not in j['campos']
-    assert 'phone' not in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert 'pwd' in j['fields']
+    assert 'email' not in j['fields']
+    assert 'phone' not in j['fields']
 
     # wrong phone
     r = client.post("users",
                     json={'email': 'pepito@gmail.com', 'pwd': 'aaaaaaaa', 'phone': 'aaaaaaaaa', 'name': 'Pepito'})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert 'pwd' not in j['campos']
-    assert 'email' not in j['campos']
-    assert 'phone' in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert 'pwd' not in j['fields']
+    assert 'email' not in j['fields']
+    assert 'phone' in j['fields']
 
     # check no users have been created
     r = client.get("users")
