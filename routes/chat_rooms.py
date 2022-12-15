@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from marshmallow import validates
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 from sqlalchemy import or_, desc
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import NotFound, Conflict
 
 from models.contracted_service import ContractedService
 from models.service import Service
@@ -60,7 +60,7 @@ class ChatRoomSchema_load(SQLAlchemyAutoSchema):
         :return: None. Raises an Exception
         """
         if not has_identity(Cservice):
-            raise NotFound(f"Contrato con id {Cservice.id} no encontrado!")
+            raise NotFound(f"Contract with id {Cservice.id} not found!")
 
         if Cservice.user_email != g.user.email and Cservice.service.user_email != g.user.email and g.user.access < 8:
             raise PrivilegeException("Not enough privileges to create chats for other user's contracts.")
@@ -81,7 +81,7 @@ def post_new_chat():
     same_chat = ChatRoom.get_by_id(info['contracted_service'])
 
     if same_chat:
-        return jsonify({'message': 'error: chat already exists'}), 409
+        raise Conflict('Chat room already exists')
 
     new_room = chat_room_schema_load.load(info, session=db.session)
     new_room.save_to_db()

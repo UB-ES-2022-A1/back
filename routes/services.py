@@ -148,7 +148,7 @@ def update_service_images(service_id):
     
     service.save_to_db()
 
-    return jsonify("Imagenes del servicio actualizadas correctamente"), 200
+    return jsonify("Service images uploaded correctly"), 200
 
 
 @services_bp.route("/<int:service_id>/user", methods=["GET"])
