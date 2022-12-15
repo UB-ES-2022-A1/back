@@ -17,6 +17,7 @@ from utils.custom_exceptions import PrivilegeException, SelfBuyException
 from utils.privilegies import access
 from routes.services import service_schema_all
 from models.transactions import Transaction
+
 # Todas las url de servicios contratados empiezan por esto
 contracted_services_bp = Blueprint("contracted_services", __name__, url_prefix="/contracted_services")
 
@@ -37,8 +38,6 @@ class ContractedServiceSchema(SQLAlchemyAutoSchema):
         """
         if not has_identity(value):
             raise NotFound("Usuario con id " + str(value.email) + " no encontrado!")
-
-
 
 
 # Para crear servicio
@@ -89,6 +88,7 @@ def get_contracted_service(contracted_service_id):
 
     return jsonify(info), 200
 
+
 @contracted_services_bp.route("/<int:contracted_service_id>/user", methods=["GET"])
 @auth.login_required(role=[access[1], access[8], access[9]])
 def get_contracted_service_user(contracted_service_id):
@@ -137,9 +137,22 @@ def get_contractor_offered_contracts(email):
     if email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to access other users' contracts.")
 
-    contracts = contracted_service_schema_all.dump(ContractedService.query.filter(ContractedService.service.has(user_email=email)).all(), many=True)
+    contracts = contracted_service_schema_all.dump(
+        ContractedService.query.filter(ContractedService.service.has(user_email=email)).all(), many=True)
     for id_c, contract in enumerate(contracts):
         contracts[id_c] = json.loads(get_contracted_service(contract["id"])[0].get_data().decode("utf-8"))
+
+    return jsonify(contracts), 200
+
+
+@contracted_services_bp.route("/done", methods=["GET"])
+@auth.login_required(role=[access[1], access[8], access[9]])
+def get_done_services():
+    """
+    :return: all finished contracts
+    """
+    contracts = ContractedService.query.filter_by(state=2).all()
+    contracts = contracted_service_schema_all.dump(contracts, many=True)
 
     return jsonify(contracts), 200
 
@@ -167,13 +180,14 @@ def contract_service():
     usr.wallet = updated_w
     usr.save_to_db()
     new_contracted_service.save_to_db()
-    transaction = Transaction(user_email=g.user.email, description="Service bought: " + new_contracted_service.service.title,
+    transaction = Transaction(user_email=g.user.email,
+                              description="Service bought: " + new_contracted_service.service.title,
                               number=g.user.number_transactions, quantity=-p, wallet=g.user.wallet)
     transaction.save_to_db()
     g.user.number_transactions += 1
     g.user.save_to_db()
 
-    new_room = chat_room_schema_load.load({'contracted_service':new_contracted_service.id}, session=db.session)
+    new_room = chat_room_schema_load.load({'contracted_service': new_contracted_service.id}, session=db.session)
     new_room.save_to_db()
 
     return {'request_id': new_contracted_service.id}, 201
@@ -187,7 +201,7 @@ def accept(contract_id):
     :param contract_id:
     :return:
     """
-    contract, service, user_client, user_seller= check(contract_id)
+    contract, service, user_client, user_seller = check(contract_id)
     if not contract.state == 0:
         raise Conflict("contract is not acceptable because it already was accepted or canceled!")
 
@@ -197,6 +211,7 @@ def accept(contract_id):
     contract.state = 1
     contract.save_to_db()
     return {'status': 'State updated successfully'}, 200
+
 
 @contracted_services_bp.route("/<int:contract_id>/validate", methods=["POST"])
 @auth.login_required(role=[access[1], access[8], access[9]])
@@ -226,7 +241,8 @@ def validate_contract(contract_id):
         user_seller.save_to_db()
         transaction = Transaction(user_email=user_seller.email,
                                   description="Service sold: " + contract.service.title,
-                                  number=user_seller.number_transactions, quantity=service.price, wallet=user_seller.wallet)
+                                  number=user_seller.number_transactions, quantity=service.price,
+                                  wallet=user_seller.wallet)
         transaction.save_to_db()
         user_seller.number_transactions += 1
         user_seller.save_to_db()
