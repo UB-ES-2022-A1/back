@@ -82,18 +82,18 @@ def test_service_post_missing_fields(client):
     assert r.status_code == 400
     j = r.get_json()
     assert j['message'] == 'Incorrect data'
-    assert 'description' not in j['campos']
-    assert 'price' not in j['campos']
+    assert 'description' not in j['fields']
+    assert 'price' not in j['fields']
     assert j['fields']['title'] == ['Missing data for required field.']
 
     # missing description
     r = request_with_login(login=client.post, request=client.post, url="services", json_r={'title': 'titleT', 'price': '0'}, email=email1, pwd=pwd1)
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert 'title' not in j['campos']
-    assert 'price' not in j['campos']
-    assert j['campos']['description'] == ['Missing data for required field.']
+    assert j['message'] == 'Incorrect data'
+    assert 'title' not in j['fields']
+    assert 'price' not in j['fields']
+    assert j['fields']['description'] == ['Missing data for required field.']
 
     # check no services have been created
     r = client.get("services")
