@@ -8,6 +8,7 @@ from routes.login import login_bp
 from routes.contracted_services import contracted_services_bp
 from routes.chat_rooms import chat_rooms_bp
 from routes.chat_messages import chat_message_bp
+from routes.hashtags import hashtags_bp
 from database import db
 from flask_migrate import Migrate
 from flask_cors import CORS
@@ -52,6 +53,7 @@ def init_app(database_location, develop=True):
     app.register_blueprint(reviews_bp)
     app.register_blueprint(chat_rooms_bp)
     app.register_blueprint(chat_message_bp)
+    app.register_blueprint(hashtags_bp)
 
     @app.route('/')
     def hello_world():  # put application's code here
