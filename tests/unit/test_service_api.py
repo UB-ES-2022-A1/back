@@ -84,7 +84,7 @@ def test_service_post_missing_fields(client):
     assert j['message'] == 'Incorrect data'
     assert 'description' not in j['campos']
     assert 'price' not in j['campos']
-    assert j['campos']['title'] == ['Missing data for required field.']
+    assert j['fields']['title'] == ['Missing data for required field.']
 
     # missing description
     r = request_with_login(login=client.post, request=client.post, url="services", json_r={'title': 'titleT', 'price': '0'}, email=email1, pwd=pwd1)
