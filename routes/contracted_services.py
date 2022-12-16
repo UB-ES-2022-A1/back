@@ -145,13 +145,13 @@ def get_contractor_offered_contracts(email):
     return jsonify(contracts), 200
 
 
-@contracted_services_bp.route("/done", methods=["GET"])
+@contracted_services_bp.route("<string:email>/done", methods=["GET"])
 @auth.login_required(role=[access[1], access[8], access[9]])
-def get_done_services():
+def get_done_services(email):
     """
     :return: all finished contracts
     """
-    contracts = ContractedService.query.filter_by(state=2).all()
+    contracts = ContractedService.query.filter_by(state=2, user_email=email).all()
     contracts = contracted_service_schema_all.dump(contracts, many=True)
 
     return jsonify(contracts), 200
