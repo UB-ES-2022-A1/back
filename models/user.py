@@ -2,6 +2,7 @@ import time
 from database import db
 from models.service import Service
 from models.contracted_service import ContractedService
+from models.chat_message import ChatMessage
 from flask import g, current_app
 from flask_httpauth import HTTPBasicAuth
 from jwt import encode, decode, ExpiredSignatureError, InvalidSignatureError
@@ -22,16 +23,23 @@ class User(db.Model):
     verified_email = db.Column(db.Boolean, nullable=False, default=False)
     # https://docs.sqlalchemy.org/en/20/core/type_basics.html
     wallet = db.Column(db.Numeric(scale=2), default=0.0)
+    user_grade = db.Column(db.Float, default=0.0)
+    number_of_reviews = db.Column(db.Integer, default = 0)
+    number_transactions = db.Column(db.Integer, default= 0)
 
     # Campos opcionales
     phone = db.Column(db.Integer, nullable=True)
     birthday = db.Column(db.Date, nullable=True)
     address = db.Column(db.Text, nullable=True)
+    image = db.Column(db.Text, nullable=True)
 
     state = db.Column(db.Integer, nullable=False, default=0)  # 0 active, 1 not active
 
     services = db.relationship(Service, backref="user")
     contracted_services = db.relationship(ContractedService, backref="user")
+
+    #chat relations
+    message = db.relationship(ChatMessage, backref="user")
 
     # Todo falta foto, gender (enum)
     def save_to_db(self):

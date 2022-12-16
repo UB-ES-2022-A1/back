@@ -1,8 +1,9 @@
 from flask import Blueprint, jsonify, request
 from marshmallow import validates, ValidationError, validate
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
-from werkzeug.exceptions import NotFound, Conflict
+from werkzeug.exceptions import NotFound, Conflict, BadRequest
 from database import db
+from models.transactions import Transaction
 from utils.custom_exceptions import PrivilegeException, NotAcceptedPrivilege
 from utils.mail import send_email
 from models.user import User
@@ -28,7 +29,7 @@ class UserSchema(SQLAlchemyAutoSchema):
         :return: None. Raises an Exception
         """
         if len(str(value)) != 9:
-            raise ValidationError("El teléfono tiene que tener 9 dígitos.")
+            raise ValidationError("Phone number must have 9 digits.")
 
     @validates("pwd")
     def validates_pwd(self, value):
@@ -38,7 +39,7 @@ class UserSchema(SQLAlchemyAutoSchema):
         :return: None. Raises an Exception
         """
         if len(value) < 5:
-            raise ValidationError("Al menos 5 carácteres de contraseña.")
+            raise ValidationError("Password must be at least 5 characters long.")
 
     @validates("email")
     def validates_email(self, value):
@@ -58,13 +59,13 @@ class UserSchema(SQLAlchemyAutoSchema):
         :return: None. Raises an Exception
         """
         if value:
-            raise ValidationError("verified_email es un campo que no se puede editar")
+            raise ValidationError("verified_email cannot be edited")
 
     # TODO remove para crear el admin maximo. Se quita esta función se crea el admin y se vuelve a añadir la función. También se puede hacer atentando contra la base de datos.
     @validates("access")
     def validates_access(self, value):
         if value > 1:
-            raise PrivilegeException("No se puede crear un usuario con estos privilegios.")
+            raise PrivilegeException("You cannot create a user with these privileges.")
 
 
 # Para representar usuario sin exponer info sensible
@@ -103,11 +104,12 @@ def get_user(email):
     """
     usr = User.query.get(email)
     if not usr:
-        raise NotFound("Usuario no encontrado")
+        raise NotFound("User not found")
     if g.user.access == 9 or g.user.access == 8:
-        return jsonify(user_schema_profile_adm.dump(usr, many=False)), 200  # Mostramos los accesos de privilegio a los administradores
+        return jsonify(user_schema_profile_adm.dump(usr,
+                                                    many=False)), 200  # Mostramos los accesos de privilegio a los administradores
     if not usr.verified_email:
-        raise NotFound("Usuario no encontrado")
+        raise NotFound("User not found")
     elif usr.email == g.user.email:
         return jsonify(user_schema_profile_self.dump(usr, many=False)), 200
     else:
@@ -158,7 +160,7 @@ def create_user():
 
     send_email('REGISTER', new_user.generate_auth_token(), new_user.email)
 
-    return {'message': "Verifica el mail"}, 201
+    return {'message': "Verify your email."}, 201
 
 
 @users_bp.route("/<string:email>", methods=["PUT"])
@@ -208,16 +210,16 @@ def changes_privileges(email, privilege):
         raise NotFound
 
     if privilege > 8 or privilege < 0:
-        raise NotAcceptedPrivilege("No se puede dar este nivel de privilegio.")
+        raise NotAcceptedPrivilege("You cannot give these privileges.")
     usr.access = privilege
     usr.save_to_db()
 
     return {'new privilege': privilege}, 200
 
+
 @users_bp.route("/<string:email>/wallet", methods=["PUT"])
 @auth.login_required(role=[access[8], access[9]])
 def edit_wallet(email):
-
     usr = User.query.get(email)
     d = request.json
     if not usr:
@@ -226,8 +228,12 @@ def edit_wallet(email):
     usr.wallet = str(float(usr.wallet) + float(d["money"]))
 
     usr.save_to_db()
-
-    return jsonify("Dinero añadido correctamente"), 200
+    transaction = Transaction(user_email=usr.email, description="Admin addition",
+                              number=usr.number_transactions, quantity=float(d["money"]), wallet=usr.wallet)
+    transaction.save_to_db()
+    usr.number_transactions += 1
+    usr.save_to_db()
+    return jsonify("Funds added successfully"), 200
 
 
 @users_bp.route("/confirm_email/<token>", methods=["GET"])
@@ -241,7 +247,7 @@ def confirm_email(token):
     user: User = User.verify_auth_token(token)
     user.verified_email = True
     user.save_to_db()
-    return jsonify("Gracias por verificar su mail!"), 200
+    return jsonify("Thanks for verifiying your email!"), 200
 
 
 @users_bp.route("/back_reset/<token>", methods=["GET"])
@@ -266,7 +272,7 @@ def forget_pwd(email):
     """
     usr = User.query.get(email)
     if not usr:
-        raise NotFound("Usuario no encontrado")
+        raise NotFound("User not found")
     send_email('RECOVER', usr.generate_auth_token(), email)
     return {'sent_to': email}, 201
 
@@ -279,7 +285,7 @@ def update_password():
     :return: Response
     """
     if 'pwd' not in request.json:
-        raise NotFound('Contraseña no encotrada')
+        raise BadRequest('Must specify password.')
     pwd = request.json['pwd']
 
     user_schema_create.validates_pwd(value=pwd)
@@ -288,5 +294,37 @@ def update_password():
     g.user.pwd = User.hash_password(pwd)
     g.user.save_to_db()
 
-    return jsonify("Contraseña cambiada"), 200
+    return jsonify("Password changed successfully"), 200
 
+
+@users_bp.route("/<string:email>/image", methods=["POST"])
+@auth.login_required(role=[access[1], access[8], access[9]])
+def update_image(email):
+    usr = User.query.get(email)
+    d = request.json
+    if not usr:
+        raise NotFound("User not found")
+
+    usr.image = d['image']
+
+    usr.save_to_db()
+
+    return jsonify("Imagen actualizada correctamente"), 200
+
+
+@users_bp.route("/<string:email>/transactions", methods=["GET"])
+@auth.login_required(role=[access[1], access[8], access[9]])
+def get_transactions(email):
+    """
+    This method gets user transactions and returns them in list style.
+    """
+    # Check privileges
+    if email != g.user.email and g.user.access < 8:
+        return PrivilegeException("Don't have privileges to see user transactions!")
+    transactions_dict = g.user.transactions
+    transactions_list = []
+    for i in range(len(transactions_dict) - 1, -1, -1):
+        n_dict = {'description': transactions_dict[i].description, 'quantity': transactions_dict[i].quantity,
+                  'wallet': transactions_dict[i].wallet}
+        transactions_list.append(n_dict)
+    return {'transactions': transactions_list, 'number_transactions': g.user.number_transactions}, 200

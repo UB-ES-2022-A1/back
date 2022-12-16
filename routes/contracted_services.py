@@ -1,6 +1,8 @@
+import json
+
 from flask import Blueprint, jsonify, request
 from marshmallow import validates, ValidationError
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, fields
 from werkzeug.exceptions import NotFound, BadRequest, Conflict
 from database import db
 from sqlalchemy.orm.util import has_identity
@@ -8,10 +10,13 @@ from models.contracted_service import ContractedService
 from models.service import Service
 from models.user import User
 from models.user import auth
+from routes.chat_rooms import chat_room_schema_load
 from routes.users import get_user
 from flask import g
-from utils.custom_exceptions import PrivilegeException
+from utils.custom_exceptions import PrivilegeException, SelfBuyException
 from utils.privilegies import access
+from routes.services import service_schema_all
+from models.transactions import Transaction
 
 # Todas las url de servicios contratados empiezan por esto
 contracted_services_bp = Blueprint("contracted_services", __name__, url_prefix="/contracted_services")
@@ -32,17 +37,7 @@ class ContractedServiceSchema(SQLAlchemyAutoSchema):
         :return: None. Raises an Exception
         """
         if not has_identity(value):
-            raise NotFound("Usuario con id " + str(value.email) + " no encontrado!")
-
-    @validates("service")
-    def validates_service(self, value):
-        """
-        Validates that the service exists
-        :param value: service id
-        :return: None. Raises an Exception
-        """
-        if not has_identity(value):
-            raise NotFound("Servicio con id " + str(value.email) + " no encontrado!")
+            raise NotFound("User with id " + str(value.email) + " not found!")
 
 
 # Para crear servicio
@@ -75,14 +70,30 @@ def get_contracted_service(contracted_service_id):
     if Cservice.user_email != g.user.email and Cservice.service.user_email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to access other users' contracts.")
 
-    return jsonify(contracted_service_schema_all.dump(Cservice, many=False)), 200
+    info = contracted_service_schema_all.dump(Cservice, many=False)
+    info2 = service_schema_all.dump(Service.get_by_id(info['service']))
+
+    info["title"] = info2["title"]
+    info["description"] = info2["description"]
+    info["price"] = info2["price"]
+    info["user_buyer_email"] = info["user"]
+    info["user_seller_email"] = info2["user"]
+    info["user_buyer_name"] = User.get_by_id(info["user_buyer_email"]).name
+    info["user_seller_name"] = User.get_by_id(info["user_seller_email"]).name
+    info["contract_id"] = info["id"]
+    info["service_id"] = info["service"]
+    info.pop("service")
+    info.pop("id")
+    info.pop("user")
+
+    return jsonify(info), 200
 
 
 @contracted_services_bp.route("/<int:contracted_service_id>/user", methods=["GET"])
 @auth.login_required(role=[access[1], access[8], access[9]])
 def get_contracted_service_user(contracted_service_id):
     """
-    This method returns the user of a service. It requires to be admin or be a part of the contract
+    This method returns the user of a contract. It requires to be admin or be a part of the contract
     :param contracted_service_id: id of the contract
     :return:
     """
@@ -101,6 +112,7 @@ def get_contracted_service_user(contracted_service_id):
 @auth.login_required(role=[access[1], access[8], access[9]])
 def get_user_contracted_services(email):
     """
+    Return all the services that a user has contracted
     :param email: the email of the client
     :return: all the contracts the client has ordered
     """
@@ -108,8 +120,11 @@ def get_user_contracted_services(email):
     if email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to access other users' contracts.")
 
-    contracts = ContractedService.query.filter_by(user_email=email).all()
-    return jsonify(contracted_service_schema_all.dump(contracts, many=True)), 200
+    contracts = contracted_service_schema_all.dump(ContractedService.query.filter_by(user_email=email).all(), many=True)
+    for id_c, contract in enumerate(contracts):
+        contracts[id_c] = json.loads(get_contracted_service(contract["id"])[0].get_data().decode("utf-8"))
+
+    return jsonify(contracts), 200
 
 
 @contracted_services_bp.route("/contractor/<string:email>", methods=["GET"])
@@ -122,8 +137,24 @@ def get_contractor_offered_contracts(email):
     if email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to access other users' contracts.")
 
-    contracts = ContractedService.query.filter(ContractedService.service.has(user_email=email)).all()
-    return jsonify(contracted_service_schema_all.dump(contracts, many=True)), 200
+    contracts = contracted_service_schema_all.dump(
+        ContractedService.query.filter(ContractedService.service.has(user_email=email)).all(), many=True)
+    for id_c, contract in enumerate(contracts):
+        contracts[id_c] = json.loads(get_contracted_service(contract["id"])[0].get_data().decode("utf-8"))
+
+    return jsonify(contracts), 200
+
+
+@contracted_services_bp.route("<string:email>/done", methods=["GET"])
+@auth.login_required(role=[access[1], access[8], access[9]])
+def get_done_services(email):
+    """
+    :return: all finished contracts
+    """
+    contracts = ContractedService.query.filter_by(state=2, user_email=email).all()
+    contracts = contracted_service_schema_all.dump(contracts, many=True)
+
+    return jsonify(contracts), 200
 
 
 @contracted_services_bp.route("", methods=["POST"])
@@ -134,115 +165,163 @@ def contract_service():
     :return: Response
     """
     info = request.json  # Leer la info del json
+    info["user"] = g.user.email
     if 'service' not in info:
         raise ValidationError({'service': ['Missing data for required field.']})
-
-    info["user"] = g.user.email
+    if Service.get_by_id(info['service']).user_email == g.user.email:
+        raise SelfBuyException("Cannot buy your own product.")
     new_contracted_service = contracted_service_schema_all.load(info, session=db.session)
     p = new_contracted_service.service.price
     w = g.user.wallet
     updated_w = w - p
-
     if updated_w < 0:
         return {'reason': 'Not enough funds'}, 400
-
-    g.user.wallet = updated_w
-    g.user.save_to_db()
+    usr = User.query.get(g.user.email)
+    usr.wallet = updated_w
+    usr.save_to_db()
     new_contracted_service.save_to_db()
+    transaction = Transaction(user_email=g.user.email,
+                              description="Service bought: " + new_contracted_service.service.title,
+                              number=g.user.number_transactions, quantity=-p, wallet=g.user.wallet)
+    transaction.save_to_db()
+    g.user.number_transactions += 1
+    g.user.save_to_db()
+
+    new_room = chat_room_schema_load.load({'contracted_service': new_contracted_service.id}, session=db.session)
+    new_room.save_to_db()
 
     return {'request_id': new_contracted_service.id}, 201
 
 
-@contracted_services_bp.route("/<int:id>/done", methods=["PUT"])
+@contracted_services_bp.route("/<int:contract_id>/accept", methods=["POST"])
 @auth.login_required(role=[access[1], access[8], access[9]])
-def mark_as_done(id):
-    contract = ContractedService.get_by_id(id)
-    service = Service.get_by_id(contract.service_id)
-
-    # En caso de no encontrar el servicio retornamos un mensaje de error.
-    if not contract:
-        raise NotFound
-
-    if not service:
-        raise NotFound
-
-    if not contract.state == 'accepted':
-        raise Conflict('Must accept service before doing it!')
-
-    if service.user_email != g.user.email and g.user.access < 8:
-        raise PrivilegeException("Not enough privileges to modify other resources.")
-
-    contracted = User.get_by_id(service.user_email)
-    if not contracted:
-        raise NotFound
-
-    contract.state = 'done'
-    contracted.wallet = str(float(contracted.wallet) + float(service.price))
-    contract.save_to_db()
-    contracted.save_to_db()
-    return {'status': 'State updated successfully'}, 200
-
-
-@contracted_services_bp.route("/<int:id>/accept", methods=["PUT"])
-@auth.login_required(role=[access[1], access[8], access[9]])
-def mark_as_accepted(id):
-    contract = ContractedService.get_by_id(id)
-    service = Service.get_by_id(contract.service_id)
-
-    # En caso de no encontrar el servicio retornamos un mensaje de error.
-    if not contract:
-        raise NotFound
-
-    if not service:
-        raise NotFound
-
-    if not contract.state == 'on process':
+def accept(contract_id):
+    """
+    This method is used to accept a contract. Must be used by the seller
+    :param contract_id:
+    :return:
+    """
+    contract, service, user_client, user_seller = check(contract_id)
+    if not contract.state == 0:
         raise Conflict("contract is not acceptable because it already was accepted or canceled!")
 
     if service.user_email != g.user.email and g.user.access < 8:
         raise PrivilegeException("Not enough privileges to modify other resources.")
 
-    contract.state = 'accepted'
+    contract.state = 1
     contract.save_to_db()
     return {'status': 'State updated successfully'}, 200
 
 
-@contracted_services_bp.route("/<int:contracted_service_id>", methods=["PUT", "DELETE"])
+@contracted_services_bp.route("/<int:contract_id>/validate", methods=["POST"])
 @auth.login_required(role=[access[1], access[8], access[9]])
-def delete_contracted_service(contracted_service_id):
+def validate_contract(contract_id):
     """
-    Method used to delete or modify services. Requires a token. The token
-    user musts coincide with the service user or be an admin
-    :param service_id: The service that is going to be treated
+    THis method validates the contract. If the contract has been validated by both client and seller it updates the state.
+    Can be used by the seller or the client
+    :param contract_id: Contract id
     :return: Response
     """
-    service = ContractedService.get_by_id(contracted_service_id)
-    # En caso de no encontrar el servicio retornamos un mensaje de error.
-    if not service:
-        raise NotFound
-
-    if service.user_email != g.user.email and g.user.access < 8:
-        raise PrivilegeException("Not enough privileges to modify other resources.")
-
-    if service.state == 'on process':
-        g.user.wallet += service.price
+    contract, service, user_client, user_seller = check(contract_id)
+    if not contract.state == 1:
+        raise Conflict('The contract cannot be validated as it was not accepted or was cancelled')
+    email = g.user.email
+    if email == service.user_email:
+        contract.validate_s = True
+    elif email == contract.user_email:
+        contract.validate_c = True
+    elif g.user.acces >= 8:
+        contract.validate_s = True
+        contract.validate_c = True
     else:
-        raise BadRequest("Can't cancel or edit an ordered which has been accepted or delivered!")
+        raise PrivilegeException("Not enough privileges to modify other resources.")
+    if contract.validate_s and contract.validate_c:
+        contract.state = 2
+        user_seller.wallet += service.price
+        user_seller.save_to_db()
+        transaction = Transaction(user_email=user_seller.email,
+                                  description="Service sold: " + contract.service.title,
+                                  number=user_seller.number_transactions, quantity=service.price,
+                                  wallet=user_seller.wallet)
+        transaction.save_to_db()
+        user_seller.number_transactions += 1
+        user_seller.save_to_db()
+    contract.save_to_db()
+    return {'status': 'State updated successfully'}, 200
 
-    if request.method == "DELETE":
-        service.delete_from_db()
-        return {'deleted_request': contracted_service_id}, 200
 
-    elif request.method == "PUT":
-        # All this code is to be able to use all the checks of the marshmallow schema.
-        info = request.json
-        iterator = iter(service.__dict__.items())
-        next(iterator)  # Metadata
-        for attr, value in iterator:
-            if attr == "user_email": attr = "user"
-            if attr not in info.keys():
-                info[attr] = value
+@contracted_services_bp.route("/<int:contract_id>", methods=["DELETE"])
+@auth.login_required(role=[access[1], access[8], access[9]])
+def delete_contracted_service(contract_id):
+    """
+    This method is used to cancel a contract
+    :param contract_id: The service that is going to be treated
+    :return: Response
+    """
+    contract, service, user_client, user_seller = check(contract_id)
+    # No privileges
+    if service.user_email != g.user.email and g.user.access < 8 and contract.user_email != g.user.email:
+        raise PrivilegeException("Not enough privileges to modify other resources.")
+    if contract.state == 2:
+        raise Conflict('The contract cannot be cancelled as it was already completed')
+    contract.state = 3
+    contract.save_to_db()
+    user_client.wallet += service.price
+    user_client.save_to_db()
+    return_cancelled_service(contract.service.title, contract.service.price, user_seller)
+    return {'cancelled_contract': contract_id}, 200
 
-        n_contracted_service = contracted_service_schema_all.load(info, session=db.session)  # De esta forma pasamos todos los constrains.
-        n_contracted_service.save_to_db()
-        return {'modified_contract': n_contracted_service.id}, 200
+
+def check(contract_id):
+    """
+    Support method used to check the database and the security
+    :param contract_id: the id of the contract that is going to be accessed.
+    :return: the contract and the service if all is correct.
+    """
+
+    contract = ContractedService.get_by_id(contract_id)
+    service = Service.get_by_id(contract.service_id)
+
+    # No contract
+    if not contract:
+        raise NotFound("Contract not found.")
+
+    # No service
+    if not service:
+        contract.state = 3
+        contract.save_to_db()
+        raise NotFound("Service not found. Contract cancelled.")
+
+    user_seller = User.get_by_id(service.user_email)
+    user_client = User.get_by_id(contract.user_email)
+
+    if not user_client and not user_seller:
+        contract.state = 3
+        contract.save_to_db()
+        raise NotFound("Both users of the contract have been deleted. Contract cancelled.")
+
+    if not user_seller:
+        user_client.wallet += service.price
+        user_client.save_to_db()
+        contract.state = 3
+        contract.save_to_db()
+        return_cancelled_service(contract.service.title, contract.service.price, user_client)
+        raise NotFound("Seller has been deleted. Contract cancelled.")
+
+    if not user_client:
+        user_seller.wallet += service.price
+        user_seller.save_to_db()
+        contract.state = 3
+        contract.save_to_db()
+        return_cancelled_service(contract.service.title, contract.service.price, user_seller)
+        raise NotFound("Client has been deleted. Contract cancelled.")
+
+    return contract, service, user_client, user_seller
+
+
+def return_cancelled_service(name, price, user_client):
+    transaction = Transaction(user_email=user_client.email, description="Service cancelled: " + name,
+                              number=user_client.number_transactions, quantity=price, wallet=user_client.wallet)
+    transaction.save_to_db()
+    user_client.number_transactions += 1
+    user_client.save_to_db()

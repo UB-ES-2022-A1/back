@@ -90,49 +90,49 @@ def test_user_post_missing_fields(client):
     r = client.post("users", json={})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert j['campos']['pwd'] == ['Missing data for required field.']
-    assert j['campos']['email'] == ['Missing data for required field.']
-    assert j['campos']['name'] == ['Missing data for required field.']
-    assert 'phone' not in j['campos']
-    assert 'birthday' not in j['campos']
-    assert 'address' not in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert j['fields']['pwd'] == ['Missing data for required field.']
+    assert j['fields']['email'] == ['Missing data for required field.']
+    assert j['fields']['name'] == ['Missing data for required field.']
+    assert 'phone' not in j['fields']
+    assert 'birthday' not in j['fields']
+    assert 'address' not in j['fields']
 
     # missing name
     r = client.post("users", json={'email': 'pepito@gmail.com', 'pwd': '12345678'})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert 'pwd' not in j['campos']
-    assert 'email' not in j['campos']
-    assert j['campos']['name'] == ['Missing data for required field.']
-    assert 'phone' not in j['campos']
-    assert 'birthday' not in j['campos']
-    assert 'address' not in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert 'pwd' not in j['fields']
+    assert 'email' not in j['fields']
+    assert j['fields']['name'] == ['Missing data for required field.']
+    assert 'phone' not in j['fields']
+    assert 'birthday' not in j['fields']
+    assert 'address' not in j['fields']
 
     # missing email
     r = client.post("users", json={'pwd': '12345678', 'name': 'pepito'})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert 'pwd' not in j['campos']
-    assert j['campos']['email'] == ['Missing data for required field.']
-    assert 'name' not in j['campos']
-    assert 'phone' not in j['campos']
-    assert 'birthday' not in j['campos']
-    assert 'address' not in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert 'pwd' not in j['fields']
+    assert j['fields']['email'] == ['Missing data for required field.']
+    assert 'name' not in j['fields']
+    assert 'phone' not in j['fields']
+    assert 'birthday' not in j['fields']
+    assert 'address' not in j['fields']
 
     # missing pwd
     r = client.post("users", json={'email': 'pepito@gmail.com', 'name': 'pepito'})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert j['campos']['pwd'] == ['Missing data for required field.']
-    assert 'email' not in j['campos']
-    assert 'name' not in j['campos']
-    assert 'phone' not in j['campos']
-    assert 'birthday' not in j['campos']
-    assert 'address' not in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert j['fields']['pwd'] == ['Missing data for required field.']
+    assert 'email' not in j['fields']
+    assert 'name' not in j['fields']
+    assert 'phone' not in j['fields']
+    assert 'birthday' not in j['fields']
+    assert 'address' not in j['fields']
 
     # check no users have been created
     r = client.get("users")
@@ -145,7 +145,7 @@ def test_user_missing_fields(client):
     r = client.post("users", json={})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
+    assert j['message'] == 'Incorrect data'
 
     # missing name
     r = client.post("users", json={'email': 'pepito@gmail.com', 'pwd': '12345678'})
@@ -170,38 +170,38 @@ def test_user_post_wrong_fields(client):
     r = client.post("users", json={'email': 'abduzcan', 'pwd': '1', 'phone': 'aaa', 'name': 'Pepito'})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert 'pwd' in j['campos']
-    assert 'email' in j['campos']
-    assert 'phone' in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert 'pwd' in j['fields']
+    assert 'email' in j['fields']
+    assert 'phone' in j['fields']
 
     # wrong email
     r = client.post("users", json={'email': 'abduzcan', 'pwd': '12345678', 'phone': '600600600', 'name': 'Pepito'})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert 'pwd' not in j['campos']
-    assert 'email' in j['campos']
-    assert 'phone' not in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert 'pwd' not in j['fields']
+    assert 'email' in j['fields']
+    assert 'phone' not in j['fields']
 
     # wrong pwd
     r = client.post("users", json={'email': 'pepito@gmail.com', 'pwd': 'aa', 'phone': '600600600', 'name': 'Pepito'})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert 'pwd' in j['campos']
-    assert 'email' not in j['campos']
-    assert 'phone' not in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert 'pwd' in j['fields']
+    assert 'email' not in j['fields']
+    assert 'phone' not in j['fields']
 
     # wrong phone
     r = client.post("users",
                     json={'email': 'pepito@gmail.com', 'pwd': 'aaaaaaaa', 'phone': 'aaaaaaaaa', 'name': 'Pepito'})
     assert r.status_code == 400
     j = r.get_json()
-    assert j['message'] == 'Datos incorrectos'
-    assert 'pwd' not in j['campos']
-    assert 'email' not in j['campos']
-    assert 'phone' in j['campos']
+    assert j['message'] == 'Incorrect data'
+    assert 'pwd' not in j['fields']
+    assert 'email' not in j['fields']
+    assert 'phone' in j['fields']
 
     # check no users have been created
     r = client.get("users")
@@ -424,3 +424,137 @@ def test_edit_wallet(client):
     assert r.status_code == 200
     assert r.get_json()['wallet'] == '10.00'
 
+def test_user_transactions(client):
+    # Credentials for contractor
+    email1 = 'pepito@gmail.com'
+    pwd1 = '12345678'
+    user1_dict = {'email': email1, 'pwd': pwd1, 'name': 'Pepito', 'access': 1}
+    r = client.post("users", json=user1_dict)
+    assert r.status_code == 201
+
+    # Credentials for client
+    email2 = 'pepita@gmail.com'
+    pwd2 = '12345678'
+    user2_dict = {'email': email2, 'pwd': pwd2, 'name': 'Pepita', 'access': 1}
+    r = client.post("users", json=user2_dict)
+    assert r.status_code == 201
+
+    # Credentials for admin
+    email3 = 'madmin@gmail.com'
+    pwd3 = 'password'
+    # We can create by this way a max admin user
+    user_a = User(email=email3, pwd=User.hash_password(pwd3), name="MaxAdm", access=9, verified_email=True)
+    user_a.save_to_db()
+
+
+    # Give user2 some money to buy service
+    r = request_with_login(login=client.post, request=client.put, url=f"users/{email2}/wallet", json_r={'money': 5000},
+                           email="madmin@gmail.com", pwd="password")
+    assert r.status_code == 200
+
+    # Give user1 some money to buy service
+    r = request_with_login(login=client.post, request=client.put, url=f"users/{email1}/wallet", json_r={'money': 5000},
+                           email="madmin@gmail.com", pwd="password")
+    assert r.status_code == 200
+
+    # Post a service user 1
+    service1_dict = {'title': 'Servicio del usuario 1', 'description': 'description', 'price': 1000}
+    r = request_with_login(login=client.post, request=client.post, url="services", json_r=service1_dict, email=email1,
+                           pwd=pwd1)
+    assert r.status_code == 200
+    service1_id = r.get_json()['added_service_id']
+
+    # Post a service user 2
+    service1_dict = {'title': 'Servicio del usuario 2', 'description': 'description', 'price': 2000}
+    r = request_with_login(login=client.post, request=client.post, url="services", json_r=service1_dict, email=email2,
+                           pwd=pwd2)
+    assert r.status_code == 200
+
+    service2_id = r.get_json()['added_service_id']
+    assert service1_id == 1
+    assert service2_id == 2
+
+    # User2 contracts
+    c_service1_dict = {'service': service1_id}
+    r = request_with_login(login=client.post, request=client.post, url="contracted_services", json_r=c_service1_dict,
+                           email=email2, pwd=pwd2)
+    assert r.status_code == 201
+
+    # User1 contracts
+    c_service2_dict = {'service': service2_id}
+    r = request_with_login(login=client.post, request=client.post, url="contracted_services", json_r=c_service2_dict,
+                           email=email1, pwd=pwd1)
+    assert r.status_code == 201
+
+    #Let's get the contracts
+    # Check the seller can see the contract.
+    r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/contractor/{email1}",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+    contracts = r.get_json()
+    assert len(contracts) == 1
+    contract_id_1 = contracts[0]['contract_id']
+
+    #Let's get the contracts
+    # Check the seller can see the contract.
+    r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/contractor/{email2}",
+                           json_r={}, email=email2, pwd=pwd2)
+    assert r.status_code == 200
+    contracts = r.get_json()
+    assert len(contracts) == 1
+    contract_id_2 = contracts[0]['contract_id']
+
+    # User 1 accepts
+    r = request_with_login(login=client.post, request=client.post, url=f"contracted_services/{contract_id_1}/accept",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+
+    # User 2 accepts
+    r = request_with_login(login=client.post, request=client.post, url=f"contracted_services/{contract_id_2}/accept",
+                           json_r={}, email=email2, pwd=pwd2)
+    assert r.status_code == 200
+
+    # All validation. First service 1 then service 2.
+    r = request_with_login(login=client.post, request=client.post, url=f"contracted_services/{contract_id_1}/validate",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+
+    r = request_with_login(login=client.post, request=client.post, url=f"contracted_services/{contract_id_1}/validate",
+                           json_r={}, email=email2, pwd=pwd2)
+    assert r.status_code == 200
+
+    r = request_with_login(login=client.post, request=client.post, url=f"contracted_services/{contract_id_2}/validate",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+
+    r = request_with_login(login=client.post, request=client.post, url=f"contracted_services/{contract_id_2}/validate",
+                           json_r={}, email=email2, pwd=pwd2)
+    assert r.status_code == 200
+
+    # User 1 transactions
+    r = request_with_login(login=client.post, request=client.get, url=f"users/{email1}/transactions",
+                           json_r={}, email=email1, pwd=pwd1)
+    assert r.status_code == 200
+
+    assert r.get_json()['number_transactions'] == 3
+    transactions = r.get_json()['transactions']
+    assert transactions[2]['quantity'] == '5000.00'
+    assert transactions[2]['wallet'] == '5000.00'
+    assert transactions[1]['quantity'] == '-2000.00'
+    assert transactions[1]['wallet'] == '3000.00'
+    assert transactions[0]['quantity'] == '1000.00'
+    assert transactions[0]['wallet'] == '4000.00'
+
+    # User 2 transactions
+    r = request_with_login(login=client.post, request=client.get, url=f"users/{email2}/transactions",
+                           json_r={}, email=email2, pwd=pwd2)
+    assert r.status_code == 200
+
+    assert r.get_json()['number_transactions'] == 3
+    transactions = r.get_json()['transactions']
+    assert transactions[2]['quantity'] == '5000.00'
+    assert transactions[2]['wallet'] == '5000.00'
+    assert transactions[1]['quantity'] == '-1000.00'
+    assert transactions[1]['wallet'] == '4000.00'
+    assert transactions[0]['quantity'] == '2000.00'
+    assert transactions[0]['wallet'] == '6000.00'
