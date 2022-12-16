@@ -457,7 +457,7 @@ def test_get_done(client):
     assert r.status_code == 200
 
     # Check the contract status is done
-    r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/done",
+    r = request_with_login(login=client.post, request=client.get, url=f"contracted_services/{email2}/done",
                            json_r={}, email=email1, pwd=pwd1)
     contract = r.get_json()
     assert r.status_code == 200
